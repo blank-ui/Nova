@@ -70,13 +70,17 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
     <h2 style={{fontSize:28,letterSpacing:"-.06em",margin:"6px 0 5px"}}>{mode === "login" ? "Sign in to your space." : "Create your client account."}</h2>
     <p style={{fontSize:13,color:"var(--muted)",lineHeight:1.7,margin:"0 0 23px"}}>{mode === "login" ? "Pick up where your project left off." : "A client workspace is created with your project."}</p>
 
-    <div style={{display:"grid",gap:10}}>
-      <button type="button" className="button button-outline" style={{width:"100%",borderRadius:12,justifyContent:"center",opacity:googleAvailable?1:.65}} disabled={!googleAvailable||busy} onClick={googleSignIn} aria-describedby={!googleAvailable?"google-note":undefined}><GoogleMark/>Continue with Google</button>
-      <button type="button" className="button button-outline" style={{width:"100%",borderRadius:12,justifyContent:"center",opacity:discordAvailable?1:.65}} disabled={!discordAvailable||busy} onClick={discordSignIn} aria-describedby={!discordAvailable?"discord-note":undefined}><DiscordMark/>Continue with Discord</button>
-    </div>
-    {!googleAvailable && !discordAvailable && <p id="social-note" style={{fontSize:11,color:"var(--muted)",margin:"8px 0 0"}}>Social sign-in (Google & Discord) is ready for setup; provider credentials are not configured.</p>}
-    {googleAvailable && !discordAvailable && <p id="discord-note" style={{fontSize:11,color:"var(--muted)",margin:"8px 0 0"}}>Discord OAuth is ready for setup; configure DISCORD_CLIENT_ID in environment.</p>}
-    <div style={{display:"flex",alignItems:"center",gap:12,margin:"22px 0",color:"#9095a2",fontSize:11}}><span style={{height:1,background:"var(--line)",flex:1}}/>OR CONTINUE WITH EMAIL<span style={{height:1,background:"var(--line)",flex:1}}/></div>
+    {(googleAvailable || discordAvailable) && (
+      <div style={{display:"grid",gap:10}}>
+        {googleAvailable && (
+          <button type="button" className="button button-outline" style={{width:"100%",borderRadius:12,justifyContent:"center"}} disabled={busy} onClick={googleSignIn}><GoogleMark/>Continue with Google</button>
+        )}
+        {discordAvailable && (
+          <button type="button" className="button button-outline" style={{width:"100%",borderRadius:12,justifyContent:"center"}} disabled={busy} onClick={discordSignIn}><DiscordMark/>Continue with Discord</button>
+        )}
+      </div>
+    )}
+    <div style={{display:"flex",alignItems:"center",gap:12,margin:"22px 0",color:"#9095a2",fontSize:11}}><span style={{height:1,background:"var(--line)",flex:1}}/>{googleAvailable || discordAvailable ? "OR CONTINUE WITH EMAIL" : "SIGN IN WITH EMAIL"}<span style={{height:1,background:"var(--line)",flex:1}}/></div>
     <form onSubmit={submit} style={{display:"grid",gap:15}}>
       {mode === "register"&&<label className="auth-label">Your name<input className="field" name="name" autoComplete="name" required minLength={2} maxLength={100} placeholder="Alex Morgan"/></label>}
       <label className="auth-label">Email address<input className="field" name="email" type="email" autoComplete="email" required maxLength={254} placeholder="alex@company.com"/></label>
