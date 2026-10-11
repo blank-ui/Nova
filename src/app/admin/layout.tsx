@@ -11,7 +11,7 @@ export default async function AdminLayout({
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <AdminNav adminEmail={session.user.email} />
+      <AdminNav adminEmail={session.user.email} adminName={session.user.name} />
       <div style={{ flex: 1 }}>{children}</div>
       <Footer />
     </div>

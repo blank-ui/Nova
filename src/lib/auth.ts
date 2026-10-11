@@ -21,7 +21,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     autoSignIn: false,
-    minPasswordLength: 12,
+    minPasswordLength: 6,
     maxPasswordLength: 128,
     customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
       ...coreFields,

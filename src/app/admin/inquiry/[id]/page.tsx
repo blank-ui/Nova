@@ -48,6 +48,20 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
     },
   });
 
+  const statusColors: Record<string, { bg: string; color: string; border: string }> = {
+    NEW: { bg: "rgba(255, 181, 71, 0.12)", color: "#d97706", border: "rgba(255, 181, 71, 0.3)" },
+    QUALIFIED: { bg: "rgba(16, 185, 129, 0.12)", color: "#059669", border: "rgba(16, 185, 129, 0.3)" },
+    CONTACTED: { bg: "rgba(59, 130, 246, 0.12)", color: "#2563eb", border: "rgba(59, 130, 246, 0.3)" },
+    PROPOSAL_SENT: { bg: "rgba(108, 76, 255, 0.12)", color: "#6C4CFF", border: "rgba(108, 76, 255, 0.3)" },
+    CONVERTED: { bg: "rgba(16, 185, 129, 0.15)", color: "#047857", border: "rgba(16, 185, 129, 0.35)" },
+    CLOSED: { bg: "rgba(156, 163, 175, 0.12)", color: "#6b7280", border: "rgba(156, 163, 175, 0.3)" },
+  };
+  const activeStyle = statusColors[inquiry.status] || {
+    bg: "rgba(108, 76, 255, 0.1)",
+    color: "#6C4CFF",
+    border: "rgba(108, 76, 255, 0.25)",
+  };
+
   return (
     <main className="shell" style={{ padding: "50px 0 80px" }}>
       <div style={{ marginBottom: 24 }}>
@@ -59,6 +73,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
             gap: 8,
             fontSize: 13,
             color: "var(--muted)",
+            textDecoration: "none",
           }}
         >
           <ArrowLeft size={16} /> Back to inquiries
@@ -72,19 +87,27 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
             {inquiry.name}
           </h1>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span
             style={{
-              padding: "6px 12px",
-              borderRadius: 20,
+              padding: "6px 14px",
+              borderRadius: 99,
               fontSize: 12,
               fontWeight: 700,
-              backgroundColor: "#e8eaed",
-              color: "var(--ink)",
+              backgroundColor: activeStyle.bg,
+              color: activeStyle.color,
+              border: `1px solid ${activeStyle.border}`,
             }}
           >
             {inquiry.status}
           </span>
+          <a
+            href={`mailto:${inquiry.email}?subject=Nova%20Studio%20-%20Follow-up%20on%20your%20inquiry`}
+            className="button"
+            style={{ padding: "8px 16px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            Reply via Email
+          </a>
         </div>
       </div>
 
@@ -95,7 +118,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
             Inquiry Details
           </h2>
 
-          <dl style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "14px 10px", fontSize: 14 }}>
+          <dl className="inquiry-dl" style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "14px 10px", fontSize: 14 }}>
             <dt style={{ color: "var(--muted)" }}>Email:</dt>
             <dd style={{ margin: 0 }}>
               <a href={`mailto:${inquiry.email}`} style={{ color: "var(--blue)", textDecoration: "underline" }}>
@@ -204,6 +227,19 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
           </section>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 540px) {
+          .inquiry-dl {
+            grid-template-columns: 1fr !important;
+            gap: 6px !important;
+          }
+          .inquiry-dl dt {
+            margin-top: 10px;
+            font-size: 12px;
+          }
+        }
+      `}</style>
     </main>
   );
 }

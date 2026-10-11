@@ -150,3 +150,51 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+/**
+ * Admin inquiry delete endpoint.
+ * Permanently removes an inquiry from the database with audit tracking.
+ */
+export async function DELETE(request: Request) {
+  const session = await getCurrentSession();
+  if (!session || !canOpenAdmin(session.user.role, session.user.twoFactorEnabled)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+
+  if (!id || !/^c[0-9a-z]{24}$/.test(id)) {
+    return NextResponse.json({ error: "Invalid inquiry id" }, { status: 400 });
+  }
+
+  try {
+    const existing = await prisma.inquiry.findUnique({
+      where: { id },
+      select: { id: true, email: true, name: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
+    }
+
+    await prisma.$transaction([
+      prisma.inquiry.delete({
+        where: { id },
+      }),
+      prisma.auditLog.create({
+        data: {
+          actorId: session.user.id,
+          action: "DELETE",
+          entityType: "Inquiry",
+          entityId: id,
+          metadata: { name: existing.name, email: existing.email },
+        },
+      }),
+    ]);
+
+    return NextResponse.json({ success: true, message: "Inquiry deleted successfully" });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete inquiry" }, { status: 500 });
+  }
+}

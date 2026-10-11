@@ -1,8 +1,161 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
-import { NovaLogo } from "@/components/brand";
+import { ArrowUpRight, Sparkles, Shield, Heart } from "lucide-react";
+import { NovaLogo, NovaMascotAvatar } from "@/components/brand";
 
-export function Footer(){return <footer style={{background:"#101322",color:"white",padding:"66px 0 26px",marginTop:90}}><div className="shell"><div style={{display:"flex",justifyContent:"space-between",gap:35,flexWrap:"wrap",paddingBottom:58}}><div><Link href="/" style={{display:"inline-block"}} aria-label="Nova home"><NovaLogo size={28} markColor="#6C4CFF" dotColor="#FFB547" textColor="white" withTagline={true} taglineColor="#8b92a4" /></Link><p style={{color:"#a6aab5",fontSize:14,lineHeight:1.7,maxWidth:340,marginTop:18}}>Digital product and design studio operated on behalf of All Sky Fares LLC.</p><p style={{color:"#898f9d",fontSize:12,lineHeight:1.6,marginTop:8}}>Inquiries: nova@allskyfares.com</p></div><div style={{display:"flex",gap:65,flexWrap:"wrap"}}>{[["Explore",["Services","Portfolio","About","Process"]],["Say hello",["Start a project","nova@allskyfares.com","Discord (@superr_nova_)","LinkedIn"]]].map(([heading,items])=><div key={heading as string}><div className="eyebrow" style={{color:"#898f9d",marginBottom:18}}>{heading as string}</div>{(items as string[]).map((item)=><div key={item} style={{margin:"12px 0",fontSize:13,color:"#d0d2d9"}}><Link href={item==="Portfolio"?"/portfolio":item==="About"?"/about":item==="Process"?"/process":item==="Services"?"/services":item==="nova@allskyfares.com"?"mailto:nova@allskyfares.com":item==="Discord (@superr_nova_)"?"https://discord.com/users/superr_nova_":"/contact"} target={item==="Discord (@superr_nova_)"?"_blank":undefined} rel={item==="Discord (@superr_nova_)"?"noopener noreferrer":undefined}>{item} <ArrowUpRight size={12} style={{display:"inline"}}/></Link></div>)}</div>)}</div></div><div style={{borderTop:"1px solid #242938",paddingTop:18,display:"flex",justifyContent:"space-between",gap:12,color:"#898f9d",fontSize:11,flexWrap:"wrap"}}><span>© {new Date().getFullYear()} All Sky Fares LLC. All rights reserved. Nova is an operated service.</span><div style={{display:"flex",gap:18,flexWrap:"wrap"}}><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/cookies">Cookies</Link><Link href="/refund-policy">Refunds</Link><Link href="/support-policy">Support</Link><Link href="/accessibility">Accessibility</Link></div></div></div></footer>}
+export function Footer() {
+  const currentYear = new Date().getFullYear();
 
+  return (
+    <footer
+      style={{
+        background: "#0c0e1a",
+        color: "#f6f4ee",
+        padding: "72px 0 32px",
+        marginTop: 90,
+        borderTop: "1px solid rgba(108, 76, 255, 0.2)",
+      }}
+    >
+      <div className="shell">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "clamp(28px, 4vw, 40px)",
+            paddingBottom: 54,
+            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          }}
+        >
+          {/* Column 1: Brand & Operating Entity */}
+          <div style={{ maxWidth: 360 }}>
+            <Link href="/" style={{ display: "inline-block" }} aria-label="Nova home">
+              <NovaLogo
+                size={28}
+                markColor="#6C4CFF"
+                dotColor="#FFB547"
+                textColor="#f6f4ee"
+                withTagline={true}
+                taglineColor="#9ba3b5"
+              />
+            </Link>
+            <p style={{ color: "#a6adbd", fontSize: 13, lineHeight: 1.7, marginTop: 18 }}>
+              Independent digital product and design studio. Operated on behalf of <strong>All Sky Fares LLC</strong>.
+            </p>
+            <p style={{ color: "#7e8799", fontSize: 12, lineHeight: 1.6, marginTop: 8 }}>
+              Direct inquiries: <a href="mailto:nova@allskyfares.com" style={{ color: "var(--cyan)", textDecoration: "underline" }}>nova@allskyfares.com</a>
+            </p>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 14, padding: "3px 10px", borderRadius: 99, background: "rgba(16, 185, 129, 0.12)", color: "#10b981", fontSize: 11, fontWeight: 600 }}>
+              <span className="radar-dot" style={{ width: 6, height: 6 }} />
+              Production Systems Operational
+            </div>
+          </div>
 
+          {/* Column 2: Capabilities & Services */}
+          <div>
+            <div className="eyebrow" style={{ color: "#8b92a4", marginBottom: 18 }}>
+              Capabilities
+            </div>
+            <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
+              <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
+                Websites & Experiences
+              </Link>
+              <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
+                Custom Web Applications & SaaS
+              </Link>
+              <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
+                Operations & CRM Dashboards
+              </Link>
+              <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
+                Product Design & Prototyping
+              </Link>
+              <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
+                API Integrations & Automation
+              </Link>
+            </div>
+          </div>
 
+          {/* Column 3: Studio & Workspaces */}
+          <div>
+            <div className="eyebrow" style={{ color: "#8b92a4", marginBottom: 18 }}>
+              Studio & Portals
+            </div>
+            <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
+              <Link href="/about" style={{ color: "#d0d4e0" }}>
+                About Studio
+              </Link>
+              <Link href="/portfolio" style={{ color: "#d0d4e0" }}>
+                Selected Work & Gallery
+              </Link>
+              <Link href="/process" style={{ color: "#d0d4e0" }}>
+                Our 4-Step Process
+              </Link>
+              <Link href="/faq" style={{ color: "#d0d4e0" }}>
+                Frequently Asked Questions
+              </Link>
+              <Link href="/portal" style={{ color: "#67E8F9", fontWeight: 600 }}>
+                Client Portal Sign In &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Column 4: Contact & Channels */}
+          <div>
+            <div className="eyebrow" style={{ color: "#8b92a4", marginBottom: 18 }}>
+              Connect
+            </div>
+            <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
+              <Link href="/contact" style={{ color: "#d0d4e0" }}>
+                Start a Project <ArrowUpRight size={12} style={{ display: "inline" }} />
+              </Link>
+              <a href="mailto:nova@allskyfares.com" style={{ color: "#d0d4e0" }}>
+                nova@allskyfares.com
+              </a>
+              <a
+                href="https://discord.com/users/superr_nova_"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#5865F2" }}
+              >
+                Discord (@superr_nova_) <ArrowUpRight size={12} style={{ display: "inline" }} />
+              </a>
+              <a
+                href="https://github.com/blank-ui/Nova"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#d0d4e0" }}
+              >
+                GitHub Repository <ArrowUpRight size={12} style={{ display: "inline" }} />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar: Copyright & Compliance */}
+        <div
+          style={{
+            paddingTop: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 16,
+            color: "#7e8799",
+            fontSize: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            © {currentYear} All Sky Fares LLC. All rights reserved. Nova is a studio service operated on behalf of All Sky Fares LLC.
+          </div>
+
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <Link href="/privacy" style={{ color: "#9ba3b5" }}>Privacy</Link>
+            <Link href="/terms" style={{ color: "#9ba3b5" }}>Terms</Link>
+            <Link href="/cookies" style={{ color: "#9ba3b5" }}>Cookies</Link>
+            <Link href="/refund-policy" style={{ color: "#9ba3b5" }}>Refunds</Link>
+            <Link href="/support-policy" style={{ color: "#9ba3b5" }}>Support</Link>
+            <Link href="/accessibility" style={{ color: "#9ba3b5" }}>Accessibility</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

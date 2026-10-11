@@ -271,9 +271,27 @@ button, input, textarea, select {
   animation: radarPulse 2.2s infinite;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .shell {
-    width: min(100% - 36px, 1220px);
+    width: min(100% - 32px, 1220px);
+  }
+}
+
+@media (max-width: 480px) {
+  .shell {
+    width: min(100% - 24px, 1220px);
+  }
+}
+
+/* Global Responsive Enhancements */
+@media (max-width: 640px) {
+  .button {
+    padding: 12px 18px;
+    font-size: 13px;
+  }
+  
+  .card {
+    border-radius: 18px;
   }
 }
 
@@ -407,5 +425,26 @@ button, input, textarea, select {
   }
   .nova-mascot-svg {
     transition: none !important;
+  }
+}
+
+/* Contact Page Responsive Stacking */
+.contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .contact-grid {
+    grid-template-columns: 100% !important;
+    gap: 40px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-form-card {
+    padding: 22px 18px !important;
   }
 }

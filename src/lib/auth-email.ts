@@ -293,24 +293,84 @@ export async function sendAuthEmail({ to, subject, url }: AuthEmailInput) {
     }
   }
 
-  // Fallback to Resend API key if explicitly provided
-  const resendKey = process.env.EMAIL_API_KEY;
-  const resendFrom = process.env.EMAIL_FROM;
-  if (resendKey && resendFrom) {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: resendFrom, to: [to], subject, text: `${subject}\n\nContinue securely: ${url}` }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) throw new Error("Transactional email delivery failed via API");
-    return;
-  }
-
   if (process.env.NODE_ENV !== "production") {
     console.info(`[Nova dev email] ${subject} for ${to}: ${url}`);
     return;
   }
 
   throw new Error("Transactional email is not configured");
+}
+
+/**
+ * Send an initiation email to a newly created user with their setup/password-creation link
+ */
+export async function sendAccountInitiationEmail({
+  to,
+  name,
+  setupUrl,
+}: {
+  to: string;
+  name: string;
+  setupUrl: string;
+}) {
+  const subject = "Welcome to Nova — Set up your account";
+  const heading = `Welcome to Nova, ${name || "there"}`;
+  const bodyText =
+    "An account has been created for you on the Nova platform by the studio administrator. Click below to choose your password and activate your workspace.";
+  const actionText = "Set Up Your Password";
+  const subtext =
+    "This invitation link is intended for you. For security, do not forward this email. If you were not expecting this, please contact support.";
+
+  const html = buildNovaEmailHtml({
+    subject,
+    heading,
+    bodyText,
+    actionText,
+    actionUrl: setupUrl,
+    subtext,
+  });
+
+  return sendSmtpEmail({
+    to,
+    subject,
+    text: `${subject}\n\nHi ${name},\n\nAn account has been created for you on Nova. Set up your password here:\n${setupUrl}`,
+    html,
+  });
+}
+
+/**
+ * Send an administrative password reset notification email
+ */
+export async function sendAdminPasswordResetNotificationEmail({
+  to,
+  name,
+  resetUrl,
+}: {
+  to: string;
+  name: string;
+  resetUrl: string;
+}) {
+  const subject = "Reset your Nova password (Requested by Administrator)";
+  const heading = `Password reset for ${name || "your account"}`;
+  const bodyText =
+    "An administrator has initiated a password reset for your Nova account. Click the button below to choose your new password.";
+  const actionText = "Set New Password";
+  const subtext =
+    "If you have questions about this request, reach out to your Nova studio administrator or nova@allskyfares.com.";
+
+  const html = buildNovaEmailHtml({
+    subject,
+    heading,
+    bodyText,
+    actionText,
+    actionUrl: resetUrl,
+    subtext,
+  });
+
+  return sendSmtpEmail({
+    to,
+    subject,
+    text: `${subject}\n\nHi ${name},\n\nAn administrator has requested a password reset for your Nova account. Set your new password here:\n${resetUrl}`,
+    html,
+  });
 }

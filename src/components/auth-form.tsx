@@ -1,15 +1,17 @@
 "use client";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Eye, EyeOff } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { NovaMark, NovaMascotAvatar } from "@/components/brand";
+import { PasswordInput } from "@/components/password-input";
+import { evaluatePasswordStrength } from "@/lib/password-policy";
 
 
 export function AuthForm({ mode, googleAvailable, discordAvailable = false, callbackURL = "/portal" }: { mode: "login" | "register"; googleAvailable: boolean; discordAvailable?: boolean; callbackURL?: string }) {
   const [busy, setBusy] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const target = safeInternalPath(callbackURL, "/portal");
@@ -20,9 +22,12 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
     setBusy(true); setMessage("");
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim().toLowerCase();
-    const password = String(data.get("password") ?? "");
     try {
       if (mode === "register") {
+        const strength = evaluatePasswordStrength(password);
+        if (!strength.isValid) {
+          throw new Error("Password must be 6 to 12 characters and include uppercase, lowercase, and a special symbol.");
+        }
         const name = String(data.get("name") ?? "").trim();
         const result = await authClient.signUp.email({ name, email, password, callbackURL: completeUrl });
         if (result.error) throw new Error("We couldn't create that account. Check the details and try again.");
@@ -84,7 +89,14 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
     <form onSubmit={submit} style={{display:"grid",gap:15}}>
       {mode === "register"&&<label className="auth-label">Your name<input className="field" name="name" autoComplete="name" required minLength={2} maxLength={100} placeholder="Alex Morgan"/></label>}
       <label className="auth-label">Email address<input className="field" name="email" type="email" autoComplete="email" required maxLength={254} placeholder="alex@company.com"/></label>
-      <label className="auth-label">Password<span className="password-wrap"><input className="field" name="password" type={showPassword?"text":"password"} autoComplete={mode === "login"?"current-password":"new-password"} required minLength={mode === "register"?12:1} maxLength={128} placeholder={mode === "register"?"At least 12 characters":"Your password"}/><button className="visibility-button" type="button" onClick={()=>setShowPassword(!showPassword)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></span></label>
+      <PasswordInput
+        value={password}
+        onChange={setPassword}
+        label="Password"
+        autoComplete={mode === "login" ? "current-password" : "new-password"}
+        showStrengthMeter={mode === "register"}
+        placeholder={mode === "register" ? "6-12 chars with Aa#" : "Your password"}
+      />
       {mode === "login"&&<Link href="/forgot-password" style={{fontSize:12,color:"var(--blue)",justifySelf:"end",marginTop:-5}}>Forgot password?</Link>}
       {message&&<p role="alert" style={{fontSize:12,color:"#b42318",margin:0,lineHeight:1.6}}>{message}</p>}
       <button className="button" disabled={busy} style={{width:"100%",borderRadius:12,opacity:busy?.7:1}}>{busy?(mode==="login"?"Signing in…":"Creating account…"):(mode==="login"?"Sign in":"Create account")}<ArrowUpRight size={15}/></button>

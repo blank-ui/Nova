@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth-guards";
 import { canOpenAdmin } from "@/lib/auth-policy";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { InquiryDeleteButton } from "@/components/inquiry-delete-button";
 import type { Prisma, InquiryStatus } from "@prisma/client";
 
 /**
@@ -77,39 +78,67 @@ export default async function InquiryList({ searchParams }: { searchParams: Prom
         </div>
       </div>
 
-      {/* Pipeline Status Filter Chips */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-        {[
-          { label: "All Inquiries", value: "" },
-          { label: "New", value: "NEW" },
-          { label: "Contacted", value: "CONTACTED" },
-          { label: "Qualified", value: "QUALIFIED" },
-          { label: "Proposal Sent", value: "PROPOSAL_SENT" },
-          { label: "Converted", value: "CONVERTED" },
-          { label: "Closed", value: "CLOSED" },
-        ].map((tab) => {
-          const isSelected = (!status && tab.value === "") || status === tab.value;
-          return (
+      {/* Pipeline Status Filter Chips & Search Controls */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {[
+            { label: "All Inquiries", value: "" },
+            { label: "New", value: "NEW" },
+            { label: "Contacted", value: "CONTACTED" },
+            { label: "Qualified", value: "QUALIFIED" },
+            { label: "Proposal Sent", value: "PROPOSAL_SENT" },
+            { label: "Converted", value: "CONVERTED" },
+            { label: "Closed", value: "CLOSED" },
+          ].map((tab) => {
+            const isSelected = (!status && tab.value === "") || status === tab.value;
+            const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+            const baseHref = search ? `/admin/inquiry?search=${encodeURIComponent(search)}` : "/admin/inquiry";
+            return (
+              <Link
+                key={tab.label}
+                href={tab.value ? `/admin/inquiry?status=${tab.value}${searchParam}` : baseHref}
+                style={{
+                  padding: "7px 15px",
+                  borderRadius: 99,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  background: isSelected ? "var(--blue)" : "var(--card-bg)",
+                  color: isSelected ? "#ffffff" : "var(--ink)",
+                  border: isSelected ? "1px solid var(--blue)" : "1px solid var(--line)",
+                  transition: "all 0.15s ease",
+                  boxShadow: isSelected ? "0 2px 8px rgba(108,76,255,0.25)" : "none",
+                }}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Quick Search Form */}
+        <form method="GET" action="/admin/inquiry" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {status && <input type="hidden" name="status" value={status} />}
+          <input
+            type="search"
+            name="search"
+            defaultValue={search || ""}
+            placeholder="Search name, email, service..."
+            className="field"
+            style={{ fontSize: 12, padding: "7px 12px", width: 220 }}
+          />
+          <button type="submit" className="button button-outline" style={{ padding: "7px 14px", fontSize: 12 }}>
+            Search
+          </button>
+          {search && (
             <Link
-              key={tab.label}
-              href={tab.value ? `/admin/inquiry?status=${tab.value}` : "/admin/inquiry"}
-              style={{
-                padding: "7px 15px",
-                borderRadius: 99,
-                fontSize: 12,
-                fontWeight: 600,
-                textDecoration: "none",
-                background: isSelected ? "var(--blue)" : "var(--card-bg)",
-                color: isSelected ? "#ffffff" : "var(--ink)",
-                border: isSelected ? "1px solid var(--blue)" : "1px solid var(--line)",
-                transition: "all 0.15s ease",
-                boxShadow: isSelected ? "0 2px 8px rgba(108,76,255,0.25)" : "none",
-              }}
+              href={status ? `/admin/inquiry?status=${status}` : "/admin/inquiry"}
+              style={{ fontSize: 12, color: "var(--muted)", textDecoration: "none", fontWeight: 600 }}
             >
-              {tab.label}
+              Clear
             </Link>
-          );
-        })}
+          )}
+        </form>
       </div>
 
       <div className="card" style={{ padding: 24, overflowX: "auto" }}>
@@ -123,12 +152,13 @@ export default async function InquiryList({ searchParams }: { searchParams: Prom
               <th style={{ padding: "12px 14px" }}>Service</th>
               <th style={{ padding: "12px 14px" }}>Status</th>
               <th style={{ padding: "12px 14px" }}>Created</th>
+              <th style={{ padding: "12px 14px", textAlign: "right" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: "36px 14px", textAlign: "center", color: "var(--muted)" }}>
+                <td colSpan={8} style={{ padding: "36px 14px", textAlign: "center", color: "var(--muted)" }}>
                   No customer inquiries match the current filter.
                 </td>
               </tr>
@@ -182,6 +212,9 @@ export default async function InquiryList({ searchParams }: { searchParams: Prom
                   </td>
                   <td style={{ padding: "14px", color: "var(--muted)", fontSize: 13 }}>
                     {new Date(inq.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                  </td>
+                  <td style={{ padding: "14px", textAlign: "right" }}>
+                    <InquiryDeleteButton inquiryId={inq.id} inquiryName={inq.name} />
                   </td>
                 </tr>
               ))

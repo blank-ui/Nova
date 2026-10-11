@@ -2,25 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, FolderKanban, Users } from "lucide-react";
+import { Shield, FolderKanban, Users, Image as ImageIcon, MessageSquare } from "lucide-react";
 import { NovaLogo, NovaMascotAvatar } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";
 
-export function AdminNav({ adminEmail }: { adminEmail: string }) {
+export function AdminNav({
+  adminEmail,
+  adminName,
+}: {
+  adminEmail: string;
+  adminName?: string;
+}) {
   const pathname = usePathname();
 
   const isOverview = pathname === "/admin";
   const isInquiries = pathname?.startsWith("/admin/inquiry");
+  const isUsers = pathname?.startsWith("/admin/users");
   const isSecurity = pathname === "/admin/security";
   const isPortal = pathname?.startsWith("/portal");
+  const isShowcase = pathname?.startsWith("/admin/showcase");
+
+  const firstName = adminName ? adminName.trim().split(/\s+/)[0] : "Admin";
 
   return (
     <header
       style={{
         height: 76,
         borderBottom: "1px solid var(--line)",
-        background: "var(--nav-bg, rgba(246,244,238,.88))",
+        background: "var(--nav-bg, rgba(246,244,238,.92))",
         backdropFilter: "blur(14px)",
         position: "sticky",
         top: 0,
@@ -51,7 +61,7 @@ export function AdminNav({ adminEmail }: { adminEmail: string }) {
             <NovaLogo size={24} markColor="#6C4CFF" dotColor="#FFB547" textColor="var(--ink)" withTagline={false} />
           </Link>
 
-          <nav style={{ display: "flex", alignItems: "center", gap: 20, flexShrink: 0 }}>
+          <nav style={{ display: "flex", alignItems: "center", gap: 18, flexShrink: 0 }}>
             <Link
               className={`nav-link ${isOverview ? "nav-link-active" : ""}`}
               href="/admin"
@@ -64,7 +74,21 @@ export function AdminNav({ adminEmail }: { adminEmail: string }) {
               href="/admin/inquiry"
               style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
             >
-              <Users size={15} /> Inquiries (CRM)
+              <MessageSquare size={15} /> Inquiries (CRM)
+            </Link>
+            <Link
+              className={`nav-link ${isUsers ? "nav-link-active" : ""}`}
+              href="/admin/users"
+              style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
+            >
+              <Users size={15} /> Users & Accounts
+            </Link>
+            <Link
+              className={`nav-link ${isShowcase ? "nav-link-active" : ""}`}
+              href="/admin/showcase"
+              style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
+            >
+              <ImageIcon size={15} /> GitHub & Gallery
             </Link>
             <Link
               className={`nav-link ${isSecurity ? "nav-link-active" : ""}`}
@@ -83,34 +107,59 @@ export function AdminNav({ adminEmail }: { adminEmail: string }) {
           </nav>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
           <ThemeToggle />
           <Link
             href="/admin/security"
-            style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              textDecoration: "none",
+              padding: "5px 10px",
+              borderRadius: 10,
+              border: "1px solid var(--line)",
+              background: "var(--paper)",
+              transition: "border-color 0.15s ease",
+            }}
             title="Administrator profile & security settings"
           >
-            <NovaMascotAvatar size={28} />
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-              <span className="eyebrow" style={{ textTransform: "none", color: "var(--ink)", fontWeight: 700, fontSize: 12 }}>
-                Admin Console
-              </span>
-              <span style={{ fontSize: 11, color: "var(--muted)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <NovaMascotAvatar size={26} />
+            <div className="admin-user-details" style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: "var(--ink)", fontWeight: 700, fontSize: 13 }}>
+                  {firstName}
+                </span>
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 800,
+                    letterSpacing: ".05em",
+                    padding: "1px 5px",
+                    borderRadius: 4,
+                    background: "rgba(108,76,255,0.12)",
+                    color: "#6C4CFF",
+                  }}
+                >
+                  ADMIN
+                </span>
+              </div>
+              <span style={{ fontSize: 11, color: "var(--muted)", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {adminEmail}
               </span>
             </div>
           </Link>
-          <Link
-            href="/admin/security"
-            className="button button-outline"
-            style={{ padding: "8px 14px", fontSize: 12, borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 6 }}
-            title="Profile & Security Settings"
-          >
-            <Shield size={13} /> Settings
-          </Link>
           <LogoutButton />
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .admin-user-details {
+            display: none !important;
+          }
+        }
+      `}</style>
     </header>
   );
 }

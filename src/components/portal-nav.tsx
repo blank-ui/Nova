@@ -60,6 +60,24 @@ export function PortalNav({ userName, userRole }: { userName: string; userRole: 
                 &larr; Admin Workspace
               </Link>
             )}
+            {userRole === "DEVELOPER" && (
+              <Link
+                className="nav-link"
+                href="/developer"
+                style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#10b981", padding: "6px 0" }}
+              >
+                &larr; Dev Workspace
+              </Link>
+            )}
+            {userRole === "FINANCE" && (
+              <Link
+                className="nav-link"
+                href="/finance"
+                style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#f59e0b", padding: "6px 0" }}
+              >
+                &larr; Finance Workspace
+              </Link>
+            )}
             <Link
               className={`nav-link ${isOverview ? "nav-link-active" : ""}`}
               href="/portal"
@@ -84,7 +102,7 @@ export function PortalNav({ userName, userRole }: { userName: string; userRole: 
           </nav>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <ThemeToggle />
           <Link
             href="/portal/security"
@@ -92,13 +110,13 @@ export function PortalNav({ userName, userRole }: { userName: string; userRole: 
             title="Manage profile & security settings"
           >
             <NovaMascotAvatar size={28} />
-            <span className="eyebrow" style={{ textTransform: "none", color: "var(--ink)", fontWeight: 600 }}>
+            <span className="portal-user-name eyebrow" style={{ textTransform: "none", color: "var(--ink)", fontWeight: 600 }}>
               {userName} <span style={{ color: "var(--muted)", fontWeight: 400 }}>({userRole})</span>
             </span>
           </Link>
           <Link
             href="/portal/security"
-            className="button button-outline"
+            className="portal-settings-btn button button-outline"
             style={{ padding: "8px 14px", fontSize: 12, borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 6 }}
             title="Profile & Security Settings"
           >
@@ -107,6 +125,17 @@ export function PortalNav({ userName, userRole }: { userName: string; userRole: 
           <LogoutButton />
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .portal-user-name {
+            display: none !important;
+          }
+          .portal-settings-btn {
+            display: none !important;
+          }
+        }
+      `}</style>
     </header>
   );
 }

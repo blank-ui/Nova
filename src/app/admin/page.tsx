@@ -13,6 +13,9 @@ import {
   ChevronRight,
   Shield,
   Activity,
+  Image as ImageIcon,
+  MessageSquare,
+  Sparkles,
 } from "lucide-react";
 import { NovaMascotAvatar } from "@/components/brand";
 
@@ -70,9 +73,10 @@ const statusConfig: Record<string, { label: string; bg: string; color: string; b
 
 export default async function Admin() {
   const session = await requireAdmin();
+  const adminFirstName = session.user.name ? session.user.name.trim().split(/\s+/)[0] : "Admin";
 
-  // Load inquiry counts and recent inquiries
-  const [totalInquiries, newInquiries, qualifiedInquiries, recentInquiries, totalProjects] = await Promise.all([
+  // Load inquiry counts, users, showcase and recent inquiries
+  const [totalInquiries, newInquiries, qualifiedInquiries, recentInquiries, totalProjects, totalUsers, totalGallery] = await Promise.all([
     prisma.inquiry.count(),
     prisma.inquiry.count({ where: { status: "NEW" } }),
     prisma.inquiry.count({ where: { status: "QUALIFIED" } }),
@@ -81,6 +85,8 @@ export default async function Admin() {
       take: 6,
     }),
     prisma.project.count(),
+    prisma.user.count(),
+    prisma.galleryItem.count(),
   ]);
 
   return (
@@ -136,7 +142,7 @@ export default async function Admin() {
                 fontSize: 13,
               }}
             >
-              {session.user.email}
+              {adminFirstName} ({session.user.email})
             </strong>
             . {session.user.twoFactorEnabled ? "MFA is active and all" : "All"} CRM and operational modules are live.
           </p>
@@ -148,7 +154,21 @@ export default async function Admin() {
             className="button"
             style={{ padding: "11px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 7 }}
           >
-            <Users size={15} /> View All Inquiries
+            <MessageSquare size={15} /> Inquiries (CRM)
+          </Link>
+          <Link
+            href="/admin/users"
+            className="button button-outline"
+            style={{ padding: "11px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 7 }}
+          >
+            <Users size={15} /> Users & Accounts
+          </Link>
+          <Link
+            href="/admin/showcase"
+            className="button button-outline"
+            style={{ padding: "11px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 7 }}
+          >
+            <ImageIcon size={15} /> GitHub & Gallery
           </Link>
           <Link
             href="/admin/security"
@@ -360,7 +380,129 @@ export default async function Admin() {
           </div>
         </Link>
 
-        {/* 4. Active Projects */}
+        {/* 4. Users & Accounts */}
+        <Link
+          href="/admin/users"
+          className="card card-hover-glow"
+          style={{
+            padding: "22px 24px",
+            textDecoration: "none",
+            color: "inherit",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            borderTop: "3px solid #ec4899",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="eyebrow" style={{ color: "var(--muted)", fontWeight: 700 }}>Users & Accounts</span>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "rgba(236, 72, 153, 0.12)",
+                  border: "1px solid rgba(236, 72, 153, 0.25)",
+                }}
+              >
+                <Users size={18} style={{ color: "#ec4899" }} />
+              </div>
+            </div>
+            <div
+              style={{
+                fontSize: 40,
+                fontWeight: 800,
+                letterSpacing: "-.06em",
+                margin: "14px 0 4px",
+                color: "var(--ink)",
+                lineHeight: 1,
+              }}
+            >
+              {totalUsers}
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#db2777",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              marginTop: 14,
+            }}
+          >
+            Provisioning & Roles <ChevronRight size={13} />
+          </div>
+        </Link>
+
+        {/* 5. Studio Showcase */}
+        <Link
+          href="/admin/showcase"
+          className="card card-hover-glow"
+          style={{
+            padding: "22px 24px",
+            textDecoration: "none",
+            color: "inherit",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            borderTop: "3px solid #8b5cf6",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="eyebrow" style={{ color: "var(--muted)", fontWeight: 700 }}>Showcase & Gallery</span>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  display: "grid",
+                  placeItems: "center",
+                  background: "rgba(139, 92, 246, 0.12)",
+                  border: "1px solid rgba(139, 92, 246, 0.25)",
+                }}
+              >
+                <ImageIcon size={18} style={{ color: "#8b5cf6" }} />
+              </div>
+            </div>
+            <div
+              style={{
+                fontSize: 40,
+                fontWeight: 800,
+                letterSpacing: "-.06em",
+                margin: "14px 0 4px",
+                color: "var(--ink)",
+                lineHeight: 1,
+              }}
+            >
+              {totalGallery}
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#7c3aed",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              marginTop: 14,
+            }}
+          >
+            GitHub & Mockup gallery <ChevronRight size={13} />
+          </div>
+        </Link>
+
+        {/* 6. Active Projects */}
         <Link
           href="/portal/projects"
           className="card card-hover-glow"

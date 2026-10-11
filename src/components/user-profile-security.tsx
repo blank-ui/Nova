@@ -16,6 +16,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { PasswordInput } from "@/components/password-input";
+import { evaluatePasswordStrength } from "@/lib/password-policy";
 
 interface UserProfileSecurityProps {
   initialUser: {
@@ -215,8 +217,12 @@ export function UserProfileSecurity({
   // 3. Password Change
   async function handlePasswordChange(e: FormEvent) {
     e.preventDefault();
-    if (newPassword.length < 12) {
-      setPasswordMessage({ type: "error", text: "New password must be at least 12 characters long." });
+    const strength = evaluatePasswordStrength(newPassword);
+    if (!strength.isValid) {
+      setPasswordMessage({
+        type: "error",
+        text: "New password must be 6 to 12 characters and include uppercase, lowercase, and a special symbol.",
+      });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -538,7 +544,7 @@ export function UserProfileSecurity({
       {/* TAB 1: Profile Settings                                             */}
       {/* =================================================================== */}
       {activeTab === "profile" && (
-        <section className="card animate-fade-in-up" style={{ padding: 32 }}>
+        <section className="card security-card animate-fade-in-up" style={{ padding: 32 }}>
           <div className="eyebrow">Personal Information</div>
           <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "6px 0 10px" }}>Display Profile</h2>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: "0 0 24px" }}>
@@ -597,11 +603,21 @@ export function UserProfileSecurity({
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>
-                      {initialUser.role === "ADMIN" ? "System Administrator" : "Client Account"}
+                      {initialUser.role === "ADMIN"
+                        ? "System Administrator"
+                        : initialUser.role === "DEVELOPER"
+                        ? "Software & System Engineer"
+                        : initialUser.role === "FINANCE"
+                        ? "Financial & Billing Specialist"
+                        : "Client Account"}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 3, lineHeight: 1.5 }}>
                       {initialUser.role === "ADMIN"
                         ? "Full administrative control across CRM inquiries, client workspaces, and system settings."
+                        : initialUser.role === "DEVELOPER"
+                        ? "Direct access to engineering sprints, technical tasks, codebase milestones, and project infrastructure."
+                        : initialUser.role === "FINANCE"
+                        ? "Full visibility into project billing, client estimates, scopes, and budget analytics."
                         : "Dedicated client workspace access for milestones, tasks, and deliverables."}
                     </div>
                   </div>
@@ -611,8 +627,22 @@ export function UserProfileSecurity({
                   style={{
                     padding: "5px 12px",
                     borderRadius: 99,
-                    background: initialUser.role === "ADMIN" ? "rgba(108,76,255,0.18)" : "rgba(16,185,129,0.18)",
-                    color: initialUser.role === "ADMIN" ? "var(--blue)" : "#047857",
+                    background:
+                      initialUser.role === "ADMIN"
+                        ? "rgba(108,76,255,0.18)"
+                        : initialUser.role === "DEVELOPER"
+                        ? "rgba(16,185,129,0.18)"
+                        : initialUser.role === "FINANCE"
+                        ? "rgba(245,158,11,0.18)"
+                        : "rgba(59,130,246,0.18)",
+                    color:
+                      initialUser.role === "ADMIN"
+                        ? "var(--blue)"
+                        : initialUser.role === "DEVELOPER"
+                        ? "#047857"
+                        : initialUser.role === "FINANCE"
+                        ? "#d97706"
+                        : "#2563eb",
                     fontWeight: 700,
                   }}
                 >
@@ -849,7 +879,7 @@ export function UserProfileSecurity({
       {/* TAB 2: Account & Verified Email Change                              */}
       {/* =================================================================== */}
       {activeTab === "account" && (
-        <section className="card animate-fade-in-up" style={{ padding: 32 }}>
+        <section className="card security-card animate-fade-in-up" style={{ padding: 32 }}>
           <div className="eyebrow">Account Security</div>
           <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "6px 0 10px" }}>Email Address Management</h2>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: "0 0 24px" }}>
@@ -923,59 +953,39 @@ export function UserProfileSecurity({
           <div className="eyebrow">Credential Protection</div>
           <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "6px 0 10px" }}>Change Account Password</h2>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: "0 0 24px" }}>
-            Choose a strong password containing at least 12 characters. You will need your current password to confirm this change.
+            Choose a strong password (6 to 12 characters with uppercase, lowercase, and a symbol). You will need your current password to confirm this change.
           </p>
 
           <form onSubmit={handlePasswordChange} style={{ display: "grid", gap: 16, maxWidth: 460 }}>
-            <div>
-              <label htmlFor="current-pw" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
-                Current Password
-              </label>
-              <input
-                id="current-pw"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="field"
-              />
-            </div>
+            <PasswordInput
+              id="current-pw"
+              value={currentPassword}
+              onChange={setCurrentPassword}
+              label="Current Password"
+              autoComplete="current-password"
+              showStrengthMeter={false}
+              placeholder="Your current password"
+            />
 
-            <div>
-              <label htmlFor="new-pw" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
-                New Password
-              </label>
-              <input
-                id="new-pw"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={12}
-                maxLength={128}
-                autoComplete="new-password"
-                className="field"
-              />
-              <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>Minimum 12 characters.</p>
-            </div>
+            <PasswordInput
+              id="new-pw"
+              value={newPassword}
+              onChange={setNewPassword}
+              label="New Password"
+              autoComplete="new-password"
+              showStrengthMeter={true}
+              placeholder="6-12 chars with Aa#"
+            />
 
-            <div>
-              <label htmlFor="confirm-pw" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
-                Confirm New Password
-              </label>
-              <input
-                id="confirm-pw"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={12}
-                maxLength={128}
-                autoComplete="new-password"
-                className="field"
-              />
-            </div>
+            <PasswordInput
+              id="confirm-pw"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              label="Confirm New Password"
+              autoComplete="new-password"
+              showStrengthMeter={false}
+              placeholder="Re-type new password"
+            />
 
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
               <input
@@ -1017,7 +1027,7 @@ export function UserProfileSecurity({
       {/* TAB 4: Multi-Factor Authentication (MFA)                            */}
       {/* =================================================================== */}
       {activeTab === "mfa" && (
-        <section className="card animate-fade-in-up" style={{ padding: 32 }}>
+        <section className="card security-card animate-fade-in-up" style={{ padding: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             {mfaEnabled ? <ShieldCheck size={22} style={{ color: "#10b981" }} /> : <ShieldAlert size={22} style={{ color: "#f59e0b" }} />}
             <span className="eyebrow">Two-Factor Authentication</span>
@@ -1223,7 +1233,7 @@ export function UserProfileSecurity({
       {/* TAB 5: Sessions & Devices                                           */}
       {/* =================================================================== */}
       {activeTab === "sessions" && (
-        <section className="card animate-fade-in-up" style={{ padding: 32 }}>
+        <section className="card security-card animate-fade-in-up" style={{ padding: 32 }}>
           <div className="eyebrow">Session Controls</div>
           <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "6px 0 10px" }}>Active Sessions & Sign-ins</h2>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: "0 0 24px" }}>
@@ -1315,6 +1325,14 @@ export function UserProfileSecurity({
           </div>
         </section>
       )}
+
+      <style>{`
+        @media (max-width: 640px) {
+          .security-card {
+            padding: 20px 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -119,18 +119,14 @@ export default function ContactPage() {
 
         {/* Main Content Layout */}
         <section
-          className="shell"
+          className="shell contact-grid"
           style={{
             padding: "54px 0 90px",
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1.35fr) minmax(280px, 0.65fr)",
-            gap: 48,
-            alignItems: "start",
           }}
         >
           {/* Form Card */}
           <div
-            className="card"
+            className="card contact-form-card"
             style={{
               padding: "clamp(24px, 4.5vw, 44px)",
               background: "var(--card-bg)",
@@ -767,15 +763,6 @@ export default function ContactPage() {
             </div>
           </aside>
         </section>
-
-        {/* Responsive Layout CSS */}
-        <style>{`
-          @media (max-width: 860px) {
-            .shell > section {
-              grid-template-columns: 1fr !important;
-            }
-          }
-        `}</style>
       </main>
       <Footer />
     </>

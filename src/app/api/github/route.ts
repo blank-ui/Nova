@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export interface GitHubRepo {
   name: string;
@@ -21,7 +22,31 @@ export interface GitHubCommit {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const targetUser = url.searchParams.get("user") || process.env.GITHUB_USERNAME || "anshu1008";
+
+  // Load configured settings from database
+  let configuredUser = "blank-ui";
+  let filterVisibleRepos: string[] | null = null;
+
+  try {
+    const settings = await prisma.studioSettings.findUnique({
+      where: { id: "default" },
+    });
+    if (settings) {
+      if (settings.githubUser) configuredUser = settings.githubUser;
+      if (settings.visibleRepos) {
+        try {
+          const parsed = JSON.parse(settings.visibleRepos);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            filterVisibleRepos = parsed;
+          }
+        } catch {}
+      }
+    }
+  } catch (dbErr) {
+    console.warn("[GitHub API] DB settings read error, using defaults:", dbErr);
+  }
+
+  const targetUser = url.searchParams.get("user") || configuredUser;
   const repoName = url.searchParams.get("repo");
 
   const headers: Record<string, string> = {
@@ -34,7 +59,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // If specific repo is requested, return repository details and latest commits
+    // If specific repo is requested
     if (repoName) {
       const [repoRes, commitsRes] = await Promise.all([
         fetch(`https://api.github.com/repos/${encodeURIComponent(targetUser)}/${encodeURIComponent(repoName)}`, {
@@ -83,9 +108,9 @@ export async function GET(request: Request) {
       });
     }
 
-    // Otherwise, fetch public repositories for targetUser
+    // Fetch public repositories for targetUser
     const res = await fetch(
-      `https://api.github.com/users/${encodeURIComponent(targetUser)}/repos?sort=updated&per_page=6`,
+      `https://api.github.com/users/${encodeURIComponent(targetUser)}/repos?sort=updated&per_page=30`,
       {
         headers,
         next: { revalidate: 300 },
@@ -94,46 +119,42 @@ export async function GET(request: Request) {
 
     if (!res.ok) {
       // Fallback curated repositories to gracefully render when offline or rate-limited
+      let fallback = [
+        {
+          name: "Nova",
+          description: "Production web development studio platform with MFA, client portals, and CRM.",
+          html_url: `https://github.com/${targetUser}/Nova`,
+          stargazers_count: 12,
+          forks_count: 2,
+          language: "TypeScript",
+          updated_at: new Date().toISOString(),
+          topics: ["nextjs", "typescript", "prisma", "mysql", "better-auth"],
+        },
+        {
+          name: "react-modern-system",
+          description: "High-performance modular UI system with dark mode tokens and micro-interactions.",
+          html_url: `https://github.com/${targetUser}/react-modern-system`,
+          stargazers_count: 8,
+          forks_count: 1,
+          language: "TypeScript",
+          updated_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+          topics: ["react", "design-system", "css-variables"],
+        },
+      ];
+
+      if (filterVisibleRepos && filterVisibleRepos.length > 0) {
+        fallback = fallback.filter((r) => filterVisibleRepos!.includes(r.name));
+      }
+
       return NextResponse.json({
         user: targetUser,
         isFallback: true,
-        repos: [
-          {
-            name: "Nova",
-            description: "Production web development studio platform with MFA, client portals, and CRM.",
-            html_url: `https://github.com/${targetUser}/Nova`,
-            stargazers_count: 12,
-            forks_count: 2,
-            language: "TypeScript",
-            updated_at: new Date().toISOString(),
-            topics: ["nextjs", "typescript", "prisma", "mysql", "better-auth"],
-          },
-          {
-            name: "react-modern-system",
-            description: "High-performance modular UI system with dark mode tokens and micro-interactions.",
-            html_url: `https://github.com/${targetUser}/react-modern-system`,
-            stargazers_count: 8,
-            forks_count: 1,
-            language: "TypeScript",
-            updated_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-            topics: ["react", "design-system", "css-variables"],
-          },
-          {
-            name: "cloud-edge-gateway",
-            description: "Zero-trust edge authentication middleware and rate-limiting gateway.",
-            html_url: `https://github.com/${targetUser}/cloud-edge-gateway`,
-            stargazers_count: 15,
-            forks_count: 3,
-            language: "Go",
-            updated_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-            topics: ["security", "edge-computing", "rate-limiting"],
-          },
-        ],
+        repos: fallback,
       });
     }
 
     const reposData = await res.json();
-    const repos: GitHubRepo[] = Array.isArray(reposData)
+    let repos: GitHubRepo[] = Array.isArray(reposData)
       ? reposData.map((r: { name: string; description: string; html_url: string; stargazers_count: number; forks_count: number; language: string; updated_at: string; topics: string[] }) => ({
           name: r.name,
           description: r.description || "Active development repository",
@@ -145,6 +166,11 @@ export async function GET(request: Request) {
           topics: r.topics || [],
         }))
       : [];
+
+    // Filter by configured visible repos if set
+    if (filterVisibleRepos && filterVisibleRepos.length > 0) {
+      repos = repos.filter((r) => filterVisibleRepos!.includes(r.name));
+    }
 
     return NextResponse.json({
       user: targetUser,

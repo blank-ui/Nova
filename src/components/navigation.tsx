@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/portfolio", label: "Selected work" },
   { href: "/about", label: "Studio" },
   { href: "/process", label: "Process" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 export function Navigation() {
@@ -70,8 +71,8 @@ export function Navigation() {
           })}
         </nav>
 
-        {/* Desktop actions */}
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        {/* Navigation actions */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <ThemeToggle />
           <Link
             className={`nav-link desktop-nav ${pathname === "/login" ? "nav-link-active" : ""}`}
@@ -80,11 +81,12 @@ export function Navigation() {
             Sign in
           </Link>
           <Link
-            className="button"
+            className="button talk-button"
             href="/contact"
-            style={{ padding: "11px 18px", fontSize: 13 }}
+            style={{ padding: "10px 16px", fontSize: 13 }}
           >
-            Let&apos;s talk <ArrowUpRight size={15} />
+            <span>Let&apos;s talk</span>
+            <ArrowUpRight size={14} />
           </Link>
 
           {/* Mobile hamburger button */}
@@ -123,10 +125,10 @@ export function Navigation() {
             background: "var(--card-bg)",
             borderBottom: "1px solid var(--line)",
             boxShadow: "var(--glass-shadow)",
-            padding: "20px 28px 28px",
+            padding: "20px 24px 28px",
             display: "flex",
             flexDirection: "column",
-            gap: 16,
+            gap: 14,
             zIndex: 39,
           }}
         >
@@ -141,7 +143,7 @@ export function Navigation() {
                   fontSize: 16,
                   fontWeight: isActive ? 700 : 500,
                   color: isActive ? "var(--blue)" : "var(--ink)",
-                  padding: "8px 0",
+                  padding: "10px 0",
                   borderBottom: "1px solid var(--line)",
                   display: "flex",
                   justifyContent: "space-between",
@@ -160,19 +162,32 @@ export function Navigation() {
               fontSize: 16,
               fontWeight: pathname === "/login" ? 700 : 500,
               color: pathname === "/login" ? "var(--blue)" : "var(--ink)",
-              padding: "8px 0",
+              padding: "10px 0",
               borderBottom: "1px solid var(--line)",
             }}
           >
             Sign in
           </Link>
+          <div style={{ paddingTop: 8 }}>
+            <Link
+              href="/contact"
+              onClick={() => setMobileOpen(false)}
+              className="button"
+              style={{ width: "100%", padding: "12px 18px", fontSize: 14, borderRadius: 12 }}
+            >
+              Start a project <ArrowUpRight size={15} />
+            </Link>
+          </div>
         </div>
       )}
 
       <style>{`
-        @media(max-width:768px){
+        @media(max-width:820px){
           .desktop-nav { display: none !important; }
           .mobile-toggle { display: inline-flex !important; }
+        }
+        @media(max-width:480px){
+          .talk-button { display: none !important; }
         }
       `}</style>
     </header>

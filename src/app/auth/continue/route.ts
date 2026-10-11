@@ -11,5 +11,13 @@ export async function GET(request: Request) {
     const adminTarget = requested.startsWith("/admin") && !requested.includes("setup=required") ? requested : "/admin";
     return NextResponse.redirect(new URL(adminTarget, url));
   }
+  if (session.user.role === "DEVELOPER") {
+    const devTarget = requested.startsWith("/developer") ? requested : "/developer";
+    return NextResponse.redirect(new URL(devTarget, url));
+  }
+  if (session.user.role === "FINANCE") {
+    const finTarget = requested.startsWith("/finance") ? requested : "/finance";
+    return NextResponse.redirect(new URL(finTarget, url));
+  }
   return NextResponse.redirect(new URL(requested.startsWith("/admin") ? "/portal" : requested, url));
 }

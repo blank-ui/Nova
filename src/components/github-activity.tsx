@@ -4,10 +4,10 @@ import React, { useState, useEffect } from "react";
 import { GitBranch, Star, GitFork, ArrowUpRight, Loader2, GitCommit, RefreshCw } from "lucide-react";
 import type { GitHubRepo } from "@/app/api/github/route";
 
-export function GitHubActivity({ defaultUser = "anshu1008" }: { defaultUser?: string }) {
+export function GitHubActivity({ defaultUser }: { defaultUser?: string }) {
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
-  const [user, setUser] = useState(defaultUser);
-  const [userInput, setUserInput] = useState(defaultUser);
+  const [user, setUser] = useState(defaultUser || "");
+  const [userInput, setUserInput] = useState(defaultUser || "");
   const [loading, setLoading] = useState(true);
   const [isFallback, setIsFallback] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +18,8 @@ export function GitHubActivity({ defaultUser = "anshu1008" }: { defaultUser?: st
     async function loadData() {
       try {
         setError(null);
-        const res = await fetch(`/api/github?user=${encodeURIComponent(defaultUser)}`);
+        const url = defaultUser ? `/api/github?user=${encodeURIComponent(defaultUser)}` : `/api/github`;
+        const res = await fetch(url);
         const data = await res.json();
         if (!active) return;
         if (!res.ok && !data.repos) {
@@ -26,7 +27,8 @@ export function GitHubActivity({ defaultUser = "anshu1008" }: { defaultUser?: st
         }
         setRepos(data.repos || []);
         setIsFallback(Boolean(data.isFallback));
-        setUser(data.user || defaultUser);
+        setUser(data.user || defaultUser || "blank-ui");
+        setUserInput(data.user || defaultUser || "blank-ui");
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : "GitHub connection error");
@@ -82,21 +84,21 @@ export function GitHubActivity({ defaultUser = "anshu1008" }: { defaultUser?: st
         </div>
 
         {/* Change account / refresh form */}
-        <form onSubmit={handleConnect} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <form onSubmit={handleConnect} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", width: "100%", maxWidth: 280 }}>
           <input
             type="text"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             placeholder="GitHub username"
             className="field"
-            style={{ padding: "8px 12px", fontSize: 13, width: 150 }}
+            style={{ padding: "8px 12px", fontSize: 13, flex: 1, minWidth: 120 }}
             aria-label="GitHub username to inspect"
           />
           <button
             type="submit"
             disabled={loading}
             className="button button-outline"
-            style={{ padding: "8px 14px", fontSize: 12, borderRadius: 10, display: "inline-flex", gap: 6 }}
+            style={{ padding: "8px 14px", fontSize: 12, borderRadius: 10, display: "inline-flex", gap: 6, flexShrink: 0 }}
           >
             {loading ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Sync
           </button>

@@ -53,55 +53,101 @@ export function StatusUpdateForm({ inquiryId, currentStatus }: StatusUpdateFormP
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <label htmlFor="status-select" style={{ fontSize: 13, fontWeight: 600 }}>
-          Change Status:
-        </label>
-        <select
-          id="status-select"
-          className="field"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as InquiryStatus)}
-          disabled={loading}
-          style={{ width: "auto", minWidth: 180, padding: "8px 12px" }}
-        >
-          {ALL_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="button"
-          disabled={loading || status === currentStatus}
-          style={{
-            padding: "9px 18px",
-            opacity: loading || status === currentStatus ? 0.6 : 1,
-            cursor: loading || status === currentStatus ? "not-allowed" : "pointer",
-          }}
-        >
-          {loading ? "Updating..." : "Save Status"}
-        </button>
-      </div>
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete this inquiry? This action cannot be undone.")) {
+      return;
+    }
 
-      {message && (
-        <div
-          role="status"
-          style={{
-            padding: "10px 14px",
-            borderRadius: 8,
-            fontSize: 13,
-            backgroundColor: message.type === "success" ? "#e6f9ed" : "#fde8e8",
-            color: message.type === "success" ? "#1e4620" : "#9b1c1c",
-            border: `1px solid ${message.type === "success" ? "#bbf7d0" : "#f8b4b4"}`,
-          }}
-        >
-          {message.text}
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/admin/inquiries?id=${encodeURIComponent(inquiryId)}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete inquiry");
+      }
+
+      router.push("/admin/inquiry");
+      router.refresh();
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
+      setMessage({ type: "error", text: errMessage });
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <label htmlFor="status-select" style={{ fontSize: 13, fontWeight: 600 }}>
+            Change Status:
+          </label>
+          <select
+            id="status-select"
+            className="field"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as InquiryStatus)}
+            disabled={loading}
+            style={{ width: "auto", minWidth: 180, padding: "8px 12px" }}
+          >
+            {ALL_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="button"
+            disabled={loading || status === currentStatus}
+            style={{
+              padding: "9px 18px",
+              opacity: loading || status === currentStatus ? 0.6 : 1,
+              cursor: loading || status === currentStatus ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? "Updating..." : "Save Status"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={loading}
+            className="button button-outline"
+            style={{
+              padding: "9px 16px",
+              color: "#dc2626",
+              borderColor: "rgba(220, 38, 38, 0.3)",
+              background: "rgba(220, 38, 38, 0.05)",
+              marginLeft: "auto",
+            }}
+            title="Permanently remove this inquiry"
+          >
+            Delete Inquiry
+          </button>
         </div>
-      )}
-    </form>
+
+        {message && (
+          <div
+            role="status"
+            style={{
+              padding: "10px 14px",
+              borderRadius: 8,
+              fontSize: 13,
+              backgroundColor: message.type === "success" ? "#e6f9ed" : "#fde8e8",
+              color: message.type === "success" ? "#1e4620" : "#9b1c1c",
+              border: `1px solid ${message.type === "success" ? "#bbf7d0" : "#f8b4b4"}`,
+            }}
+          >
+            {message.text}
+          </div>
+        )}
+      </form>
+    </div>
   );
 }
