@@ -1,0 +1,411 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --ink: #101322;
+  --muted: #727988;
+  --line: #e6e5de;
+  --paper: #F6F4EE;
+  --card-bg: #ffffff;
+  --nav-bg: rgba(246, 244, 238, 0.90);
+  --blue: #6C4CFF;
+  --violet: #6C4CFF;
+  --amber: #FFB547;
+  --cyan: #67E8F9;
+  --lav: #eeebff;
+  --banner-bg: #eceef7;
+  --glass-bg: rgba(255, 255, 255, 0.76);
+  --glass-border: rgba(255, 255, 255, 0.88);
+  --glass-shadow: 0 22px 80px rgba(30, 36, 58, 0.11);
+  --grid-line: rgba(40, 48, 65, 0.038);
+  --orb-gradient: radial-gradient(circle, #dcdfff 0%, rgba(225, 227, 255, 0.6) 32%, transparent 70%);
+}
+
+[data-theme="dark"],
+.dark {
+  --ink: #F6F4EE;
+  --muted: #9ba3b5;
+  --line: #272d42;
+  --paper: #0b0d17;
+  --card-bg: #141829;
+  --nav-bg: rgba(11, 13, 23, 0.92);
+  --blue: #8b72ff;
+  --violet: #8b72ff;
+  --amber: #FFB547;
+  --cyan: #67E8F9;
+  --lav: #1e1b38;
+  --banner-bg: #141829;
+  --glass-bg: rgba(20, 24, 41, 0.82);
+  --glass-border: rgba(108, 76, 255, 0.25);
+  --glass-shadow: 0 22px 80px rgba(0, 0, 0, 0.55);
+  --grid-line: rgba(255, 255, 255, 0.032);
+  --orb-gradient: radial-gradient(circle, rgba(108, 76, 255, 0.35) 0%, rgba(108, 76, 255, 0.12) 36%, transparent 70%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Manrope, Arial, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, textarea, select {
+  font: inherit;
+}
+
+::selection {
+  background: #cfd3ff;
+  color: #101322;
+}
+
+.grid-paper {
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+.mono {
+  font-family: 'DM Mono', monospace;
+}
+
+.shell {
+  width: min(1220px, calc(100% - 56px));
+  margin: auto;
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--blue);
+}
+
+.eyebrow {
+  font: 11px 'DM Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 99px;
+  padding: 14px 19px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s, color 0.2s;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  background: var(--blue);
+  color: white;
+}
+
+.button-outline {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.button-outline:hover {
+  color: white;
+  border-color: var(--blue);
+  background: var(--blue);
+}
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  border-radius: 22px;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 14px;
+  background: var(--card-bg);
+  color: var(--ink);
+  outline: 0;
+  transition: border 0.2s, box-shadow 0.2s, background-color 0.25s;
+}
+
+.field:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(108, 76, 255, 0.15);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-link-active {
+  color: var(--blue) !important;
+  font-weight: 700 !important;
+  position: relative;
+}
+
+.nav-link-active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--blue);
+  border-radius: 99px;
+}
+
+.card-hover-glow {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.card-hover-glow:hover {
+  transform: translateY(-3px);
+  border-color: var(--blue) !important;
+  box-shadow: 0 14px 36px -10px rgba(108, 76, 255, 0.16);
+}
+
+@keyframes orbFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(25px, -18px) scale(1.06);
+  }
+  66% {
+    transform: translate(-18px, 15px) scale(0.96);
+  }
+}
+
+.orb-float {
+  animation: orbFloat 22s ease-in-out infinite;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes radarPulse {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 7px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.radar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+  animation: radarPulse 2.2s infinite;
+}
+
+@media (max-width: 700px) {
+  .shell {
+    width: min(100% - 36px, 1220px);
+  }
+}
+
+/* ========================================================================= */
+/* Nova Animated Mascot Keyframes & Micro-interactions                       */
+/* ========================================================================= */
+@keyframes mascotBreathe {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.015);
+  }
+}
+
+@keyframes mascotTailWag {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes mascotChipFloatLeft {
+  0%, 100% {
+    transform: translate(18px, 70px) translateY(0px) rotate(-2deg);
+  }
+  50% {
+    transform: translate(18px, 70px) translateY(-8px) rotate(3deg);
+  }
+}
+
+@keyframes mascotChipFloatRight {
+  0%, 100% {
+    transform: translate(196px, 60px) translateY(0px) rotate(2deg);
+  }
+  50% {
+    transform: translate(196px, 60px) translateY(-7px) rotate(-3deg);
+  }
+}
+
+@keyframes mascotBlink {
+  0%, 94%, 98%, 100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes mascotPop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.85);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-3px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0px) scale(1);
+  }
+}
+
+@keyframes mascotOrbitSpin {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 40;
+  }
+}
+
+.mascot-idle {
+  animation: mascotBreathe 4s ease-in-out infinite;
+}
+
+.mascot-idle .mascot-tail {
+  transform-origin: 170px 175px;
+  animation: mascotTailWag 3.2s ease-in-out infinite;
+}
+
+.mascot-idle .mascot-chip-left {
+  animation: mascotChipFloatLeft 3.6s ease-in-out infinite;
+}
+
+.mascot-idle .mascot-chip-right {
+  animation: mascotChipFloatRight 4.2s ease-in-out infinite;
+}
+
+.mascot-idle .mascot-eyes {
+  transform-origin: 130px 113px;
+  animation: mascotBlink 4.8s infinite;
+}
+
+.mascot-idle .mascot-orbit-ring {
+  animation: mascotOrbitSpin 20s linear infinite;
+}
+
+.mascot-hover {
+  transform: translateY(-8px) scale(1.04);
+}
+
+.mascot-hover .mascot-tail {
+  transform-origin: 170px 175px;
+  animation: mascotTailWag 1.4s ease-in-out infinite;
+}
+
+.mascot-react-click {
+  transform: translateY(-16px) scale(1.08) !important;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* Accessible prefers-reduced-motion safety */
+@media (prefers-reduced-motion: reduce) {
+  .mascot-idle,
+  .mascot-tail,
+  .mascot-chip-left,
+  .mascot-chip-right,
+  .mascot-eyes,
+  .mascot-orbit-ring,
+  .orb-float,
+  .animate-fade-in-up,
+  .radar-dot {
+    animation: none !important;
+  }
+  .card-hover-glow {
+    transform: none !important;
+  }
+  .nova-mascot-svg {
+    transition: none !important;
+  }
+}
