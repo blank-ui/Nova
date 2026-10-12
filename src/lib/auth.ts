@@ -5,10 +5,15 @@ import { admin, twoFactor } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
 import { sendAuthEmail } from "@/lib/auth-email";
 
-const appUrl = process.env.APP_URL ?? "http://localhost:3000";
-const secret = process.env.AUTH_SECRET ?? (process.env.NODE_ENV === "production" ? undefined : randomBytes(32).toString("base64url"));
+const defaultAppUrl = "https://nova.allskyfares.com";
+const appUrl = process.env.APP_URL ?? (process.env.NODE_ENV === "production" ? defaultAppUrl : "http://localhost:3000");
+const defaultSecret = "rljd-lQGEUNMH93ERQ9mJz9uWd0y9HWUsBgsfeRUuMs";
+const secret = process.env.AUTH_SECRET ?? defaultSecret;
+
 const googleConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-const discordConfigured = Boolean(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET);
+const discordClientId = process.env.DISCORD_CLIENT_ID || "1558773921686360155";
+const discordClientSecret = process.env.DISCORD_CLIENT_SECRET || "ciSouW4gzTfBHTZSxRWKJPU4pKlfnrz1";
+const discordConfigured = Boolean(discordClientId && discordClientSecret);
 
 export const auth = betterAuth({
   appName: "Nova",
@@ -51,8 +56,8 @@ export const auth = betterAuth({
     } : {}),
     ...(discordConfigured ? {
       discord: {
-        clientId: process.env.DISCORD_CLIENT_ID!,
-        clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+        clientId: discordClientId,
+        clientSecret: discordClientSecret,
       },
     } : {}),
   },

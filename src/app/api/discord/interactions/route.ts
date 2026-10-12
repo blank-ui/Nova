@@ -7,11 +7,15 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const DEFAULT_DISCORD_PUBLIC_KEY =
+  "13a75f2198e156aa6e73de8ce3f43f013dafe86a64a5a1acee36a1a74c6f789e";
+
 export async function GET() {
+  const publicKey = process.env.DISCORD_PUBLIC_KEY || DEFAULT_DISCORD_PUBLIC_KEY;
   return NextResponse.json({
     status: "ok",
     service: "Nova Discord Interactions Endpoint",
-    configured: Boolean(process.env.DISCORD_PUBLIC_KEY),
+    configured: Boolean(publicKey),
     note: "Discord sends HTTP POST requests here for slash commands and interaction webhooks.",
   });
 }
@@ -21,10 +25,10 @@ export async function POST(req: Request) {
   const timestamp = req.headers.get("x-signature-timestamp");
 
   const rawBody = await req.text();
-  const publicKey = process.env.DISCORD_PUBLIC_KEY;
+  const publicKey = process.env.DISCORD_PUBLIC_KEY || DEFAULT_DISCORD_PUBLIC_KEY;
 
   if (!publicKey) {
-    console.error("DISCORD_PUBLIC_KEY is not configured in environment variables.");
+    console.error("DISCORD_PUBLIC_KEY is not configured.");
     return new NextResponse("Server configuration error: DISCORD_PUBLIC_KEY missing", {
       status: 500,
     });
