@@ -1,6 +1,5 @@
 import { requireDeveloper } from "@/lib/auth-guards";
-import Link from "next/link";
-import { GitBranch, ExternalLink, Code2, Terminal, ShieldAlert } from "lucide-react";
+import { GitBranch, ExternalLink } from "lucide-react";
 
 export default async function DeveloperReposPage() {
   await requireDeveloper();

@@ -1,6 +1,6 @@
 import React from "react";
 import { PublicPage } from "@/components/public-page";
-import { ShieldAlert, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 export interface LegalSection {
   title: string;

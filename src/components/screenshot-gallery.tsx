@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon, ExternalLink, Maximize2, X, Sparkles, FolderGit2 } from "lucide-react";
+import { ExternalLink, Maximize2, X, Sparkles, FolderGit2 } from "lucide-react";
 
 export interface GalleryItemData {
   id: string;
@@ -74,6 +74,8 @@ export function ScreenshotGallery({ initialItems }: { initialItems: GalleryItemD
         {filtered.map((item) => (
           <div
             key={item.id}
+            role="button"
+            tabIndex={0}
             className="card card-hover-glow"
             style={{
               overflow: "hidden",
@@ -83,6 +85,12 @@ export function ScreenshotGallery({ initialItems }: { initialItems: GalleryItemD
               justifyContent: "space-between",
             }}
             onClick={() => setActiveModalItem(item)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setActiveModalItem(item);
+              }
+            }}
           >
             <div>
               <div
@@ -94,7 +102,6 @@ export function ScreenshotGallery({ initialItems }: { initialItems: GalleryItemD
                   overflow: "hidden",
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.imageUrl}
                   alt={item.title}
@@ -188,7 +195,11 @@ export function ScreenshotGallery({ initialItems }: { initialItems: GalleryItemD
         <div
           role="dialog"
           aria-modal="true"
+          tabIndex={-1}
           onClick={() => setActiveModalItem(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setActiveModalItem(null);
+          }}
           className="modal-backdrop"
           style={{
             position: "fixed",
@@ -202,7 +213,10 @@ export function ScreenshotGallery({ initialItems }: { initialItems: GalleryItemD
           }}
         >
           <div
+            role="document"
+            tabIndex={0}
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
             style={{
               maxWidth: 900,
               width: "100%",
@@ -214,7 +228,6 @@ export function ScreenshotGallery({ initialItems }: { initialItems: GalleryItemD
             }}
           >
             <div style={{ position: "relative", maxHeight: "68vh", overflow: "hidden", background: "#000" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={activeModalItem.imageUrl}
                 alt={activeModalItem.title}

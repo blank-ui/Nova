@@ -3,15 +3,12 @@
 import { useState } from "react";
 import {
   UserPlus,
-  Shield,
   KeyRound,
   Trash2,
   Ban,
   CheckCircle2,
   AlertCircle,
   Copy,
-  ExternalLink,
-  Mail,
   Loader2,
   Search,
   Filter,
@@ -508,11 +505,12 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
                 </div>
 
                 <div>
-                  <label className="auth-label" style={{ fontSize: 11, marginBottom: 4 }}>
+                  <label htmlFor="setup-link-input" className="auth-label" style={{ fontSize: 11, marginBottom: 4 }}>
                     One-time Password Setup Link:
                   </label>
                   <div style={{ display: "flex", gap: 8 }}>
                     <input
+                      id="setup-link-input"
                       type="text"
                       readOnly
                       value={createdResult.setupUrl}

@@ -2,7 +2,7 @@ import { PublicPage, FeatureGrid, CTA } from "@/components/public-page";
 import { GitHubActivity } from "@/components/github-activity";
 import { ScreenshotGallery } from "@/components/screenshot-gallery";
 import { prisma } from "@/lib/prisma";
-import { Sparkles, ShieldCheck, FolderGit2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export default async function Portfolio() {
   // Fetch configured studio settings and gallery items

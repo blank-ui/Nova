@@ -24,7 +24,6 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
   const hasLower = /[a-z]/.test(password);
   const hasUpper = /[A-Z]/.test(password);
   const hasSymbol = /[^A-Za-z0-9]/.test(password);
-  const lengthValid = password.length >= 6 && password.length <= 128; // 6 to 12 target range, up to 128 for security
 
   const requirements: PasswordRequirement[] = [
     {

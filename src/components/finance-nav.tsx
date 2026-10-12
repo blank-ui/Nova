@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DollarSign, Receipt, CreditCard, Shield, FolderKanban, TrendingUp } from "lucide-react";
+import { Receipt, Shield, FolderKanban, TrendingUp } from "lucide-react";
 import { NovaLogo, NovaMascotAvatar } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";

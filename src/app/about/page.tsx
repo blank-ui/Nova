@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { PublicPage, FeatureGrid, CTA, Checklist } from "@/components/public-page";
-import { ShieldCheck, HeartHandshake, Code2, Users, Sparkles, ArrowUpRight } from "lucide-react";
-import { NovaMark, NovaMascotAvatar } from "@/components/brand";
+import { ShieldCheck, HeartHandshake, Code2 } from "lucide-react";
+import { NovaMark } from "@/components/brand";
 
 export default function About() {
   return (

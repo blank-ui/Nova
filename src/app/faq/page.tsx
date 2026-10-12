@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PublicPage, CTA } from "@/components/public-page";
-import { HelpCircle, Mail, MessageSquare, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 interface FAQItem {
   category: string;

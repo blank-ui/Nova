@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowUpRight, Sparkles, Shield, Heart } from "lucide-react";
-import { NovaLogo, NovaMascotAvatar } from "@/components/brand";
+import { ArrowUpRight } from "lucide-react";
+import { NovaLogo } from "@/components/brand";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();

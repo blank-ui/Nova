@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   MoveUpRight,
@@ -10,7 +9,6 @@ import {
   Layers,
   Code2,
   ExternalLink,
-  ChevronRight,
   FolderGit2,
   Clock,
   CheckCircle2,
@@ -54,17 +52,10 @@ const techBadges = [
 
 export default async function Home() {
   // Load featured screenshots / showcase from DB
-  const [featuredGallery, settings] = await Promise.all([
-    prisma.galleryItem.findMany({
-      take: 3,
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.studioSettings.findUnique({
-      where: { id: "default" },
-    }),
-  ]);
-
-  const githubUser = settings?.githubUser || "blank-ui";
+  const featuredGallery = await prisma.galleryItem.findMany({
+    take: 3,
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <>
@@ -409,7 +400,6 @@ export default async function Home() {
                         overflow: "hidden",
                       }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={item.imageUrl}
                         alt={item.title}

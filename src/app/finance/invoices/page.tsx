@@ -1,6 +1,6 @@
 import { requireFinance } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { Receipt, DollarSign, Download, CheckCircle2, Clock } from "lucide-react";
+import { Receipt } from "lucide-react";
 
 export default async function InvoicesPage() {
   await requireFinance();

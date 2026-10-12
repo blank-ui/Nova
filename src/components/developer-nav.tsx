@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Code2, GitBranch, Terminal, Shield, FolderKanban } from "lucide-react";
+import { Code2, GitBranch, Shield, FolderKanban } from "lucide-react";
 import { NovaLogo, NovaMascotAvatar } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";

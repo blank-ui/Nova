@@ -3,14 +3,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import {
   DollarSign,
-  TrendingUp,
   Receipt,
-  CreditCard,
   Building,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
-  ShieldAlert,
 } from "lucide-react";
 
 export default async function FinanceWorkspace() {

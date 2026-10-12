@@ -10,13 +10,10 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
-  Eye,
   CheckCircle2,
   AlertCircle,
   FolderGit2,
   Sparkles,
-  Upload,
-  ChevronDown,
   ChevronUp,
 } from "lucide-react";
 
@@ -329,7 +326,7 @@ export function AdminShowcaseManager({
 
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 20 }}>
               <div style={{ flex: 1, minWidth: 240 }}>
-                <label className="auth-label" style={{ display: "block", marginBottom: 6 }}>
+                <label htmlFor="github-user-input" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
                   Configured GitHub Username or Organization
                 </label>
                 <div style={{ position: "relative" }}>
@@ -337,6 +334,7 @@ export function AdminShowcaseManager({
                     @
                   </span>
                   <input
+                    id="github-user-input"
                     type="text"
                     value={githubUser}
                     onChange={(e) => setGithubUser(e.target.value)}
@@ -450,7 +448,15 @@ export function AdminShowcaseManager({
                     return (
                       <div
                         key={repo.name}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => toggleRepoVisibility(repo.name)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggleRepoVisibility(repo.name);
+                          }
+                        }}
                         style={{
                           padding: "14px 16px",
                           borderRadius: 12,
@@ -786,7 +792,7 @@ export function AdminShowcaseManager({
 
                 {/* Live Image Preview Column */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <label className="auth-label">Live Screenshot Preview</label>
+                  <span className="auth-label">Live Screenshot Preview</span>
                   <div
                     style={{
                       height: 250,
@@ -800,7 +806,6 @@ export function AdminShowcaseManager({
                     }}
                   >
                     {newImageUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={newImageUrl}
                         alt="Preview"
@@ -941,7 +946,6 @@ export function AdminShowcaseManager({
                         overflow: "hidden",
                       }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={item.imageUrl}
                         alt={item.title}

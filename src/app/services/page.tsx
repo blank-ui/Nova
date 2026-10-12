@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PublicPage, CTA, Checklist } from "@/components/public-page";
+import { PublicPage, CTA } from "@/components/public-page";
 import {
   Globe,
   Layers,
@@ -8,7 +8,6 @@ import {
   Cpu,
   HeartPulse,
   ArrowUpRight,
-  Sparkles,
   CheckCircle2,
 } from "lucide-react";
 

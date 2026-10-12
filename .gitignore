@@ -6,6 +6,8 @@ coverage/
 dist/
 .env
 .env.*
+*.env
+hostinger.env
 !.env.example
 *.log
 *.tsbuildinfo

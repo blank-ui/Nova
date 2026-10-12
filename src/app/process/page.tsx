@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { PublicPage, CTA, Checklist } from "@/components/public-page";
-import { Search, PenTool, Code, Rocket, CheckCircle2, FolderKanban, ArrowUpRight } from "lucide-react";
+import { PublicPage, CTA } from "@/components/public-page";
+import { Search, PenTool, Code, Rocket, CheckCircle2, ArrowUpRight } from "lucide-react";
 
 const steps = [
   {

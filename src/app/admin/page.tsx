@@ -15,7 +15,6 @@ import {
   Activity,
   Image as ImageIcon,
   MessageSquare,
-  Sparkles,
 } from "lucide-react";
 import { NovaMascotAvatar } from "@/components/brand";
 

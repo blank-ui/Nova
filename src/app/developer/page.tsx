@@ -2,16 +2,11 @@ import { requireDeveloper } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import {
-  Code2,
   CheckCircle2,
-  Clock,
   FolderKanban,
   ExternalLink,
   GitBranch,
   Terminal,
-  Bug,
-  Sparkles,
-  Layers,
 } from "lucide-react";
 
 export default async function DeveloperWorkspace() {
