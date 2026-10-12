@@ -50,12 +50,19 @@ const techBadges = [
   { name: "Hostinger SMTP Mail", tag: "Delivery" },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   // Load featured screenshots / showcase from DB
-  const featuredGallery = await prisma.galleryItem.findMany({
-    take: 3,
-    orderBy: { createdAt: "desc" },
-  });
+  let featuredGallery: Awaited<ReturnType<typeof prisma.galleryItem.findMany>> = [];
+  try {
+    featuredGallery = await prisma.galleryItem.findMany({
+      take: 3,
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.warn("[Home Page] Could not load featured gallery:", err);
+  }
 
   return (
     <>

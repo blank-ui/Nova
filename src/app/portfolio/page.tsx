@@ -4,16 +4,24 @@ import { ScreenshotGallery } from "@/components/screenshot-gallery";
 import { prisma } from "@/lib/prisma";
 import { ShieldCheck } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function Portfolio() {
   // Fetch configured studio settings and gallery items
-  const [settings, galleryItems] = await Promise.all([
-    prisma.studioSettings.findUnique({
-      where: { id: "default" },
-    }),
-    prisma.galleryItem.findMany({
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  let settings: Awaited<ReturnType<typeof prisma.studioSettings.findUnique>> = null;
+  let galleryItems: Awaited<ReturnType<typeof prisma.galleryItem.findMany>> = [];
+  try {
+    [settings, galleryItems] = await Promise.all([
+      prisma.studioSettings.findUnique({
+        where: { id: "default" },
+      }),
+      prisma.galleryItem.findMany({
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+  } catch (err) {
+    console.warn("[Portfolio Page] Could not load portfolio settings/gallery:", err);
+  }
 
   const defaultUser = settings?.githubUser || "blank-ui";
 
