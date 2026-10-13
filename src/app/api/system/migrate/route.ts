@@ -291,10 +291,23 @@ export async function GET(req: Request) {
       }
     }
 
+    // 3. Auto-verify any unverified users
+    try {
+      await prisma.user.updateMany({
+        where: { emailVerified: false },
+        data: { emailVerified: true, emailVerifiedAt: new Date() },
+      });
+    } catch {}
+
+    const users = await prisma.user.findMany({
+      select: { id: true, email: true, name: true, role: true, emailVerified: true },
+    });
+
     return NextResponse.json({
       success: true,
       message: "Database schema migration executed successfully!",
       totalStatements: DDL_STATEMENTS.length + FOREIGN_KEYS.length,
+      users,
       results,
     });
   } catch (error) {

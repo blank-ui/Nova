@@ -24,8 +24,8 @@ export const auth = betterAuth({
   rateLimit: { enabled: true, storage: "database", window: 60, max: 60, modelName: "AuthRateLimit" },
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
-    autoSignIn: false,
+    requireEmailVerification: false,
+    autoSignIn: true,
     minPasswordLength: 6,
     maxPasswordLength: 128,
     customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
@@ -37,14 +37,26 @@ export const auth = betterAuth({
       ...additionalFields,
       id,
     }),
-    sendResetPassword: async ({ user, url }) => sendAuthEmail({ to: user.email, subject: "Reset your Nova password", url }),
+    sendResetPassword: async ({ user, url }) => {
+      try {
+        await sendAuthEmail({ to: user.email, subject: "Reset your Nova password", url });
+      } catch (err) {
+        console.error("Password reset email delivery failed:", err);
+      }
+    },
   },
   emailVerification: {
-    sendOnSignUp: true,
-    sendOnSignIn: true,
+    sendOnSignUp: false,
+    sendOnSignIn: false,
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60,
-    sendVerificationEmail: async ({ user, url }) => sendAuthEmail({ to: user.email, subject: "Verify your Nova email", url }),
+    sendVerificationEmail: async ({ user, url }) => {
+      try {
+        await sendAuthEmail({ to: user.email, subject: "Verify your Nova email", url });
+      } catch (err) {
+        console.error("Verification email delivery failed:", err);
+      }
+    },
   },
   socialProviders: {
     ...(googleConfigured ? {
@@ -83,7 +95,10 @@ export const auth = betterAuth({
   session: { modelName: "AuthSession", expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
   account: {
     modelName: "AuthAccount",
-    accountLinking: { enabled: true, disableImplicitLinking: true, allowDifferentEmails: false },
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "discord"],
+    },
   },
   verification: { modelName: "AuthVerification" },
   plugins: [

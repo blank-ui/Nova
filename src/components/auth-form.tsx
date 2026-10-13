@@ -36,7 +36,7 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
       }
       sessionStorage.setItem("nova-auth-next", completeUrl);
       const result = await authClient.signIn.email({ email, password, callbackURL: completeUrl, rememberMe: true });
-      if (result.error) throw new Error("Email or password is incorrect, or the account still needs email verification.");
+      if (result.error) throw new Error(result.error.message || "Email or password is incorrect.");
       if ((result.data as { twoFactorRedirect?: boolean })?.twoFactorRedirect) {
         window.location.assign("/login/verify-mfa");
         return;
@@ -52,7 +52,7 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
     try {
       sessionStorage.setItem("nova-auth-next", completeUrl);
       const result = await authClient.signIn.social({ provider: "google", callbackURL: completeUrl, errorCallbackURL: `/login?callbackURL=${encodeURIComponent(target)}` });
-      if (result.error) throw new Error("Google sign-in is unavailable. Check the provider setup or use email and password.");
+      if (result.error) throw new Error(result.error.message || "Google sign-in is unavailable.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Google sign-in couldn't be started."); setBusy(false); }
   }
 
@@ -61,7 +61,7 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
     try {
       sessionStorage.setItem("nova-auth-next", completeUrl);
       const result = await authClient.signIn.social({ provider: "discord", callbackURL: completeUrl, errorCallbackURL: `/login?callbackURL=${encodeURIComponent(target)}` });
-      if (result.error) throw new Error("Discord sign-in is unavailable. Check the provider setup or use email and password.");
+      if (result.error) throw new Error(result.error.message || "Discord sign-in is unavailable.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Discord sign-in couldn't be started."); setBusy(false); }
   }
 
