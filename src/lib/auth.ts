@@ -6,7 +6,17 @@ import { prisma } from "@/lib/prisma";
 import { sendAuthEmail } from "@/lib/auth-email";
 
 const defaultAppUrl = "https://nova.allskyfares.com";
-const appUrl = process.env.APP_URL ?? (process.env.NODE_ENV === "production" ? defaultAppUrl : "http://localhost:3000");
+const rawAppUrl = process.env.APP_URL || process.env.BETTER_AUTH_URL;
+const appUrl =
+  rawAppUrl &&
+  !rawAppUrl.includes("0.0.0.0") &&
+  !rawAppUrl.includes("127.0.0.1") &&
+  (process.env.NODE_ENV === "production" ? !rawAppUrl.includes("localhost") : true)
+    ? rawAppUrl
+    : process.env.NODE_ENV === "production"
+      ? defaultAppUrl
+      : "http://localhost:3000";
+
 const defaultSecret = "rljd-lQGEUNMH93ERQ9mJz9uWd0y9HWUsBgsfeRUuMs";
 const secret = process.env.AUTH_SECRET ?? defaultSecret;
 
@@ -19,7 +29,7 @@ export const auth = betterAuth({
   appName: "Nova",
   baseURL: appUrl,
   secret,
-  trustedOrigins: [appUrl],
+  trustedOrigins: Array.from(new Set([defaultAppUrl, appUrl, "http://localhost:3000"])),
   database: prismaAdapter(prisma, { provider: "mysql" }),
   rateLimit: { enabled: true, storage: "database", window: 60, max: 60, modelName: "AuthRateLimit" },
   emailAndPassword: {

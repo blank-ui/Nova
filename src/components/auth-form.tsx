@@ -15,7 +15,12 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const target = safeInternalPath(callbackURL, "/portal");
-  const completeUrl = `/auth/continue?next=${encodeURIComponent(target)}`;
+  const origin =
+    typeof window !== "undefined" && window.location.origin && !window.location.origin.includes("0.0.0.0")
+      ? window.location.origin
+      : "https://nova.allskyfares.com";
+  const completeUrl = `${origin}/auth/continue?next=${encodeURIComponent(target)}`;
+  const errorCallbackUrl = `${origin}/login?callbackURL=${encodeURIComponent(target)}`;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,7 +56,7 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
     setBusy(true); setMessage("");
     try {
       sessionStorage.setItem("nova-auth-next", completeUrl);
-      const result = await authClient.signIn.social({ provider: "google", callbackURL: completeUrl, errorCallbackURL: `/login?callbackURL=${encodeURIComponent(target)}` });
+      const result = await authClient.signIn.social({ provider: "google", callbackURL: completeUrl, errorCallbackURL: errorCallbackUrl });
       if (result.error) throw new Error(result.error.message || "Google sign-in is unavailable.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Google sign-in couldn't be started."); setBusy(false); }
   }
@@ -60,7 +65,7 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
     setBusy(true); setMessage("");
     try {
       sessionStorage.setItem("nova-auth-next", completeUrl);
-      const result = await authClient.signIn.social({ provider: "discord", callbackURL: completeUrl, errorCallbackURL: `/login?callbackURL=${encodeURIComponent(target)}` });
+      const result = await authClient.signIn.social({ provider: "discord", callbackURL: completeUrl, errorCallbackURL: errorCallbackUrl });
       if (result.error) throw new Error(result.error.message || "Discord sign-in is unavailable.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Discord sign-in couldn't be started."); setBusy(false); }
   }
