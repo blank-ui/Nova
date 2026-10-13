@@ -108,9 +108,34 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
       trustedProviders: ["google", "discord"],
+      allowDifferentEmails: true,
     },
   },
   verification: { modelName: "AuthVerification" },
+  databaseHooks: {
+    account: {
+      create: {
+        after: async (account) => {
+          if (account.providerId === "discord" && account.userId && account.accountId) {
+            try {
+              await prisma.user.update({
+                where: { id: account.userId },
+                data: {
+                  discordId: account.accountId,
+                  discordHandle: "superr_nova_",
+                },
+              });
+            } catch (err) {
+              console.error("Failed to sync discordHandle on account creation:", err);
+            }
+          }
+        },
+      },
+    },
+  },
+  onAPIError: {
+    errorURL: `${appUrl}/admin/security`,
+  },
   plugins: [
     admin({ defaultRole: "CLIENT", adminRoles: ["ADMIN"] }),
     twoFactor({ issuer: process.env.ADMIN_MFA_ISSUER ?? "Nova", skipVerificationOnEnable: false, accountLockout: { enabled: true, maxFailedAttempts: 5, durationSeconds: 900 }, schema: { twoFactor: { modelName: "AuthTwoFactor" } } }),

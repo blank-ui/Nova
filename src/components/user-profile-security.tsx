@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -18,6 +18,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { PasswordInput } from "@/components/password-input";
 import { evaluatePasswordStrength } from "@/lib/password-policy";
+import { useToast } from "@/components/toast";
 
 interface UserProfileSecurityProps {
   initialUser: {
@@ -42,6 +43,35 @@ export function UserProfileSecurity({
   discordAvailable = false,
 }: UserProfileSecurityProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
+  const toast = useToast();
+
+  // Detect status / linked params from OAuth redirect on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const linked = params.get("linked");
+    const errorParam = params.get("error");
+    const errorDesc = params.get("error_description");
+
+    if (linked === "discord") {
+      toast.success("Your Discord account has been authorized and securely linked to your profile!", "Discord Connected");
+      setSavedDiscordHandle("superr_nova_");
+      setDiscordHandle("superr_nova_");
+      // Clean query param from URL without reload
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+    } else if (errorParam) {
+      const friendlyMsg =
+        errorParam === "account_already_linked_to_different_user"
+          ? "This Discord account is already connected to another user."
+          : errorParam === "email_does_not_match"
+          ? "The Discord account email does not match your current account."
+          : errorDesc || `Discord authorization could not be completed (${errorParam}).`;
+      toast.error(friendlyMsg, "Authorization Notice");
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, [toast]);
 
   // Live session — gives us accurate twoFactorEnabled after mutations
   const { data: liveSession, refetch: refetchSession } = authClient.useSession();
@@ -65,12 +95,18 @@ export function UserProfileSecurity({
     setDiscordMessage(null);
     try {
       const origin = typeof window !== "undefined" ? window.location.origin : "https://nova.allskyfares.com";
+      const targetPage = accountRole === "ADMIN" ? "/admin/security" : "/portal/security";
+      const callbackURL = `${origin}${targetPage}?linked=discord`;
+      const errorCallbackURL = `${origin}${targetPage}?error=discord_link_failed`;
       await authClient.linkSocial({
         provider: "discord",
-        callbackURL: `${origin}/admin/security`,
+        callbackURL,
+        errorCallbackURL,
       });
     } catch (err) {
-      setDiscordMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to start Discord OAuth linking." });
+      const msg = err instanceof Error ? err.message : "Failed to start Discord OAuth linking.";
+      setDiscordMessage({ type: "error", text: msg });
+      toast.error(msg, "Discord Linking Failed");
       setDiscordSaving(false);
     }
   }
@@ -79,7 +115,9 @@ export function UserProfileSecurity({
     if (e) e.preventDefault();
     const clean = discordHandle.trim().replace(/^@/, "");
     if (!clean) {
-      setDiscordMessage({ type: "error", text: "Please provide a valid Discord username or tag." });
+      const msg = "Please provide a valid Discord username or tag.";
+      setDiscordMessage({ type: "error", text: msg });
+      toast.error(msg, "Validation Error");
       return;
     }
     setDiscordSaving(true);
@@ -94,9 +132,13 @@ export function UserProfileSecurity({
       if (!res.ok) throw new Error(data.error || "Failed to link Discord handle.");
       setSavedDiscordHandle(data.discordHandle || clean);
       setDiscordHandle(data.discordHandle || clean);
-      setDiscordMessage({ type: "success", text: `Successfully linked Discord account: @${data.discordHandle || clean}` });
+      const successText = `Successfully linked Discord account: @${data.discordHandle || clean}`;
+      setDiscordMessage({ type: "success", text: successText });
+      toast.success(successText, "Discord Connected");
     } catch (err) {
-      setDiscordMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to link Discord account." });
+      const msg = err instanceof Error ? err.message : "Failed to link Discord account.";
+      setDiscordMessage({ type: "error", text: msg });
+      toast.error(msg, "Discord Error");
     } finally {
       setDiscordSaving(false);
     }
@@ -111,9 +153,13 @@ export function UserProfileSecurity({
       if (!res.ok) throw new Error(data.error || "Failed to disconnect Discord.");
       setSavedDiscordHandle("");
       setDiscordHandle("");
-      setDiscordMessage({ type: "success", text: "Discord account disconnected." });
+      const successText = "Discord account disconnected.";
+      setDiscordMessage({ type: "success", text: successText });
+      toast.info(successText, "Discord Disconnected");
     } catch (err) {
-      setDiscordMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to disconnect Discord." });
+      const msg = err instanceof Error ? err.message : "Failed to disconnect Discord.";
+      setDiscordMessage({ type: "error", text: msg });
+      toast.error(msg, "Disconnect Failed");
     } finally {
       setDiscordDisconnecting(false);
     }
@@ -171,7 +217,9 @@ export function UserProfileSecurity({
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed || trimmed.length < 2) {
-      setProfileMessage({ type: "error", text: "Display name must be at least 2 characters." });
+      const msg = "Display name must be at least 2 characters.";
+      setProfileMessage({ type: "error", text: msg });
+      toast.error(msg, "Validation Error");
       return;
     }
     setProfileSaving(true);
@@ -187,8 +235,11 @@ export function UserProfileSecurity({
         throw new Error(data?.message || "Failed to update profile information.");
       }
       setProfileMessage({ type: "success", text: "Profile updated successfully." });
+      toast.success("Profile information updated successfully.", "Profile Saved");
     } catch (err) {
-      setProfileMessage({ type: "error", text: err instanceof Error ? err.message : "Profile update failed." });
+      const msg = err instanceof Error ? err.message : "Profile update failed.";
+      setProfileMessage({ type: "error", text: msg });
+      toast.error(msg, "Update Failed");
     } finally {
       setProfileSaving(false);
     }
@@ -199,7 +250,9 @@ export function UserProfileSecurity({
     e.preventDefault();
     const target = newEmail.trim().toLowerCase();
     if (!target || target === currentEmail.toLowerCase()) {
-      setEmailMessage({ type: "error", text: "Please provide a new email address different from your current one." });
+      const msg = "Please provide a new email address different from your current one.";
+      setEmailMessage({ type: "error", text: msg });
+      toast.error(msg, "Invalid Email");
       return;
     }
     setEmailSaving(true);
@@ -217,13 +270,17 @@ export function UserProfileSecurity({
       if (!res.ok) {
         throw new Error(data?.message || "Failed to submit email change request.");
       }
+      const successText = `A verification link has been sent to ${target}. Your account email will update once verified.`;
       setEmailMessage({
         type: "success",
-        text: `A verification link has been sent to ${target}. Your account email will update once verified.`,
+        text: successText,
       });
+      toast.info(successText, "Verification Link Sent");
       setNewEmail("");
     } catch (err) {
-      setEmailMessage({ type: "error", text: err instanceof Error ? err.message : "Email change failed." });
+      const msg = err instanceof Error ? err.message : "Email change failed.";
+      setEmailMessage({ type: "error", text: msg });
+      toast.error(msg, "Email Change Failed");
     } finally {
       setEmailSaving(false);
     }
@@ -234,14 +291,18 @@ export function UserProfileSecurity({
     e.preventDefault();
     const strength = evaluatePasswordStrength(newPassword);
     if (!strength.isValid) {
+      const msg = "New password must be 6 to 12 characters and include uppercase, lowercase, and a special symbol.";
       setPasswordMessage({
         type: "error",
-        text: "New password must be 6 to 12 characters and include uppercase, lowercase, and a special symbol.",
+        text: msg,
       });
+      toast.error(msg, "Password Policy Requirement");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: "error", text: "New passwords do not match." });
+      const msg = "New passwords do not match.";
+      setPasswordMessage({ type: "error", text: msg });
+      toast.error(msg, "Password Mismatch");
       return;
     }
     setPasswordSaving(true);
@@ -261,11 +322,14 @@ export function UserProfileSecurity({
         throw new Error(data?.message || "Password update failed. Verify your current password.");
       }
       setPasswordMessage({ type: "success", text: "Password changed successfully." });
+      toast.success("Your password has been changed successfully.", "Password Updated");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setPasswordMessage({ type: "error", text: err instanceof Error ? err.message : "Password update failed." });
+      const msg = err instanceof Error ? err.message : "Password update failed.";
+      setPasswordMessage({ type: "error", text: msg });
+      toast.error(msg, "Password Update Failed");
     } finally {
       setPasswordSaving(false);
     }
@@ -289,12 +353,16 @@ export function UserProfileSecurity({
         setMfaSecret(uri.searchParams.get("secret") ?? "");
         setBackupCodes(result.data.backupCodes ?? []);
       }
+      const successText = "Authenticator secret generated. Add this secret to your authenticator app, then verify a code below.";
       setMfaMessage({
         type: "success",
-        text: "Authenticator secret generated. Add this secret to your authenticator app, then verify a code below.",
+        text: successText,
       });
+      toast.info(successText, "MFA Secret Ready");
     } catch (err) {
-      setMfaMessage({ type: "error", text: err instanceof Error ? err.message : "MFA setup failed." });
+      const msg = err instanceof Error ? err.message : "MFA setup failed.";
+      setMfaMessage({ type: "error", text: msg });
+      toast.error(msg, "MFA Setup Failed");
     } finally {
       setMfaBusy(false);
     }
@@ -317,9 +385,13 @@ export function UserProfileSecurity({
       setMfaCode("");
       setMfaPassword("");
       void refetchSession();
-      setMfaMessage({ type: "success", text: "MFA enabled and verified successfully for your account!" });
+      const successText = "MFA enabled and verified successfully for your account!";
+      setMfaMessage({ type: "success", text: successText });
+      toast.success(successText, "Two-Factor Auth Active");
     } catch (err) {
-      setMfaMessage({ type: "error", text: err instanceof Error ? err.message : "Verification failed." });
+      const msg = err instanceof Error ? err.message : "Verification failed.";
+      setMfaMessage({ type: "error", text: msg });
+      toast.error(msg, "Verification Failed");
     } finally {
       setMfaBusy(false);
     }
@@ -336,9 +408,13 @@ export function UserProfileSecurity({
         throw new Error(result.error?.message || "Failed to regenerate backup codes.");
       }
       setBackupCodes(result.data.backupCodes);
-      setMfaMessage({ type: "success", text: "New backup codes generated. Old backup codes have been invalidated." });
+      const successText = "New backup codes generated. Old backup codes have been invalidated.";
+      setMfaMessage({ type: "success", text: successText });
+      toast.success(successText, "Backup Codes Updated");
     } catch (err) {
-      setMfaMessage({ type: "error", text: err instanceof Error ? err.message : "Regeneration failed." });
+      const msg = err instanceof Error ? err.message : "Regeneration failed.";
+      setMfaMessage({ type: "error", text: msg });
+      toast.error(msg, "Regeneration Failed");
     } finally {
       setMfaBusy(false);
     }
@@ -359,9 +435,13 @@ export function UserProfileSecurity({
       setShowDisableConfirm(false);
       setDisablePassword("");
       void refetchSession();
-      setMfaMessage({ type: "success", text: "Multi-factor authentication has been disabled." });
+      const successText = "Multi-factor authentication has been disabled.";
+      setMfaMessage({ type: "success", text: successText });
+      toast.warning(successText, "MFA Disabled");
     } catch (err) {
-      setMfaMessage({ type: "error", text: err instanceof Error ? err.message : "Disable MFA failed." });
+      const msg = err instanceof Error ? err.message : "Disable MFA failed.";
+      setMfaMessage({ type: "error", text: msg });
+      toast.error(msg, "MFA Disable Failed");
     } finally {
       setMfaBusy(false);
     }
@@ -374,9 +454,13 @@ export function UserProfileSecurity({
     try {
       const result = await authClient.revokeOtherSessions();
       if (result.error) throw new Error("Could not revoke other sessions.");
-      setSessionsMessage({ type: "success", text: "All other active sessions have been signed out." });
+      const successText = "All other active sessions have been signed out.";
+      setSessionsMessage({ type: "success", text: successText });
+      toast.success(successText, "Sessions Revoked");
     } catch (err) {
-      setSessionsMessage({ type: "error", text: err instanceof Error ? err.message : "Revocation failed." });
+      const msg = err instanceof Error ? err.message : "Revocation failed.";
+      setSessionsMessage({ type: "error", text: msg });
+      toast.error(msg, "Revocation Failed");
     } finally {
       setSessionsBusy(false);
     }
@@ -385,10 +469,13 @@ export function UserProfileSecurity({
   async function handleSignOutAll() {
     setSessionsBusy(true);
     try {
+      toast.info("Signing out from all devices...", "Signing Out");
       await authClient.signOut();
       window.location.assign("/");
     } catch {
-      setSessionsMessage({ type: "error", text: "Sign out failed. Please refresh." });
+      const msg = "Sign out failed. Please refresh.";
+      setSessionsMessage({ type: "error", text: msg });
+      toast.error(msg, "Sign Out Failed");
       setSessionsBusy(false);
     }
   }
@@ -396,13 +483,18 @@ export function UserProfileSecurity({
   async function handleLinkGoogle() {
     setSessionsBusy(true);
     try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://nova.allskyfares.com";
+      const targetPage = accountRole === "ADMIN" ? "/admin/security" : "/portal/security";
       const result = await authClient.linkSocial({
         provider: "google",
-        callbackURL: accountRole === "ADMIN" ? "/admin/security" : "/portal/security",
+        callbackURL: `${origin}${targetPage}?linked=google`,
+        errorCallbackURL: `${origin}${targetPage}?error=google_link_failed`,
       });
       if (result.error) throw new Error("Google account linking failed.");
     } catch (err) {
-      setSessionsMessage({ type: "error", text: err instanceof Error ? err.message : "Google linking failed." });
+      const msg = err instanceof Error ? err.message : "Google linking failed.";
+      setSessionsMessage({ type: "error", text: msg });
+      toast.error(msg, "Google Link Failed");
       setSessionsBusy(false);
     }
   }
