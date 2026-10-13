@@ -53,12 +53,27 @@ export function UserProfileSecurity({
   const [profileMessage, setProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Discord integration state
-  const initialDiscord = initialUser.discordHandle ?? (initialUser.role === "ADMIN" ? "superr_nova_" : "");
+  const initialDiscord = initialUser.discordHandle ?? "";
   const [discordHandle, setDiscordHandle] = useState(initialDiscord);
   const [savedDiscordHandle, setSavedDiscordHandle] = useState(initialDiscord);
   const [discordSaving, setDiscordSaving] = useState(false);
   const [discordDisconnecting, setDiscordDisconnecting] = useState(false);
   const [discordMessage, setDiscordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  async function handleLinkDiscordOAuth() {
+    setDiscordSaving(true);
+    setDiscordMessage(null);
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://nova.allskyfares.com";
+      await authClient.linkSocial({
+        provider: "discord",
+        callbackURL: `${origin}/admin/security`,
+      });
+    } catch (err) {
+      setDiscordMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to start Discord OAuth linking." });
+      setDiscordSaving(false);
+    }
+  }
 
   async function handleDiscordSave(e?: FormEvent) {
     if (e) e.preventDefault();
@@ -789,18 +804,42 @@ export function UserProfileSecurity({
                   </div>
                 </div>
 
-                {savedDiscordHandle && (
-                  <a
-                    href={`https://discord.com/users/${savedDiscordHandle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="button button-outline"
-                    style={{ padding: "7px 14px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}
-                  >
-                    <span>Open Discord DM</span>
-                    <ArrowUpRight size={13} />
-                  </a>
-                )}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  {discordAvailable && (
+                    <button
+                      type="button"
+                      onClick={handleLinkDiscordOAuth}
+                      disabled={discordSaving}
+                      className="button button-outline"
+                      style={{
+                        padding: "7px 14px",
+                        fontSize: 12,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        background: "rgba(88, 101, 242, 0.1)",
+                        borderColor: "rgba(88, 101, 242, 0.4)",
+                        color: "#5865F2",
+                        fontWeight: 600,
+                      }}
+                    >
+                      <DiscordIcon size={14} />
+                      <span>Authorize Discord OAuth</span>
+                    </button>
+                  )}
+                  {savedDiscordHandle && (
+                    <a
+                      href={`https://discord.com/users/${savedDiscordHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="button button-outline"
+                      style={{ padding: "7px 14px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}
+                    >
+                      <span>Open Discord DM</span>
+                      <ArrowUpRight size={13} />
+                    </a>
+                  )}
+                </div>
               </div>
 
               {/* Input & Action controls */}
