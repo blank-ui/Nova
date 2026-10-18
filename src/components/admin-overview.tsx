@@ -65,7 +65,6 @@ export function AdminOverview({ user, metrics, recentInquiries }: AdminOverviewP
       <PageHeader
         titleLine1="Admin"
         titleLine2="Overview"
-        backHref="/portal"
         stats={[
           {
             icon: <MessageSquare size={18} strokeWidth={1.8} />,

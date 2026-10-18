@@ -103,7 +103,7 @@ export default async function PortalProjectsPage({
   }));
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--page-bg, #F6F4EE)", padding: "20px 0 60px" }}>
+    <div className="animate-fade-in-up" style={{ width: "100%" }}>
       <ClientProfileCRM
         user={serializedUser}
         inquiries={serializedInquiries}
@@ -111,6 +111,6 @@ export default async function PortalProjectsPage({
         backUrl="/portal"
         pageTitle="Customer Information"
       />
-    </main>
+    </div>
   );
 }

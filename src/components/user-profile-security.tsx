@@ -19,6 +19,7 @@ import { authClient } from "@/lib/auth-client";
 import { PasswordInput } from "@/components/password-input";
 import { evaluatePasswordStrength } from "@/lib/password-policy";
 import { useToast } from "@/components/toast";
+import { Avatar, AvatarMenu } from "@/components/admin-ui";
 
 interface UserProfileSecurityProps {
   initialUser: {
@@ -26,6 +27,7 @@ interface UserProfileSecurityProps {
     name: string;
     email: string;
     role: string;
+    image?: string | null;
     twoFactorEnabled: boolean;
     discordHandle?: string | null;
   };
@@ -79,8 +81,21 @@ export function UserProfileSecurity({
 
   // Profile fields state
   const [name, setName] = useState(initialUser.name);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialUser.image ?? null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    function onAvatarUpdated(e: Event) {
+      const customEvent = e as CustomEvent<{ userId?: string; avatarUrl: string | null }>;
+      if (!customEvent.detail) return;
+      if (!customEvent.detail.userId || customEvent.detail.userId === initialUser.id) {
+        setAvatarUrl(customEvent.detail.avatarUrl);
+      }
+    }
+    window.addEventListener("nova:avatar-updated", onAvatarUpdated);
+    return () => window.removeEventListener("nova:avatar-updated", onAvatarUpdated);
+  }, [initialUser.id]);
 
   // Discord integration state
   const initialDiscord = initialUser.discordHandle ?? "";
@@ -655,8 +670,70 @@ export function UserProfileSecurity({
           <div className="eyebrow">Personal Information</div>
           <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "6px 0 10px" }}>Display Profile</h2>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: "0 0 24px" }}>
-            Update your public display name shown across project updates, discussions, and activity logs.
+            Update your public display name and profile picture shown across project updates, discussions, and activity logs.
           </p>
+
+          {/* Profile Picture & Avatar Management */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 20,
+              padding: "20px 24px",
+              background: "var(--surface-raised, #F7F8FA)",
+              border: "1px solid var(--border-hairline, #C8CED7)",
+              borderRadius: 20,
+              marginBottom: 28,
+              maxWidth: 640,
+              flexWrap: "wrap",
+            }}
+          >
+            <Avatar
+              src={avatarUrl}
+              name={name}
+              size="lg"
+              userId={initialUser.id}
+              editable={true}
+              onAvatarChanged={(newUrl) => setAvatarUrl(newUrl)}
+            />
+
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
+                  Profile Picture
+                </h3>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: 99,
+                    background: avatarUrl ? "rgba(16,185,129,0.12)" : "rgba(108,76,224,0.12)",
+                    color: avatarUrl ? "#059669" : "#6C4CE0",
+                  }}
+                >
+                  {avatarUrl ? "Custom Photo Set" : "Using Default Initial"}
+                </span>
+              </div>
+              <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--text-muted-crm)", lineHeight: 1.5 }}>
+                Click the camera icon on your avatar or the button below to upload, reposition, crop, or remove your photo. JPEG, PNG, or WebP up to 2 MB.
+              </p>
+
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <AvatarMenu
+                  currentAvatarUrl={avatarUrl}
+                  userId={initialUser.id}
+                  userName={name}
+                  onAvatarChanged={(newUrl) => setAvatarUrl(newUrl)}
+                />
+                {avatarUrl && (
+                  <span style={{ fontSize: 11, color: "var(--text-muted-crm)" }}>
+                    Updates across all workspaces immediately
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
 
           <form onSubmit={handleProfileSave} style={{ display: "grid", gap: 22, maxWidth: 520 }}>
             <div>

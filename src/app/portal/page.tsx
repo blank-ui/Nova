@@ -48,7 +48,7 @@ export default async function PortalOverviewPage() {
   const clientCompany = clientInquiries[0]?.company || "Client Workspace";
 
   return (
-    <main className="shell" style={{ padding: "50px 0 80px" }}>
+    <div className="animate-fade-in-up" style={{ width: "100%" }}>
       {isUserAdmin && (
         <div
           style={{
@@ -110,6 +110,20 @@ export default async function PortalOverviewPage() {
             {projects.reduce((acc, p) => acc + p.milestones.filter((m) => m.completedAt === null).length, 0)}
           </div>
           <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>pending review or completion</div>
+        </div>
+
+        <div className="card card-hover-glow" style={{ padding: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--muted)", fontSize: 13, marginBottom: 8 }}>
+            <Calendar size={16} color="var(--blue)" /> Appointments
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.04em", margin: "4px 0" }}>
+            Consultations
+          </div>
+          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+            <Link href="/portal/appointments" style={{ color: "var(--blue)", fontWeight: 700, textDecoration: "none" }}>
+              Request Session &rarr;
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -380,6 +394,6 @@ export default async function PortalOverviewPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

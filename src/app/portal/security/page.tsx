@@ -7,11 +7,11 @@ export default async function PortalSecurity() {
   const session = await requireClient();
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { discordHandle: true },
+    select: { discordHandle: true, image: true },
   });
 
   return (
-    <main className="shell" style={{ padding: "50px 0 80px" }}>
+    <div className="animate-fade-in-up" style={{ width: "100%" }}>
       <div style={{ maxWidth: 840, margin: "0 auto 32px" }}>
         <div className="eyebrow" style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span className="radar-dot" style={{ width: 7, height: 7 }} />
@@ -31,6 +31,7 @@ export default async function PortalSecurity() {
           name: session.user.name,
           email: session.user.email,
           role: session.user.role ?? "CLIENT",
+          image: user?.image ?? session.user.image ?? null,
           twoFactorEnabled: session.user.twoFactorEnabled ?? false,
           discordHandle: user?.discordHandle ?? null,
         }}
@@ -38,7 +39,7 @@ export default async function PortalSecurity() {
         googleAvailable={googleSignInAvailable}
         discordAvailable={discordSignInAvailable}
       />
-    </main>
+    </div>
   );
 }
 

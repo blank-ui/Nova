@@ -20,15 +20,28 @@ export interface TopBarProps {
 
 export function TopBar({ user }: TopBarProps) {
   const pathname = usePathname();
+  const isPortal = pathname?.startsWith("/portal");
+  const isAdmin = user.role === "ADMIN";
 
-  const navLinks = [
-    { label: "Overview", href: "/admin", matchExact: true },
-    { label: "Inquiries", href: "/admin/inquiry", matchExact: false },
-    { label: "Users & Accounts", href: "/admin/users", matchExact: false },
-    { label: "GitHub & Gallery", href: "/admin/showcase", matchExact: false },
-    { label: "Security", href: "/admin/security", matchExact: false },
-    { label: "Client Portal", href: "/portal", matchExact: false },
-  ];
+  const navLinks = isPortal
+    ? [
+        { label: "Overview", href: "/portal", matchExact: true },
+        { label: "Projects", href: "/portal/projects", matchExact: false },
+        { label: "Appointments", href: "/portal/appointments", matchExact: false },
+        { label: "Profile & Security", href: "/portal/security", matchExact: false },
+        ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
+      ]
+    : [
+        { label: "Overview", href: "/admin", matchExact: true },
+        { label: "Inquiries", href: "/admin/inquiry", matchExact: false },
+        { label: "Appointments", href: "/admin/appointments", matchExact: false },
+        { label: "Users & Accounts", href: "/admin/users", matchExact: false },
+        { label: "GitHub & Gallery", href: "/admin/showcase", matchExact: false },
+        { label: "Security", href: "/admin/security", matchExact: false },
+        { label: "Client Portal", href: "/portal", matchExact: false },
+      ];
+
+  const profileHref = isPortal ? "/portal/security" : "/admin/security";
 
   return (
     <header
@@ -40,9 +53,9 @@ export function TopBar({ user }: TopBarProps) {
         paddingBottom: 24,
       }}
     >
-      {/* Left: Nova Logo (Black rounded-square mark + lowercase "nova") */}
+      {/* Left: Nova Logo */}
       <Link
-        href="/admin"
+        href={isPortal ? "/portal" : "/admin"}
         style={{
           display: "flex",
           alignItems: "center",
@@ -50,7 +63,7 @@ export function TopBar({ user }: TopBarProps) {
           textDecoration: "none",
           color: "var(--text-primary)",
         }}
-        aria-label="Nova Admin Home"
+        aria-label="Nova Platform Home"
       >
         <div
           style={{
@@ -65,7 +78,6 @@ export function TopBar({ user }: TopBarProps) {
             boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
           }}
         >
-          {/* Four-point spark / star */}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" />
           </svg>
@@ -84,7 +96,7 @@ export function TopBar({ user }: TopBarProps) {
 
       {/* Center: Pill Navigation */}
       <nav
-        aria-label="Admin Sections"
+        aria-label="Platform Sections"
         className="topbar-nav-pill-track"
         style={{
           display: "inline-flex",
@@ -124,12 +136,10 @@ export function TopBar({ user }: TopBarProps) {
 
       {/* Right: Circular 44px Buttons & Avatar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-        {/* Theme Toggle */}
         <div style={{ display: "flex", alignItems: "center" }}>
           <ThemeToggle />
         </div>
 
-        {/* Notifications Icon Button */}
         <button
           type="button"
           aria-label="View notifications"
@@ -152,15 +162,14 @@ export function TopBar({ user }: TopBarProps) {
           <Bell size={18} strokeWidth={1.8} />
         </button>
 
-        {/* Logout Button */}
         <LogoutButton />
 
-        {/* User Avatar */}
-        <Link href="/admin/security" aria-label="Administrator profile">
+        <Link href={profileHref} aria-label="User profile & security">
           <Avatar
             src={user.image}
             name={user.name || user.email}
             size="md"
+            userId={user.id}
           />
         </Link>
       </div>

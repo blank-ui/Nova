@@ -29,6 +29,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
+import { Avatar } from "@/components/admin-ui";
 
 export interface ClientProfileData {
   id: string;
@@ -973,41 +974,13 @@ export function ClientProfileCRM({
 
             {/* Large Circular Client Avatar */}
             <div style={{ position: "relative", marginBottom: 14 }}>
-              {user.image ? (
-                <img
-                  src={user.image}
-                  alt={user.name}
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "3px solid var(--paper)",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
-                    color: "#FFFFFF",
-                    fontSize: 32,
-                    fontWeight: 800,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    letterSpacing: "-0.04em",
-                    border: "3px solid var(--paper)",
-                    boxShadow: "0 8px 24px rgba(37,99,235,0.25)",
-                  }}
-                >
-                  {firstName[0]}
-                  {lastName[0] || ""}
-                </div>
-              )}
+              <Avatar
+                src={user.image}
+                name={user.name}
+                size="lg"
+                userId={user.id}
+                editable={true}
+              />
             </div>
 
             {/* Client Name & Title */}

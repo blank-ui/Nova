@@ -12,9 +12,9 @@ import {
   Folder,
   Shield,
   Send,
+  Calendar,
+  Home,
   X,
-  ArrowRight,
-  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 
@@ -22,6 +22,8 @@ export function LeftRail() {
   const pathname = usePathname();
   const router = useRouter();
   const toast = useToast();
+
+  const isPortal = pathname?.startsWith("/portal");
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -32,7 +34,7 @@ export function LeftRail() {
   const [projectDesc, setProjectDesc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const navItems = [
+  const adminNavItems = [
     {
       id: "search",
       label: "Search & Command",
@@ -45,6 +47,12 @@ export function LeftRail() {
       label: "Customer Inquiries (CRM)",
       href: "/admin/inquiry",
       icon: <MessageSquare size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "appointments",
+      label: "Appointments & Schedule",
+      href: "/admin/appointments",
+      icon: <Calendar size={18} strokeWidth={1.8} />,
     },
     {
       id: "users",
@@ -85,11 +93,51 @@ export function LeftRail() {
     },
   ];
 
+  const clientNavItems = [
+    {
+      id: "search",
+      label: "Search Workspace",
+      isAction: true,
+      onClick: () => setSearchOpen(true),
+      icon: <Search size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "overview",
+      label: "Client Overview",
+      href: "/portal",
+      icon: <Home size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "projects",
+      label: "Initiatives & Deliverables",
+      href: "/portal/projects",
+      icon: <Folder size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "appointments",
+      label: "Schedule Consultation",
+      href: "/portal/appointments",
+      icon: <Calendar size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "security",
+      label: "Profile & Security",
+      href: "/portal/security",
+      icon: <Shield size={18} strokeWidth={1.8} />,
+    },
+  ];
+
+  const navItems = isPortal ? clientNavItems : adminNavItems;
+
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     setSearchOpen(false);
-    router.push(`/admin/inquiry?search=${encodeURIComponent(searchQuery.trim())}`);
+    if (isPortal) {
+      router.push(`/portal/projects?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push(`/admin/inquiry?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
   }
 
   async function handleQuickProjectCreate(e: React.FormEvent) {
@@ -178,7 +226,7 @@ export function LeftRail() {
             );
           }
 
-          const isActive = pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href!));
+          const isActive = pathname === item.href || (item.href !== "/admin" && item.href !== "/portal" && pathname?.startsWith(item.href!));
 
           return (
             <Link
@@ -252,7 +300,7 @@ export function LeftRail() {
               <input
                 type="search"
                 autoFocus
-                placeholder="Search leads, clients, company, or services..."
+                placeholder={isPortal ? "Search project initiatives and deliverables..." : "Search leads, clients, company, or services..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -270,27 +318,48 @@ export function LeftRail() {
 
             <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
               <span style={{ fontSize: 11, color: "var(--text-muted-crm)", alignSelf: "center" }}>Quick jumps:</span>
-              <button
-                type="button"
-                onClick={() => { setSearchOpen(false); router.push("/admin/inquiry?status=NEW"); }}
-                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
-              >
-                New Inquiries
-              </button>
-              <button
-                type="button"
-                onClick={() => { setSearchOpen(false); router.push("/admin/projects"); }}
-                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
-              >
-                Projects
-              </button>
-              <button
-                type="button"
-                onClick={() => { setSearchOpen(false); router.push("/admin/users"); }}
-                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
-              >
-                Users &amp; Roles
-              </button>
+              {isPortal ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/portal/projects"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    My Projects
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/portal/appointments"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Appointments
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/admin/inquiry?status=NEW"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    New Inquiries
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/admin/appointments"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Appointments
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/admin/users"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Users &amp; Roles
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

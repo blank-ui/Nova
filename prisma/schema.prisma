@@ -42,11 +42,13 @@ model User {
   updatedAt        DateTime      @updatedAt
   projects         Project[]
   sessions         Session[]
-  authSessions     AuthSession[]
-  accounts         AuthAccount[]
-  twoFactors       AuthTwoFactor[]
-  auditEvents      AuditLog[]
-  bootstrapClaim   BootstrapClaim?
+  authSessions          AuthSession[]
+  accounts              AuthAccount[]
+  twoFactors            AuthTwoFactor[]
+  auditEvents           AuditLog[]
+  bootstrapClaim        BootstrapClaim?
+  appointmentsRequested Appointment[] @relation("AppointmentsRequested")
+  appointmentsAssigned  Appointment[] @relation("AppointmentsAssigned")
   @@index([role, createdAt])
   @@index([discordId])
 }
@@ -242,4 +244,25 @@ model GalleryItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   @@index([category, createdAt])
+}
+
+model Appointment {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?   @db.Text
+  date            DateTime
+  duration        Int       @default(30) // Duration in minutes
+  status          String    @default("REQUESTED") // REQUESTED, SCHEDULED, COMPLETED, CANCELLED
+  meetingLink     String?
+  notes           String?   @db.Text
+  requestedById   String
+  requestedBy     User      @relation("AppointmentsRequested", fields: [requestedById], references: [id], onDelete: Cascade)
+  assignedStaffId String?
+  assignedStaff   User?     @relation("AppointmentsAssigned", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status, date])
+  @@index([requestedById])
+  @@index([assignedStaffId])
 }
