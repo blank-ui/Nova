@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -16,6 +16,7 @@ import {
   Trash2,
   User,
   Users,
+  Search,
 } from "lucide-react";
 import {
   PageHeader,
@@ -24,6 +25,7 @@ import {
   Avatar,
   EmptyState,
   DetailRow,
+  ConfirmModal,
 } from "@/components/admin-ui";
 import { useToast } from "@/components/toast";
 
@@ -85,10 +87,32 @@ export function AppointmentsManager({
   const [editingItem, setEditingItem] = useState<AppointmentItem | null>(null);
   const [editMeetingLink, setEditMeetingLink] = useState("");
   const [editDateStr, setEditDateStr] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deleteAptId, setDeleteAptId] = useState<string | null>(null);
+
+  // Keyboard shortcut: Escape to close modals
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setModalOpen(false);
+        setEditingItem(null);
+        setDeleteAptId(null);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const filtered = appointments.filter((app) => {
-    if (statusFilter === "ALL") return true;
-    return app.status === statusFilter;
+    const matchesFilter = statusFilter === "ALL" ? true : app.status === statusFilter;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q
+      ? true
+      : app.title.toLowerCase().includes(q) ||
+        app.requestedBy?.name?.toLowerCase().includes(q) ||
+        app.requestedBy?.email?.toLowerCase().includes(q) ||
+        (app.description && app.description.toLowerCase().includes(q));
+    return matchesFilter && matchesSearch;
   });
 
   const scheduledCount = appointments.filter((a) => a.status === "SCHEDULED").length;
@@ -197,8 +221,14 @@ export function AppointmentsManager({
     }
   }
 
-  async function handleDeleteAppointment(id: string) {
-    if (!window.confirm("Permanently delete this appointment record?")) return;
+  function handleDeleteAppointment(id: string) {
+    setDeleteAptId(id);
+  }
+
+  async function executeDeleteAppointment() {
+    if (!deleteAptId) return;
+    const id = deleteAptId;
+    setDeleteAptId(null);
 
     try {
       const res = await fetch(`/api/appointments?id=${encodeURIComponent(id)}`, {
@@ -250,7 +280,7 @@ export function AppointmentsManager({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: 16,
+          gap: 12,
           flexWrap: "wrap",
           marginBottom: 20,
         }}
@@ -276,7 +306,7 @@ export function AppointmentsManager({
                   fontWeight: isSelected ? 700 : 500,
                   border: isSelected ? "none" : "1px solid var(--border-hairline)",
                   background: isSelected ? "var(--ink-crm)" : "var(--surface-raised)",
-                  color: isSelected ? "#FFFFFF" : "var(--text-secondary)",
+                  color: isSelected ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
                 }}
@@ -287,31 +317,72 @@ export function AppointmentsManager({
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setModalOpen(true);
-            const now = new Date();
-            now.setDate(now.getDate() + 1);
-            setDateStr(now.toISOString().split("T")[0]);
-          }}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 18px",
-            borderRadius: "var(--radius-pill)",
-            background: "var(--ink-crm)",
-            color: "#FFFFFF",
-            border: "none",
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <Plus size={15} />
-          <span>{isStaff ? "Set Appointment" : "Request Appointment"}</span>
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {/* Search Bar */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "6px 14px",
+              background: "var(--surface-raised)",
+              border: "1px solid var(--border-hairline)",
+              borderRadius: "var(--radius-pill)",
+              width: 230,
+            }}
+          >
+            <Search size={14} color="var(--text-muted-crm)" />
+            <input
+              type="text"
+              placeholder="Search sessions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                border: "none",
+                background: "transparent",
+                outline: "none",
+                fontSize: 12,
+                color: "var(--text-primary)",
+                width: "100%",
+              }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                style={{ border: "none", background: "none", cursor: "pointer", padding: 0, color: "var(--text-muted-crm)" }}
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setModalOpen(true);
+              const now = new Date();
+              now.setDate(now.getDate() + 1);
+              setDateStr(now.toISOString().split("T")[0]);
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "var(--radius-pill)",
+              background: "var(--ink-crm)",
+              color: "var(--ink-crm-text, #FFFFFF)",
+              border: "none",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <Plus size={15} />
+            <span>{isStaff ? "Set Appointment" : "Request Appointment"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Appointments List Grid */}
@@ -341,6 +412,9 @@ export function AppointmentsManager({
                 minute: "2-digit",
               });
 
+              const monthShort = appDate.toLocaleDateString([], { month: "short" }).toUpperCase();
+              const dayNum = appDate.getDate();
+
               return (
                 <div
                   key={app.id}
@@ -356,8 +430,30 @@ export function AppointmentsManager({
                     flexWrap: "wrap",
                   }}
                 >
-                  {/* Left: User & Title */}
+                  {/* Left: Calendar badge + User & Title */}
                   <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 260, flex: 1 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 46,
+                        height: 46,
+                        borderRadius: 12,
+                        background: "var(--subtle-fill)",
+                        border: "1px solid var(--border-hairline)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span style={{ fontSize: 10, fontWeight: 800, color: "var(--accent-blue)", lineHeight: 1 }}>
+                        {monthShort}
+                      </span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>
+                        {dayNum}
+                      </span>
+                    </div>
+
                     <Avatar
                       src={app.requestedBy?.image}
                       name={app.requestedBy?.name || "Client"}
@@ -936,6 +1032,17 @@ export function AppointmentsManager({
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal for Deletion */}
+      <ConfirmModal
+        open={!!deleteAptId}
+        title="Delete Appointment Record"
+        message="Are you sure you want to permanently delete this appointment? Both parties will be notified that this session is cancelled and removed from the active calendar."
+        confirmLabel="Delete Appointment"
+        variant="danger"
+        onConfirm={executeDeleteAppointment}
+        onCancel={() => setDeleteAptId(null)}
+      />
     </div>
   );
 }

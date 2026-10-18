@@ -44,6 +44,9 @@ export async function GET(request: Request) {
         name: true,
         email: true,
         role: true,
+        phone: true,
+        dateOfBirth: true,
+        image: true,
         emailVerified: true,
         twoFactorEnabled: true,
         banned: true,
@@ -111,6 +114,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Role must be CLIENT, ADMIN, DEVELOPER, or FINANCE." }, { status: 400 });
   }
 
+  const phone = typeof body.phone === "string" ? body.phone.trim() : null;
+  const dateOfBirth = typeof body.dateOfBirth === "string" ? body.dateOfBirth.trim() : null;
+
+  const isStaffRole = ["ADMIN", "DEVELOPER", "FINANCE"].includes(role);
+  if (isStaffRole) {
+    if (!phone || phone.length < 7) {
+      return NextResponse.json({ error: "Staff account requires a valid phone number." }, { status: 400 });
+    }
+    if (!dateOfBirth) {
+      return NextResponse.json({ error: "Staff account requires a date of birth for identity records." }, { status: 400 });
+    }
+  }
+
   try {
     const existing = await prisma.user.findUnique({
       where: { email },
@@ -125,6 +141,8 @@ export async function POST(request: Request) {
         name,
         email,
         role,
+        phone,
+        dateOfBirth,
         emailVerified: true,
         emailVerifiedAt: new Date(),
       },

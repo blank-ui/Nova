@@ -14,6 +14,7 @@ export interface DataTableProps<T> {
   keyExtractor: (row: T, index: number) => string;
   emptyState?: React.ReactNode;
   onRowClick?: (row: T) => void;
+  onRowDoubleClick?: (row: T) => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -24,6 +25,7 @@ export function DataTable<T>({
   keyExtractor,
   emptyState,
   onRowClick,
+  onRowDoubleClick,
   className = "",
   style,
 }: DataTableProps<T>) {
@@ -73,6 +75,7 @@ export function DataTable<T>({
           <div
             key={keyExtractor(row, idx)}
             onClick={() => onRowClick?.(row)}
+            onDoubleClick={() => onRowDoubleClick?.(row)}
             className="data-table-row"
             style={{
               display: "grid",

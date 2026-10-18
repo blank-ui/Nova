@@ -64,6 +64,7 @@ export async function POST(request: Request) {
         name: parsed.data.name,
         email: parsed.data.email.toLowerCase(),
         phone: parsed.data.phone,
+        dateOfBirth: parsed.data.dateOfBirth || null,
         company: parsed.data.company || null,
         service: parsed.data.service,
         budget: parsed.data.budget || null,

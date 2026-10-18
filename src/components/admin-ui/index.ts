@@ -14,3 +14,4 @@ export * from "./AdminShell";
 export * from "./PageHeader";
 export * from "./AvatarMenu";
 export * from "./AvatarCropModal";
+export * from "./ConfirmModal";

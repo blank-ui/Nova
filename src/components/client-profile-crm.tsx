@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -115,6 +115,79 @@ export function ClientProfileCRM({
   const [newProjectDesc, setNewProjectDesc] = useState("");
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [localProjects, setLocalProjects] = useState(user.projects || []);
+
+  // Day notes & appointments on calendar
+  const [dayNotes, setDayNotes] = useState<Record<number, string[]>>({
+    9: ["Initial client project inquiry submitted"],
+    18: ["System onboarding & workspace setup"],
+  });
+  const [dayAppointments, setDayAppointments] = useState<Record<number, string[]>>({
+    15: ["10:30 AM · Architecture Scoping Review"],
+  });
+  const [calendarActionModal, setCalendarActionModal] = useState<"appointment" | "note" | null>(null);
+  const [calendarNoteText, setCalendarNoteText] = useState("");
+  const [calendarAptTitle, setCalendarAptTitle] = useState("Milestone Review Meeting");
+  const [calendarAptTime, setCalendarAptTime] = useState("14:00");
+  const [isSubmittingApt, setIsSubmittingApt] = useState(false);
+
+  // Keyboard shortcut: Escape to close all modals
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setCalendarActionModal(null);
+        setEditContactModal(false);
+        setCreateProjectModal(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  async function handleCreateCalendarAppointment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedCalendarDay) return;
+    setIsSubmittingApt(true);
+    try {
+      const dayStr = String(selectedCalendarDay).padStart(2, "0");
+      const dateIso = `2026-10-${dayStr}T${calendarAptTime || "12:00"}:00`;
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: calendarAptTitle.trim(),
+          date: new Date(dateIso).toISOString(),
+          duration: 30,
+          clientId: user.id,
+          status: "SCHEDULED",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to schedule appointment");
+
+      setDayAppointments((prev) => ({
+        ...prev,
+        [selectedCalendarDay]: [...(prev[selectedCalendarDay] || []), `${calendarAptTime} · ${calendarAptTitle}`],
+      }));
+      toast.success(`Appointment confirmed for October ${selectedCalendarDay}!`, "Appointment Set");
+      setCalendarActionModal(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to set appointment", "Error");
+    } finally {
+      setIsSubmittingApt(false);
+    }
+  }
+
+  function handleSaveCalendarNote(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedCalendarDay || !calendarNoteText.trim()) return;
+    setDayNotes((prev) => ({
+      ...prev,
+      [selectedCalendarDay]: [...(prev[selectedCalendarDay] || []), calendarNoteText.trim()],
+    }));
+    toast.success(`Note saved for October ${selectedCalendarDay}!`, "Note Added");
+    setCalendarNoteText("");
+    setCalendarActionModal(null);
+  }
 
   // Derive Client Name
   const nameParts = (user.name || "").trim().split(/\s+/);
@@ -752,10 +825,12 @@ export function ClientProfileCRM({
                   </div>
                 ))}
 
-                {/* Day Numbers 1 to 21 */}
-                {Array.from({ length: 21 }, (_, i) => {
+                {/* Day Numbers 1 to 31 */}
+                {Array.from({ length: 31 }, (_, i) => {
                   const day = i + 1;
                   const isSelected = selectedCalendarDay === day;
+                  const hasApt = Boolean(dayAppointments[day]?.length);
+                  const hasNote = Boolean(dayNotes[day]?.length);
 
                   return (
                     <button
@@ -765,7 +840,7 @@ export function ClientProfileCRM({
                       style={{
                         aspectRatio: "1/1",
                         borderRadius: 10,
-                        border: "none",
+                        border: isSelected ? "1.5px solid var(--accent-blue)" : "1px solid transparent",
                         cursor: "pointer",
                         display: "flex",
                         flexDirection: "column",
@@ -773,39 +848,276 @@ export function ClientProfileCRM({
                         justifyContent: "center",
                         fontSize: 11,
                         fontWeight: isSelected ? 800 : 500,
-                        background: isSelected ? "rgba(108,76,255,0.15)" : "transparent",
-                        color: isSelected ? "#6C4CFF" : "var(--ink)",
-                        transition: "background 0.15s ease",
+                        background: isSelected
+                          ? "rgba(47,84,235,0.12)"
+                          : hasApt
+                          ? "rgba(108,76,224,0.08)"
+                          : "transparent",
+                        color: isSelected ? "var(--accent-blue)" : "var(--text-primary)",
+                        transition: "all 0.15s ease",
+                        position: "relative",
+                        padding: 2,
                       }}
                     >
                       <span>{day}</span>
+                      <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
+                        {hasApt && (
+                          <span
+                            style={{
+                              width: 4,
+                              height: 4,
+                              borderRadius: "50%",
+                              background: "#6C4CE0",
+                            }}
+                            title="Appointment scheduled"
+                          />
+                        )}
+                        {hasNote && (
+                          <span
+                            style={{
+                              width: 4,
+                              height: 4,
+                              borderRadius: "50%",
+                              background: "#059669",
+                            }}
+                            title="Note logged"
+                          />
+                        )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Status Note */}
-              <div
-                style={{
-                  marginTop: 16,
-                  padding: "10px 14px",
-                  borderRadius: 12,
-                  background: "var(--paper-alt, rgba(0,0,0,0.02))",
-                  border: "1px solid var(--line)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 12,
-                  color: "var(--muted)",
-                }}
-              >
-                <Clock size={14} color="#6C4CFF" />
-                <span>
-                  {totalTasks > 0
-                    ? `${totalTasks} deliverables tracked in project workspace`
-                    : "No scheduled task deadlines for this month"}
-                </span>
-              </div>
+              {/* Day Details & Interactive Actions when Day Selected */}
+              {selectedCalendarDay ? (
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: "12px 14px",
+                    borderRadius: 14,
+                    background: "var(--surface-raised, #F7F8FA)",
+                    border: "1px solid var(--border-hairline, #C8CED7)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>
+                      October {selectedCalendarDay}, 2026
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCalendarDay(null);
+                        setCalendarActionModal(null);
+                      }}
+                      style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted-crm)", fontSize: 11 }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  {/* Existing Day Appointments */}
+                  {dayAppointments[selectedCalendarDay]?.map((apt, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        fontSize: 11,
+                        padding: "4px 8px",
+                        borderRadius: 6,
+                        background: "rgba(108,76,224,0.1)",
+                        color: "#6C4CE0",
+                        fontWeight: 600,
+                        marginBottom: 4,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <Calendar size={11} />
+                      <span>{apt}</span>
+                    </div>
+                  ))}
+
+                  {/* Existing Day Notes */}
+                  {dayNotes[selectedCalendarDay]?.map((note, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        fontSize: 11,
+                        padding: "4px 8px",
+                        borderRadius: 6,
+                        background: "rgba(5,150,105,0.08)",
+                        color: "#059669",
+                        fontWeight: 500,
+                        marginBottom: 4,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <FileText size={11} />
+                      <span>{note}</span>
+                    </div>
+                  ))}
+
+                  {/* Action Buttons to Set Appointment or Leave Note */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => setCalendarActionModal("appointment")}
+                      style={{
+                        flex: 1,
+                        padding: "6px 10px",
+                        borderRadius: 99,
+                        border: "none",
+                        background: "var(--accent-blue, #2F54EB)",
+                        color: "#FFFFFF",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <Calendar size={12} />
+                      <span>Set Appointment</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCalendarActionModal("note")}
+                      style={{
+                        flex: 1,
+                        padding: "6px 10px",
+                        borderRadius: 99,
+                        border: "1px solid var(--border-hairline, #C8CED7)",
+                        background: "var(--paper, #FFFFFF)",
+                        color: "var(--text-primary)",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <Edit3 size={12} />
+                      <span>Leave Note</span>
+                    </button>
+                  </div>
+
+                  {/* Subform: Set Appointment */}
+                  {calendarActionModal === "appointment" && (
+                    <form onSubmit={handleCreateCalendarAppointment} style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Meeting topic (e.g. Scope Review)"
+                        value={calendarAptTitle}
+                        onChange={(e) => setCalendarAptTitle(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "6px 10px",
+                          borderRadius: 8,
+                          border: "1px solid var(--border-hairline)",
+                          background: "var(--card-bg-crm)",
+                          fontSize: 11,
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <input
+                          type="time"
+                          required
+                          value={calendarAptTime}
+                          onChange={(e) => setCalendarAptTime(e.target.value)}
+                          style={{
+                            flex: 1,
+                            padding: "6px 8px",
+                            borderRadius: 8,
+                            border: "1px solid var(--border-hairline)",
+                            background: "var(--card-bg-crm)",
+                            fontSize: 11,
+                          }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={isSubmittingApt}
+                          style={{
+                            padding: "6px 14px",
+                            borderRadius: 99,
+                            border: "none",
+                            background: "var(--ink-crm)",
+                            color: "var(--ink-crm-text, #FFFFFF)",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {isSubmittingApt ? "Saving..." : "Confirm"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Subform: Leave Note */}
+                  {calendarActionModal === "note" && (
+                    <form onSubmit={handleSaveCalendarNote} style={{ marginTop: 10, display: "flex", gap: 6 }}>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Write note for this day..."
+                        value={calendarNoteText}
+                        onChange={(e) => setCalendarNoteText(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: "6px 10px",
+                          borderRadius: 8,
+                          border: "1px solid var(--border-hairline)",
+                          background: "var(--card-bg-crm)",
+                          fontSize: 11,
+                        }}
+                      />
+                      <button
+                        type="submit"
+                        style={{
+                          padding: "6px 14px",
+                          borderRadius: 99,
+                          border: "none",
+                          background: "var(--ink-crm)",
+                          color: "var(--ink-crm-text, #FFFFFF)",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Save
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ) : (
+                /* Status Note */
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    background: "var(--surface-raised, rgba(0,0,0,0.02))",
+                    border: "1px solid var(--border-hairline-light, var(--line))",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 11,
+                    color: "var(--text-muted-crm, var(--muted))",
+                  }}
+                >
+                  <Clock size={14} color="#6C4CE0" />
+                  <span>Click any date to schedule an appointment or leave a milestone note.</span>
+                </div>
+              )}
             </section>
 
             {/* Stage Funnel Card */}

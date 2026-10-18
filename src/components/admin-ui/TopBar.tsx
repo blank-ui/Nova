@@ -97,7 +97,7 @@ export function TopBar({ user }: TopBarProps) {
       {/* Center: Pill Navigation */}
       <nav
         aria-label="Platform Sections"
-        className="topbar-nav-pill-track"
+        className="topbar-nav-pill-track no-scrollbar"
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -105,6 +105,9 @@ export function TopBar({ user }: TopBarProps) {
           padding: 4,
           borderRadius: "var(--radius-pill)",
           background: "transparent",
+          overflowX: "auto",
+          maxWidth: "100%",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {navLinks.map((item) => {
@@ -123,9 +126,10 @@ export function TopBar({ user }: TopBarProps) {
                 fontWeight: isActive ? 700 : 500,
                 textDecoration: "none",
                 background: isActive ? "var(--ink-crm)" : "transparent",
-                color: isActive ? "#FFFFFF" : "var(--text-secondary)",
+                color: isActive ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
                 transition: "all 0.15s ease",
                 whiteSpace: "nowrap",
+                flexShrink: 0,
               }}
             >
               {item.label}

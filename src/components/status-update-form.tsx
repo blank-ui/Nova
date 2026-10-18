@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { InquiryStatus } from "@prisma/client";
+import { ConfirmModal } from "@/components/admin-ui";
+import { useToast } from "@/components/toast";
 
 interface StatusUpdateFormProps {
   inquiryId: string;
@@ -20,8 +22,10 @@ const ALL_STATUSES: InquiryStatus[] = [
 
 export function StatusUpdateForm({ inquiryId, currentStatus }: StatusUpdateFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const [status, setStatus] = useState<InquiryStatus>(currentStatus);
   const [loading, setLoading] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,32 +36,31 @@ export function StatusUpdateForm({ inquiryId, currentStatus }: StatusUpdateFormP
     setMessage(null);
 
     try {
-      const res = await fetch("/api/admin/inquiries", {
+      const res = await fetch(`/api/admin/inquiries?id=${encodeURIComponent(inquiryId)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: inquiryId, status }),
+        body: JSON.stringify({ status }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to update inquiry status");
+        throw new Error(data.error || "Failed to update status");
       }
 
-      setMessage({ type: "success", text: `Status updated successfully to ${status}.` });
+      setMessage({ type: "success", text: "Status updated successfully." });
+      toast.success(`Inquiry status updated to ${status}.`, "Status Saved");
       router.refresh();
     } catch (err: unknown) {
       const errMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
       setMessage({ type: "error", text: errMessage });
+      toast.error(errMessage, "Update Failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to permanently delete this inquiry? This action cannot be undone.")) {
-      return;
-    }
-
+  const executeDelete = async () => {
+    setConfirmDeleteOpen(false);
     setLoading(true);
     setMessage(null);
 
@@ -71,11 +74,13 @@ export function StatusUpdateForm({ inquiryId, currentStatus }: StatusUpdateFormP
         throw new Error(data.error || "Failed to delete inquiry");
       }
 
+      toast.success("Inquiry permanently removed.", "Deleted");
       router.push("/admin/inquiry");
       router.refresh();
     } catch (err: unknown) {
       const errMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
       setMessage({ type: "error", text: errMessage });
+      toast.error(errMessage, "Delete Failed");
       setLoading(false);
     }
   };
@@ -83,17 +88,13 @@ export function StatusUpdateForm({ inquiryId, currentStatus }: StatusUpdateFormP
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <label htmlFor="status-select" style={{ fontSize: 13, fontWeight: 600 }}>
-            Change Status:
-          </label>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <select
-            id="status-select"
-            className="field"
             value={status}
             onChange={(e) => setStatus(e.target.value as InquiryStatus)}
             disabled={loading}
-            style={{ width: "auto", minWidth: 180, padding: "8px 12px" }}
+            className="field"
+            style={{ padding: "8px 12px", borderRadius: 8, fontSize: 13, flex: 1 }}
           >
             {ALL_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -103,20 +104,16 @@ export function StatusUpdateForm({ inquiryId, currentStatus }: StatusUpdateFormP
           </select>
           <button
             type="submit"
-            className="button"
             disabled={loading || status === currentStatus}
-            style={{
-              padding: "9px 18px",
-              opacity: loading || status === currentStatus ? 0.6 : 1,
-              cursor: loading || status === currentStatus ? "not-allowed" : "pointer",
-            }}
+            className="button"
+            style={{ padding: "8px 16px", fontSize: 13 }}
           >
-            {loading ? "Updating..." : "Save Status"}
+            {loading ? "Updating..." : "Update Status"}
           </button>
 
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => setConfirmDeleteOpen(true)}
             disabled={loading}
             className="button button-outline"
             style={{
@@ -148,6 +145,17 @@ export function StatusUpdateForm({ inquiryId, currentStatus }: StatusUpdateFormP
           </div>
         )}
       </form>
+
+      <ConfirmModal
+        isOpen={confirmDeleteOpen}
+        title="Permanently Delete Inquiry?"
+        message="Are you sure you want to permanently delete this inquiry? This action cannot be undone."
+        confirmLabel="Delete Inquiry"
+        variant="danger"
+        isBusy={loading}
+        onConfirm={executeDelete}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
     </div>
   );
 }

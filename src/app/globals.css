@@ -33,6 +33,7 @@
   --text-secondary: #3A4150;
   --text-muted-crm: #555C69;
   --ink-crm: #0C0D10;
+  --ink-crm-text: #FFFFFF;
   --left-rail-bg: #1C1F1A;
   --left-rail-icon: #E8EBE4;
   --left-rail-btn-border: #3A3F37;
@@ -71,16 +72,17 @@
   /* CRM & Admin Design Tokens (Dark) */
   --page-bg: #0C0E14;
   --app-bg: #131722;
-  --card-bg-crm: #1A2030;
-  --surface-raised: #222A3F;
-  --subtle-fill: #2B344D;
-  --subtle-fill-alt: #343E5B;
-  --border-hairline: #2D374E;
-  --border-hairline-light: #384462;
+  --card-bg-crm: #181D2A;
+  --surface-raised: #1F2637;
+  --subtle-fill: #273147;
+  --subtle-fill-alt: #313C56;
+  --border-hairline: #2C374E;
+  --border-hairline-light: #374461;
   --text-primary: #F0F3F9;
   --text-secondary: #C0C8D8;
   --text-muted-crm: #8E99AF;
   --ink-crm: #F0F3F9;
+  --ink-crm-text: #0C0D10;
   --left-rail-bg: #121413;
   --left-rail-icon: #E8EBE4;
   --left-rail-btn-border: #2D332B;

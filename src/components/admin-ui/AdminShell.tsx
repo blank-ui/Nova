@@ -112,7 +112,13 @@ export function AdminShell({ user, children }: AdminShellProps) {
             overflow-x: auto !important;
           }
           .topbar-nav-pill-track {
-            display: none !important;
+            order: 3 !important;
+            width: 100% !important;
+            display: flex !important;
+            justify-content: flex-start !important;
+            overflow-x: auto !important;
+            padding-bottom: 6px !important;
+            margin-top: 4px !important;
           }
         }
       `}</style>

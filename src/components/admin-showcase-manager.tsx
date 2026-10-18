@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   GitBranch,
@@ -26,6 +26,7 @@ import {
   SectionCard,
   Badge,
   EmptyState,
+  ConfirmModal,
 } from "@/components/admin-ui";
 import { useToast } from "@/components/toast";
 
@@ -85,6 +86,19 @@ export function AdminShowcaseManager({
   const [newCategory, setNewCategory] = useState("UI/UX Design");
   const [newRepoName, setNewRepoName] = useState("");
   const [newProjectUrl, setNewProjectUrl] = useState("");
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  // Keyboard shortcut: Escape closes modal
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowAddModal(false);
+        setItemToDelete(null);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Search and filter state
   const [repoSearch, setRepoSearch] = useState("");
@@ -234,8 +248,14 @@ export function AdminShowcaseManager({
     }
   }
 
-  async function handleDeleteGalleryItem(id: string) {
-    if (!window.confirm("Permanently delete this showcase screenshot?")) return;
+  function handleDeleteGalleryItem(id: string) {
+    setItemToDelete(id);
+  }
+
+  async function confirmDeleteGalleryItem() {
+    if (!itemToDelete) return;
+    const id = itemToDelete;
+    setItemToDelete(null);
 
     try {
       const res = await fetch(`/api/admin/gallery?id=${encodeURIComponent(id)}`, {
@@ -1030,6 +1050,17 @@ export function AdminShowcaseManager({
           </div>
         </div>
       )}
+
+      {/* In-App Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(itemToDelete)}
+        title="Delete Showcase Item?"
+        message="Permanently delete this showcase screenshot? This cannot be undone."
+        confirmLabel="Delete Item"
+        variant="danger"
+        onConfirm={confirmDeleteGalleryItem}
+        onCancel={() => setItemToDelete(null)}
+      />
     </div>
   );
 }

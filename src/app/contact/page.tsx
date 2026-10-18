@@ -288,6 +288,33 @@ export default function ContactPage() {
                   </p>
                 </div>
 
+                {/* Date of Birth Row */}
+                <div>
+                  <label
+                    htmlFor="contact-dob"
+                    style={{
+                      display: "block",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "var(--ink)",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Date of Birth <span style={{ color: "var(--blue)" }}>*</span>
+                  </label>
+                  <input
+                    id="contact-dob"
+                    className="field"
+                    type="date"
+                    name="dateOfBirth"
+                    autoComplete="bday"
+                    required
+                  />
+                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>
+                    Used for client account verification and project agreement onboarding.
+                  </p>
+                </div>
+
                 {/* Company Row */}
                 <div>
                   <label

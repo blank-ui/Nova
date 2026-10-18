@@ -62,6 +62,7 @@ export default async function InquiryList({
     name: inq.name,
     email: inq.email,
     phone: inq.phone,
+    dateOfBirth: inq.dateOfBirth,
     company: inq.company,
     service: inq.service,
     budget: inq.budget,

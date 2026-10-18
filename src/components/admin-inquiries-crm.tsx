@@ -33,6 +33,7 @@ export interface InquiryRow {
   name: string;
   email: string;
   phone?: string | null;
+  dateOfBirth?: string | null;
   company?: string | null;
   service: string;
   budget?: string | null;
@@ -342,6 +343,7 @@ export function AdminInquiriesCRM({
               data={inquiries}
               keyExtractor={(row) => row.id}
               onRowClick={(row) => setSelectedInquiryId(row.id)}
+              onRowDoubleClick={(row) => router.push(`/admin/inquiry/${row.id}`)}
               emptyState={
                 <EmptyState
                   icon={<MessageSquare size={24} />}
@@ -408,6 +410,15 @@ export function AdminInquiriesCRM({
                         {selectedInquiry.phone}
                       </a>
                     }
+                  />
+                )}
+
+                {/* DetailRow: Date of Birth */}
+                {selectedInquiry.dateOfBirth && (
+                  <DetailRow
+                    icon={<Calendar size={16} strokeWidth={1.8} />}
+                    label="Date of Birth"
+                    value={selectedInquiry.dateOfBirth}
                   />
                 )}
 

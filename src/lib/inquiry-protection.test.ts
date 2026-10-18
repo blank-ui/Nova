@@ -101,6 +101,7 @@ describe("Public Inquiry Endpoint Protections (Unit Tests)", () => {
       budget: "$50k - $100k",
       message: "We need a Next.js application built with strict security controls.",
       status: "NEW",
+      dateOfBirth: null,
       createdAt: new Date(),
     });
 

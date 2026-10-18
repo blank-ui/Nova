@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   UserPlus,
@@ -21,6 +21,8 @@ import {
   Clock,
   User as UserIcon,
   X,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import {
   PageHeader,
@@ -33,6 +35,7 @@ import {
   EmptyState,
   PillButton,
   IconButton,
+  ConfirmModal,
 } from "@/components/admin-ui";
 import { useToast } from "@/components/toast";
 
@@ -41,6 +44,8 @@ export interface UserItem {
   name: string;
   email: string;
   role: string;
+  phone?: string | null;
+  dateOfBirth?: string | null;
   image?: string | null;
   emailVerified: boolean;
   twoFactorEnabled: boolean;
@@ -78,11 +83,42 @@ export function AdminUsersManager({
   // Form states for creating a new user
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newDob, setNewDob] = useState("");
   const [newRole, setNewRole] = useState<"CLIENT" | "ADMIN" | "DEVELOPER" | "FINANCE">("CLIENT");
   const [createdResult, setCreatedResult] = useState<{ setupUrl: string; emailSent: boolean } | null>(null);
 
+  // In-app Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel: string;
+    variant: "danger" | "primary" | "warning";
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmLabel: "Confirm",
+    variant: "danger",
+    onConfirm: () => {},
+  });
+
   // Loading states for actions
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
+
+  // Keyboard shortcut: Escape to close modals
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowCreateModal(false);
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const selectedUser = users.find((u) => u.id === selectedUserId) || users[0] || null;
 
@@ -111,11 +147,36 @@ export function AdminUsersManager({
     setCreateError("");
     setCreatedResult(null);
 
+    const isStaff = newRole !== "CLIENT";
+    if (isStaff) {
+      if (!newName.trim() || newName.trim().length < 2) {
+        setCreateError("Staff account requires a full name.");
+        setCreateLoading(false);
+        return;
+      }
+      if (!newDob.trim()) {
+        setCreateError("Staff account requires date of birth.");
+        setCreateLoading(false);
+        return;
+      }
+      if (!newPhone.trim() || newPhone.trim().length < 7) {
+        setCreateError("Staff account requires a valid phone number.");
+        setCreateLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, email: newEmail, role: newRole }),
+        body: JSON.stringify({
+          name: newName.trim(),
+          email: newEmail.trim(),
+          role: newRole,
+          phone: newPhone.trim() || undefined,
+          dateOfBirth: newDob.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create user.");
@@ -126,6 +187,8 @@ export function AdminUsersManager({
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
+        phone: data.user.phone || null,
+        dateOfBirth: data.user.dateOfBirth || null,
         image: null,
         emailVerified: true,
         twoFactorEnabled: false,
@@ -137,6 +200,8 @@ export function AdminUsersManager({
       setSelectedUserId(newUser.id);
       setNewName("");
       setNewEmail("");
+      setNewPhone("");
+      setNewDob("");
 
       if (data.emailSent) {
         toast.success(`Account created for ${data.user.name}. Setup email dispatched to ${data.user.email}.`, "User Initiated");
@@ -152,103 +217,129 @@ export function AdminUsersManager({
     }
   }
 
-  async function handleSuspend(user: UserItem) {
+  function handleSuspend(user: UserItem) {
     if (user.id === currentAdminId) return;
     const isSuspending = !user.banned;
-    const promptText = isSuspending
-      ? `Are you sure you want to suspend ${user.name} (${user.email})? They will be logged out immediately.`
-      : `Reactivate account for ${user.name}?`;
-    if (!window.confirm(promptText)) return;
+    const title = isSuspending ? "Suspend User Account?" : "Reactivate User Account?";
+    const message = isSuspending
+      ? `Are you sure you want to suspend ${user.name} (${user.email})? All active sessions will be terminated immediately.`
+      : `Reactivate account access for ${user.name} (${user.email})?`;
 
-    setBusyUserId(user.id);
-    setActionMessage(null);
-    try {
-      const res = await fetch("/api/admin/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: user.id, action: "suspend" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update suspension status");
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      confirmLabel: isSuspending ? "Suspend Account" : "Reactivate Account",
+      variant: isSuspending ? "warning" : "primary",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        setBusyUserId(user.id);
+        setActionMessage(null);
+        try {
+          const res = await fetch("/api/admin/users", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: user.id, action: "suspend" }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to update suspension status");
 
-      setUsers(users.map((u) => (u.id === user.id ? { ...u, banned: data.banned } : u)));
-      setActionMessage({ type: "success", text: data.message });
-      if (data.banned) {
-        toast.warning(`Account for ${user.name} suspended. All active sessions revoked.`, "User Suspended");
-      } else {
-        toast.success(`Account for ${user.name} has been reactivated.`, "User Reactivated");
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to update user.";
-      setActionMessage({ type: "error", text: msg });
-      toast.error(msg, "Status Update Failed");
-    } finally {
-      setBusyUserId(null);
-    }
+          setUsers(users.map((u) => (u.id === user.id ? { ...u, banned: data.banned } : u)));
+          setActionMessage({ type: "success", text: data.message });
+          if (data.banned) {
+            toast.warning(`Account for ${user.name} suspended. All active sessions revoked.`, "User Suspended");
+          } else {
+            toast.success(`Account for ${user.name} has been reactivated.`, "User Reactivated");
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Failed to update user.";
+          setActionMessage({ type: "error", text: msg });
+          toast.error(msg, "Status Update Failed");
+        } finally {
+          setBusyUserId(null);
+        }
+      },
+    });
   }
 
-  async function handleResetPassword(user: UserItem) {
-    if (!window.confirm(`Send password setup / reset email to ${user.email}?`)) return;
+  function handleResetPassword(user: UserItem) {
+    setConfirmModal({
+      isOpen: true,
+      title: "Dispatch Password Setup / Reset?",
+      message: `Send an official password setup and initiation link to ${user.email}?`,
+      confirmLabel: "Send Email",
+      variant: "primary",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        setBusyUserId(user.id);
+        setActionMessage(null);
+        try {
+          const res = await fetch("/api/admin/users", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: user.id, action: "reset-password" }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to trigger password reset");
 
-    setBusyUserId(user.id);
-    setActionMessage(null);
-    try {
-      const res = await fetch("/api/admin/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: user.id, action: "reset-password" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to trigger password reset");
-
-      const successText = data.emailSent
-        ? `Password setup email sent to ${user.email} successfully!`
-        : `Password link generated: ${data.resetUrl}`;
-      setActionMessage({ type: "success", text: successText });
-      if (data.emailSent) {
-        toast.success(`Password link dispatched to ${user.email}.`, "Email Dispatched");
-      } else {
-        toast.info("Password link generated.", "Link Created");
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to reset password.";
-      setActionMessage({ type: "error", text: msg });
-      toast.error(msg, "Reset Failed");
-    } finally {
-      setBusyUserId(null);
-    }
+          const successText = data.emailSent
+            ? `Password setup email sent to ${user.email} successfully!`
+            : `Password link generated: ${data.resetUrl}`;
+          setActionMessage({ type: "success", text: successText });
+          if (data.emailSent) {
+            toast.success(`Password link dispatched to ${user.email}.`, "Email Dispatched");
+          } else {
+            toast.info("Password link generated.", "Link Created");
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Failed to reset password.";
+          setActionMessage({ type: "error", text: msg });
+          toast.error(msg, "Reset Failed");
+        } finally {
+          setBusyUserId(null);
+        }
+      },
+    });
   }
 
-  async function handleDeleteUser(user: UserItem) {
+  function handleDeleteUser(user: UserItem) {
     if (user.id === currentAdminId) {
-      alert("You cannot delete your own administrative account.");
-      return;
-    }
-    if (!window.confirm(`DANGER: Permanently delete ${user.name} (${user.email})? This action cannot be reversed.`)) {
+      toast.warning("You cannot delete your own administrative account.", "Action Forbidden");
       return;
     }
 
-    setBusyUserId(user.id);
-    setActionMessage(null);
-    try {
-      const res = await fetch(`/api/admin/users?id=${encodeURIComponent(user.id)}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete user");
+    setConfirmModal({
+      isOpen: true,
+      title: "Permanently Delete User Account?",
+      message: `DANGER: Permanently delete ${user.name} (${user.email})? This action cannot be reversed and deletes all credentials.`,
+      confirmLabel: "Delete Permanently",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        setBusyUserId(user.id);
+        setActionMessage(null);
+        try {
+          const res = await fetch(`/api/admin/users?id=${encodeURIComponent(user.id)}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to delete user");
 
-      setUsers(users.filter((u) => u.id !== user.id));
-      if (selectedUserId === user.id) {
-        setSelectedUserId(users.find((u) => u.id !== user.id)?.id || null);
-      }
-      setActionMessage({ type: "success", text: `User ${user.email} was permanently deleted.` });
-      toast.success(`User ${user.name} removed.`, "Deleted");
-    } catch (err) {
-      setActionMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to delete user." });
-      toast.error("Failed to delete user", "Error");
-    } finally {
-      setBusyUserId(null);
-    }
+          setUsers(users.filter((u) => u.id !== user.id));
+          if (selectedUserId === user.id) {
+            setSelectedUserId(users.find((u) => u.id !== user.id)?.id || null);
+          }
+          setActionMessage({ type: "success", text: data.message });
+          toast.success(`User ${user.name} was permanently removed.`, "User Deleted");
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Failed to delete user.";
+          setActionMessage({ type: "error", text: msg });
+          toast.error(msg, "Deletion Failed");
+        } finally {
+          setBusyUserId(null);
+        }
+      },
+    });
   }
 
   const columns = [
@@ -671,6 +762,22 @@ export function AdminUsersManager({
                     value={selectedUser.email}
                   />
 
+                  {selectedUser.phone && (
+                    <DetailRow
+                      icon={<Phone size={16} strokeWidth={1.8} />}
+                      label="Phone Number"
+                      value={selectedUser.phone}
+                    />
+                  )}
+
+                  {selectedUser.dateOfBirth && (
+                    <DetailRow
+                      icon={<Calendar size={16} strokeWidth={1.8} />}
+                      label="Date of Birth"
+                      value={selectedUser.dateOfBirth}
+                    />
+                  )}
+
                   <DetailRow
                     icon={<Shield size={16} strokeWidth={1.8} />}
                     label="Two-Factor (TOTP)"
@@ -1006,6 +1113,57 @@ export function AdminUsersManager({
                   </select>
                 </div>
 
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                    Phone Number {newRole !== "CLIENT" ? "*" : "(Optional)"}
+                  </label>
+                  <input
+                    type="tel"
+                    required={newRole !== "CLIENT"}
+                    placeholder="+91 98765 43210"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 14,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      fontSize: 13,
+                    }}
+                  />
+                  {newRole !== "CLIENT" && (
+                    <span style={{ fontSize: 10, color: "var(--text-muted-crm)", marginTop: 3, display: "block" }}>
+                      Required for staff notifications &amp; emergency access.
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                    Date of Birth {newRole !== "CLIENT" ? "*" : "(Optional)"}
+                  </label>
+                  <input
+                    type="date"
+                    required={newRole !== "CLIENT"}
+                    value={newDob}
+                    onChange={(e) => setNewDob(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 14,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      fontSize: 13,
+                    }}
+                  />
+                  {newRole !== "CLIENT" && (
+                    <span style={{ fontSize: 10, color: "var(--text-muted-crm)", marginTop: 3, display: "block" }}>
+                      Required for staff employee records &amp; identity compliance.
+                    </span>
+                  )}
+                </div>
+
                 <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                   <button
                     type="button"
@@ -1032,7 +1190,7 @@ export function AdminUsersManager({
                       borderRadius: 99,
                       border: "none",
                       background: "var(--ink-crm)",
-                      color: "#FFFFFF",
+                      color: "var(--ink-crm-text, #FFFFFF)",
                       fontWeight: 700,
                       fontSize: 13,
                       cursor: "pointer",
@@ -1057,6 +1215,17 @@ export function AdminUsersManager({
           </div>
         </div>
       )}
+
+      {/* In-App Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmLabel={confirmModal.confirmLabel}
+        variant={confirmModal.variant}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
 
       <style>{`
         @media (max-width: 1040px) {

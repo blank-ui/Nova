@@ -715,23 +715,9 @@ export function UserProfileSecurity({
                   {avatarUrl ? "Custom Photo Set" : "Using Default Initial"}
                 </span>
               </div>
-              <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--text-muted-crm)", lineHeight: 1.5 }}>
-                Click the camera icon on your avatar or the button below to upload, reposition, crop, or remove your photo. JPEG, PNG, or WebP up to 2 MB.
+              <p style={{ margin: "0", fontSize: 12, color: "var(--text-muted-crm)", lineHeight: 1.5 }}>
+                Click the camera icon on your avatar to upload, reposition, crop, or remove your photo. JPEG, PNG, or WebP up to 2 MB.
               </p>
-
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <AvatarMenu
-                  currentAvatarUrl={avatarUrl}
-                  userId={initialUser.id}
-                  userName={name}
-                  onAvatarChanged={(newUrl) => setAvatarUrl(newUrl)}
-                />
-                {avatarUrl && (
-                  <span style={{ fontSize: 11, color: "var(--text-muted-crm)" }}>
-                    Updates across all workspaces immediately
-                  </span>
-                )}
-              </div>
             </div>
           </div>
 

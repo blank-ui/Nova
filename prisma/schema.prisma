@@ -32,6 +32,8 @@ model User {
   emailVerified    Boolean       @default(false)
   emailVerifiedAt  DateTime?
   image            String?
+  phone            String?
+  dateOfBirth      String?
   discordHandle    String?
   discordId        String?
   twoFactorEnabled Boolean       @default(false)
@@ -138,6 +140,7 @@ model Inquiry {
   name      String
   email     String
   phone     String?
+  dateOfBirth String?
   company   String?
   service   String
   budget    String?
