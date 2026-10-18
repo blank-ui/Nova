@@ -55,12 +55,12 @@ export function StatTile({
     },
     black: {
       bg: "var(--ink-crm)",
-      text: "#FFFFFF",
-      subText: "rgba(255, 255, 255, 0.75)",
-      pillBg: "rgba(255, 255, 255, 0.15)",
-      pillColor: "#FFFFFF",
-      circleBorder: "rgba(255, 255, 255, 0.3)",
-      circleBg: "rgba(255, 255, 255, 0.08)",
+      text: "var(--ink-crm-text, #FFFFFF)",
+      subText: "var(--ink-crm-text, #FFFFFF)",
+      pillBg: "rgba(125, 125, 125, 0.25)",
+      pillColor: "var(--ink-crm-text, #FFFFFF)",
+      circleBorder: "var(--border-hairline)",
+      circleBg: "rgba(125, 125, 125, 0.12)",
     },
     yellow: {
       bg: "var(--accent-yellow)",

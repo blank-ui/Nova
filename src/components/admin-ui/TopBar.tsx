@@ -45,12 +45,14 @@ export function TopBar({ user }: TopBarProps) {
 
   return (
     <header
+      className="topbar-header"
       style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         gap: 16,
         paddingBottom: 24,
+        flexWrap: "wrap",
       }}
     >
       {/* Left: Nova Logo */}
@@ -71,7 +73,7 @@ export function TopBar({ user }: TopBarProps) {
             height: 36,
             borderRadius: 10,
             background: "var(--ink-crm)",
-            color: "#FFFFFF",
+            color: "var(--ink-crm-text, #FFFFFF)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -140,9 +142,16 @@ export function TopBar({ user }: TopBarProps) {
 
       {/* Right: Circular 44px Buttons & Avatar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <ThemeToggle />
-        </div>
+        <ThemeToggle
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            border: "1px solid var(--border-hairline)",
+            background: "var(--surface-raised)",
+            color: "var(--text-primary)",
+          }}
+        />
 
         <button
           type="button"
@@ -166,7 +175,23 @@ export function TopBar({ user }: TopBarProps) {
           <Bell size={18} strokeWidth={1.8} />
         </button>
 
-        <LogoutButton />
+        <LogoutButton
+          iconOnly
+          className=""
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            border: "1px solid var(--border-hairline)",
+            background: "var(--surface-raised)",
+            color: "var(--text-primary)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            padding: 0,
+          }}
+        />
 
         <Link href={profileHref} aria-label="User profile & security">
           <Avatar

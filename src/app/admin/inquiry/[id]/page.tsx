@@ -151,17 +151,18 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
 
         {/* Message */}
         <div style={{ marginBottom: 16 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted-crm, var(--muted))", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
             Client Message / Project Scope:
           </span>
           <p
             style={{
               fontSize: 13,
               lineHeight: 1.7,
-              background: "var(--paper)",
+              background: "var(--surface-raised, var(--paper))",
               padding: "12px 14px",
               borderRadius: 10,
-              border: "1px solid var(--line)",
+              border: "1px solid var(--border-hairline-light, var(--line))",
+              color: "var(--text-primary)",
               margin: 0,
               whiteSpace: "pre-wrap",
             }}
@@ -172,7 +173,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
 
         {/* Status Update Form */}
         <div>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", display: "block", marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted-crm, var(--muted))", textTransform: "uppercase", display: "block", marginBottom: 8 }}>
             Update Pipeline Status:
           </span>
           <StatusUpdateForm inquiryId={inquiry.id} currentStatus={inquiry.status} />
@@ -181,8 +182,8 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
 
       {/* Audit History */}
       {auditLogs.length > 0 && (
-        <div style={{ background: "var(--paper-alt, rgba(0,0,0,0.02))", border: "1px solid var(--line)", borderRadius: 16, padding: 18 }}>
-          <h4 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 700 }}>Audit History</h4>
+        <div style={{ background: "var(--surface-raised, var(--paper-alt))", border: "1px solid var(--border-hairline-light, var(--line))", borderRadius: 16, padding: 18 }}>
+          <h4 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>Audit History</h4>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {auditLogs.map((log) => {
               const meta = log.metadata as Record<string, unknown> | null;
@@ -193,8 +194,9 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
                     fontSize: 12,
                     padding: "8px 12px",
                     borderRadius: 8,
-                    backgroundColor: "var(--paper)",
-                    border: "1px solid var(--line)",
+                    backgroundColor: "var(--card-bg-crm, var(--paper))",
+                    border: "1px solid var(--border-hairline, var(--line))",
+                    color: "var(--text-primary)",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
@@ -206,7 +208,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
                       <span> &rarr; Status: <strong>{String(meta?.new)}</strong></span>
                     )}
                   </div>
-                  <time style={{ color: "var(--muted)", fontSize: 11 }}>
+                  <time style={{ color: "var(--text-muted-crm, var(--muted))", fontSize: 11 }}>
                     {new Date(log.createdAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </time>
                 </li>
@@ -219,7 +221,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
   );
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--page-bg, #F6F4EE)", padding: "20px 0 60px" }}>
+    <main style={{ minHeight: "100vh", background: "var(--page-bg)", padding: "20px 0 60px" }}>
       <ClientProfileCRM
         user={serializedUser}
         inquiries={serializedInquiries}

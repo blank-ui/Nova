@@ -328,7 +328,8 @@ export function AppointmentsManager({
               background: "var(--surface-raised)",
               border: "1px solid var(--border-hairline)",
               borderRadius: "var(--radius-pill)",
-              width: 230,
+              flex: "1 1 180px",
+              maxWidth: 280,
             }}
           >
             <Search size={14} color="var(--text-muted-crm)" />
@@ -546,7 +547,7 @@ export function AppointmentsManager({
                               borderRadius: "var(--radius-pill)",
                               border: "none",
                               background: "var(--ink-crm)",
-                              color: "#FFFFFF",
+                              color: "var(--ink-crm-text, #FFFFFF)",
                               fontSize: 11,
                               fontWeight: 700,
                               cursor: "pointer",
@@ -895,7 +896,7 @@ export function AppointmentsManager({
                     borderRadius: 99,
                     border: "none",
                     background: "var(--ink-crm)",
-                    color: "#FFFFFF",
+                    color: "var(--ink-crm-text, #FFFFFF)",
                     fontWeight: 700,
                     fontSize: 13,
                     cursor: "pointer",
@@ -1019,7 +1020,7 @@ export function AppointmentsManager({
                     borderRadius: 99,
                     border: "none",
                     background: "var(--ink-crm)",
-                    color: "#FFFFFF",
+                    color: "var(--ink-crm-text, #FFFFFF)",
                     fontWeight: 700,
                     fontSize: 13,
                     cursor: "pointer",

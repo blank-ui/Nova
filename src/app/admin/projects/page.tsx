@@ -150,7 +150,7 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
                     padding: "5px 14px",
                     borderRadius: "var(--radius-pill)",
                     background: isActive ? "var(--ink-crm)" : "transparent",
-                    color: isActive ? "#FFFFFF" : "var(--text-secondary)",
+                    color: isActive ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
                     fontWeight: isActive ? 700 : 500,
                     textDecoration: "none",
                     whiteSpace: "nowrap",

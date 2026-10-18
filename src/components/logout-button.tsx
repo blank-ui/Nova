@@ -7,9 +7,11 @@ import { authClient } from "@/lib/auth-client";
 export function LogoutButton({
   className = "button button-outline",
   style,
+  iconOnly = false,
 }: {
   className?: string;
   style?: React.CSSProperties;
+  iconOnly?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
 
@@ -31,20 +33,21 @@ export function LogoutButton({
       disabled={busy}
       className={className}
       style={{
-        padding: "8px 14px",
+        padding: iconOnly ? 0 : "8px 14px",
         fontSize: 12,
-        borderRadius: 10,
+        borderRadius: iconOnly ? "50%" : 10,
         cursor: busy ? "wait" : "pointer",
         display: "inline-flex",
         alignItems: "center",
+        justifyContent: "center",
         gap: 6,
         ...style,
       }}
       title="Sign out of Nova"
       aria-label="Sign out of Nova"
     >
-      <LogOut size={13} />
-      <span>{busy ? "Signing out..." : "Sign Out"}</span>
+      <LogOut size={iconOnly ? 17 : 13} strokeWidth={1.8} />
+      {!iconOnly && <span>{busy ? "Signing out..." : "Sign Out"}</span>}
     </button>
   );
 }

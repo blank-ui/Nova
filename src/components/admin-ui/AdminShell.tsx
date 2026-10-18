@@ -103,13 +103,22 @@ export function AdminShell({ user, children }: AdminShellProps) {
           }
           .admin-body-layout {
             flex-direction: column !important;
+            gap: 16px !important;
           }
           .left-rail-container {
             width: 100% !important;
             flex-direction: row !important;
-            justifyContent: center !important;
+            justifyContent: flex-start !important;
             border-radius: var(--radius-pill) !important;
             overflow-x: auto !important;
+            padding: 8px 12px !important;
+            gap: 8px !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .left-rail-container::-webkit-scrollbar {
+            display: none !important;
           }
           .topbar-nav-pill-track {
             order: 3 !important;
@@ -118,7 +127,19 @@ export function AdminShell({ user, children }: AdminShellProps) {
             justify-content: flex-start !important;
             overflow-x: auto !important;
             padding-bottom: 6px !important;
-            margin-top: 4px !important;
+            margin-top: 6px !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .topbar-nav-pill-track::-webkit-scrollbar {
+            display: none !important;
+          }
+        }
+        @media (max-width: 600px) {
+          .admin-app-shell {
+            padding: 12px 10px 18px !important;
+            border-radius: 16px !important;
           }
         }
       `}</style>

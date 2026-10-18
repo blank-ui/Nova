@@ -498,3 +498,56 @@ button, input, textarea, select {
     padding: 22px 18px !important;
   }
 }
+
+/* ========================================================================= */
+/* CRM & Admin Unified Token Adaptation & Mobile Optimization                */
+/* ========================================================================= */
+.admin-app-shell .card,
+.admin-app-shell section.card {
+  background: var(--card-bg-crm) !important;
+  border-color: var(--border-hairline-light) !important;
+  color: var(--text-primary) !important;
+}
+
+.admin-app-shell .field,
+.admin-app-shell input:not([type="checkbox"]):not([type="radio"]),
+.admin-app-shell select,
+.admin-app-shell textarea {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-primary);
+}
+
+.admin-app-shell input::placeholder,
+.admin-app-shell textarea::placeholder {
+  color: var(--text-muted-crm);
+}
+
+.admin-app-shell input:focus,
+.admin-app-shell select:focus,
+.admin-app-shell textarea:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(47, 84, 235, 0.16);
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    gap: 14px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .page-header h1 {
+    font-size: 26px !important;
+  }
+
+  .data-table-container {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 22px !important;
+  }
+}

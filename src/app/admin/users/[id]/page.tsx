@@ -67,7 +67,7 @@ export default async function AdminUserProfilePage({ params }: AdminUserProfileP
   }));
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--page-bg, #F6F4EE)", padding: "24px 0 60px" }}>
+    <main style={{ minHeight: "100vh", background: "var(--page-bg)", padding: "24px 0 60px" }}>
       <ClientProfileCRM
         user={serializedUser}
         inquiries={serializedInquiries}

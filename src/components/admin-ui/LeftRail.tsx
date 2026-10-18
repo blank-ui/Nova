@@ -233,6 +233,7 @@ export function LeftRail() {
                   cursor: "pointer",
                   transition: "all 0.15s ease",
                   padding: 0,
+                  flexShrink: 0,
                 }}
                 className="left-rail-btn"
               >
@@ -261,6 +262,7 @@ export function LeftRail() {
                 border: isActive ? "1px solid var(--left-rail-btn-border)" : "1px solid transparent",
                 transition: "all 0.15s ease",
                 textDecoration: "none",
+                flexShrink: 0,
               }}
               className="left-rail-btn"
             >
