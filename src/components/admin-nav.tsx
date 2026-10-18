@@ -18,6 +18,7 @@ export function AdminNav({
 
   const isOverview = pathname === "/admin";
   const isInquiries = pathname?.startsWith("/admin/inquiry");
+  const isProjects = pathname?.startsWith("/admin/projects");
   const isUsers = pathname?.startsWith("/admin/users");
   const isSecurity = pathname === "/admin/security";
   const isPortal = pathname?.startsWith("/portal");
@@ -75,6 +76,13 @@ export function AdminNav({
               style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
             >
               <MessageSquare size={15} /> Inquiries (CRM)
+            </Link>
+            <Link
+              className={`nav-link ${isProjects ? "nav-link-active" : ""}`}
+              href="/admin/projects"
+              style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
+            >
+              <FolderKanban size={15} /> Projects
             </Link>
             <Link
               className={`nav-link ${isUsers ? "nav-link-active" : ""}`}

@@ -12,6 +12,7 @@ export default async function AdminUsersPage() {
       name: true,
       email: true,
       role: true,
+      image: true,
       emailVerified: true,
       twoFactorEnabled: true,
       banned: true,
@@ -33,11 +34,11 @@ export default async function AdminUsersPage() {
   }));
 
   return (
-    <main className="shell" style={{ padding: "40px 0 80px" }}>
+    <div style={{ width: "100%" }}>
       <AdminUsersManager
         initialUsers={serializedUsers}
         currentAdminId={session.user.id}
       />
-    </main>
+    </div>
   );
 }

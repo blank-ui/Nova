@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
+import Link from "next/link";
 import {
   GitBranch,
   Image as ImageIcon,
@@ -14,8 +15,19 @@ import {
   AlertCircle,
   FolderGit2,
   Sparkles,
-  ChevronUp,
+  Star,
+  Search,
+  X,
+  Code,
+  Layers,
 } from "lucide-react";
+import {
+  PageHeader,
+  SectionCard,
+  Badge,
+  EmptyState,
+} from "@/components/admin-ui";
+import { useToast } from "@/components/toast";
 
 interface AvailableRepo {
   name: string;
@@ -49,6 +61,7 @@ export function AdminShowcaseManager({
   initialGalleryItems,
 }: AdminShowcaseManagerProps) {
   const [activeTab, setActiveTab] = useState<"github" | "gallery">("github");
+  const toast = useToast();
 
   // GitHub configuration state
   const [githubUser, setGithubUser] = useState(initialGithubUser);
@@ -87,23 +100,6 @@ export function AdminShowcaseManager({
     galleryCategoryFilter === "ALL" || g.category === galleryCategoryFilter
   );
 
-  function applyPreset(preset: {
-    title: string;
-    imageUrl: string;
-    category: string;
-    repoName: string;
-    projectUrl: string;
-    description: string;
-  }) {
-    setNewTitle(preset.title);
-    setNewImageUrl(preset.imageUrl);
-    setNewCategory(preset.category);
-    setNewRepoName(preset.repoName);
-    setNewProjectUrl(preset.projectUrl);
-    setNewDescription(preset.description);
-    setShowAddModal(true);
-  }
-
   function selectAllRepos() {
     const allNames = availableRepos.map((r) => r.name);
     setVisibleRepos(Array.from(new Set([...visibleRepos, ...allNames])));
@@ -113,7 +109,6 @@ export function AdminShowcaseManager({
     setVisibleRepos([]);
   }
 
-  // Toggle repository visibility
   function toggleRepoVisibility(repoName: string) {
     if (visibleRepos.includes(repoName)) {
       setVisibleRepos(visibleRepos.filter((r) => r !== repoName));
@@ -122,7 +117,6 @@ export function AdminShowcaseManager({
     }
   }
 
-  // Add custom repo name manually
   function addCustomRepo() {
     const trimmed = customRepoInput.trim();
     if (trimmed && !visibleRepos.includes(trimmed)) {
@@ -137,7 +131,6 @@ export function AdminShowcaseManager({
     }
   }
 
-  // Save GitHub settings
   async function handleSaveGithub(e: React.FormEvent) {
     e.preventDefault();
     setGithubSaving(true);
@@ -157,25 +150,26 @@ export function AdminShowcaseManager({
 
       setGithubMessage({
         type: "success",
-        text: `Configured @${data.githubUser} with ${visibleRepos.length} showcased repositories.`,
+        text: `Saved @${data.githubUser} showcase with ${visibleRepos.length} featured repositories.`,
       });
+      toast.success("GitHub showcase preferences saved.", "Showcase Updated");
     } catch (err) {
-      setGithubMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Error saving GitHub configuration",
-      });
+      const msg = err instanceof Error ? err.message : "Error saving GitHub configuration";
+      setGithubMessage({ type: "error", text: msg });
+      toast.error(msg, "Save Failed");
     } finally {
       setGithubSaving(false);
     }
   }
 
-  // Sync / refresh repos from GitHub for entered username
   async function handleSyncRepos() {
     setGithubSyncing(true);
     setGithubMessage(null);
 
     try {
-      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(githubUser.trim())}/repos?sort=updated&per_page=60`);
+      const res = await fetch(
+        `https://api.github.com/users/${encodeURIComponent(githubUser.trim())}/repos?sort=updated&per_page=60`
+      );
       if (!res.ok) throw new Error(`Could not fetch repos for user @${githubUser}`);
       const data = await res.json();
 
@@ -189,20 +183,19 @@ export function AdminShowcaseManager({
         setAvailableRepos(mapped);
         setGithubMessage({
           type: "success",
-          text: `Fetched ${mapped.length} repositories from @${githubUser}.`,
+          text: `Synced ${mapped.length} public repositories from @${githubUser}.`,
         });
+        toast.success(`Retrieved ${mapped.length} repositories from GitHub.`, "Sync Complete");
       }
     } catch (err) {
-      setGithubMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Failed to sync GitHub repositories",
-      });
+      const msg = err instanceof Error ? err.message : "Failed to sync GitHub repositories";
+      setGithubMessage({ type: "error", text: msg });
+      toast.error(msg, "Sync Error");
     } finally {
       setGithubSyncing(false);
     }
   }
 
-  // Create new gallery item
   async function handleAddGalleryItem(e: React.FormEvent) {
     e.preventDefault();
     setGalleryBusy(true);
@@ -231,20 +224,18 @@ export function AdminShowcaseManager({
       setNewDescription("");
       setNewProjectUrl("");
       setNewRepoName("");
-      setGalleryMessage({ type: "success", text: "Screenshot showcase item created!" });
+      toast.success("Showcase screenshot published to gallery.", "Item Created");
     } catch (err) {
-      setGalleryMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Failed to add showcase item",
-      });
+      const msg = err instanceof Error ? err.message : "Failed to add showcase item";
+      setGalleryMessage({ type: "error", text: msg });
+      toast.error(msg, "Creation Failed");
     } finally {
       setGalleryBusy(false);
     }
   }
 
-  // Delete gallery item
   async function handleDeleteGalleryItem(id: string) {
-    if (!window.confirm("Delete this showcase screenshot?")) return;
+    if (!window.confirm("Permanently delete this showcase screenshot?")) return;
 
     try {
       const res = await fetch(`/api/admin/gallery?id=${encodeURIComponent(id)}`, {
@@ -253,798 +244,792 @@ export function AdminShowcaseManager({
       if (!res.ok) throw new Error("Failed to delete item");
 
       setGalleryItems(galleryItems.filter((item) => item.id !== id));
-      setGalleryMessage({ type: "success", text: "Item deleted." });
+      toast.success("Gallery item deleted.", "Removed");
     } catch (err) {
-      setGalleryMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Delete failed",
-      });
+      toast.error(err instanceof Error ? err.message : "Delete failed", "Error");
     }
   }
 
   return (
-    <div style={{ display: "grid", gap: 24 }}>
-      {/* Top Header */}
-      <div>
-        <h1 style={{ fontSize: 28, letterSpacing: "-.05em", margin: "0 0 6px", color: "var(--ink)" }}>
-          Studio Showcase, GitHub & Screenshot Gallery
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-          Control which GitHub repositories are featured across Nova, and manage screenshot showcases of your builds and designs.
-        </p>
-      </div>
+    <div className="animate-fade-in-up">
+      {/* Page Header with Headline Stats Strip */}
+      <PageHeader
+        titleLine1="GitHub &"
+        titleLine2="Gallery"
+        backHref="/admin"
+        stats={[
+          {
+            icon: <GitBranch size={18} strokeWidth={1.8} />,
+            value: availableRepos.length,
+            badgeLabel: "Repos",
+            badgeVariant: "neutral",
+            caption: `Connected to @${githubUser}`,
+          },
+          {
+            icon: <Sparkles size={18} strokeWidth={1.8} />,
+            value: visibleRepos.length,
+            badgeLabel: "Featured",
+            badgeVariant: "warning",
+            caption: "Visible on public showcase",
+          },
+          {
+            icon: <ImageIcon size={18} strokeWidth={1.8} />,
+            value: galleryItems.length,
+            badgeLabel: "Mockups",
+            badgeVariant: "info",
+            caption: "Screenshot gallery builds",
+          },
+        ]}
+      />
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: 8, borderBottom: "1px solid var(--line)", paddingBottom: 12 }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab("github")}
-          className={`button ${activeTab === "github" ? "" : "button-outline"}`}
-          style={{ padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
-        >
-          <GitBranch size={15} /> GitHub Account & Visible Repos
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("gallery")}
-          className={`button ${activeTab === "gallery" ? "" : "button-outline"}`}
-          style={{ padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
-        >
-          <ImageIcon size={15} /> Screenshot Gallery ({galleryItems.length})
-        </button>
+      {/* Tabs Row: GitHub vs Gallery */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 16,
+          flexWrap: "wrap",
+          marginBottom: 20,
+        }}
+      >
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab("github")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "var(--radius-pill)",
+              fontSize: 12,
+              fontWeight: activeTab === "github" ? 700 : 500,
+              border: activeTab === "github" ? "none" : "1px solid var(--border-hairline)",
+              background: activeTab === "github" ? "var(--ink-crm)" : "var(--surface-raised)",
+              color: activeTab === "github" ? "#FFFFFF" : "var(--text-secondary)",
+              cursor: "pointer",
+            }}
+          >
+            <GitBranch size={15} />
+            <span>GitHub Repositories ({visibleRepos.length}/{availableRepos.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("gallery")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "var(--radius-pill)",
+              fontSize: 12,
+              fontWeight: activeTab === "gallery" ? 700 : 500,
+              border: activeTab === "gallery" ? "none" : "1px solid var(--border-hairline)",
+              background: activeTab === "gallery" ? "var(--ink-crm)" : "var(--surface-raised)",
+              color: activeTab === "gallery" ? "#FFFFFF" : "var(--text-secondary)",
+              cursor: "pointer",
+            }}
+          >
+            <ImageIcon size={15} />
+            <span>Screenshot Gallery ({galleryItems.length})</span>
+          </button>
+        </div>
+
+        {activeTab === "gallery" && (
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "var(--radius-pill)",
+              background: "var(--ink-crm)",
+              color: "#FFFFFF",
+              border: "none",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <Plus size={15} />
+            <span>Add Screenshot Item</span>
+          </button>
+        )}
       </div>
 
       {/* ================================================================= */}
-      {/* TAB 1: GITHUB CONFIGURATION                                       */}
+      {/* TAB 1: GITHUB REPOSITORIES                                        */}
       {/* ================================================================= */}
       {activeTab === "github" && (
-        <div style={{ display: "grid", gap: 20 }}>
-          {githubMessage && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* GitHub Config Bar */}
+          <SectionCard title="GitHub Studio Configuration">
+            <form onSubmit={handleSaveGithub}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 260 }}>
+                  <label htmlFor="gh-user-input" style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+                    Organization / User:
+                  </label>
+                  <div style={{ position: "relative", flex: 1 }}>
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: 12,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontWeight: 700,
+                        color: "var(--text-muted-crm)",
+                        fontSize: 13,
+                      }}
+                    >
+                      @
+                    </span>
+                    <input
+                      id="gh-user-input"
+                      type="text"
+                      value={githubUser}
+                      onChange={(e) => setGithubUser(e.target.value)}
+                      required
+                      placeholder="e.g. blank-ui"
+                      style={{
+                        width: "100%",
+                        padding: "8px 14px 8px 28px",
+                        borderRadius: "var(--radius-pill)",
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--surface-raised)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    onClick={handleSyncRepos}
+                    disabled={githubSyncing}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "var(--radius-pill)",
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <RefreshCw size={13} className={githubSyncing ? "animate-spin" : ""} />
+                    <span>{githubSyncing ? "Syncing..." : "Sync Repos"}</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={githubSaving}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: "var(--radius-pill)",
+                      border: "none",
+                      background: "var(--accent-blue)",
+                      color: "#FFFFFF",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Check size={14} />
+                    <span>{githubSaving ? "Saving..." : "Save Visibility"}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </SectionCard>
+
+          {/* Repo Controls & Search Bar */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={selectAllRepos}
+                style={{
+                  fontSize: 11,
+                  padding: "5px 12px",
+                  borderRadius: 99,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Select All
+              </button>
+              <button
+                type="button"
+                onClick={deselectAllRepos}
+                style={{
+                  fontSize: 11,
+                  padding: "5px 12px",
+                  borderRadius: 99,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Clear All
+              </button>
+            </div>
+
+            <div style={{ position: "relative", minWidth: 260 }}>
+              <Search
+                size={14}
+                style={{
+                  position: "absolute",
+                  left: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--text-muted-crm)",
+                }}
+              />
+              <input
+                type="search"
+                placeholder="Search repositories..."
+                value={repoSearch}
+                onChange={(e) => setRepoSearch(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 14px 8px 32px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  fontSize: 12,
+                  outline: "none",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Repos Grid (StatTile-style cards in responsive grid) */}
+          {filteredRepos.length > 0 ? (
             <div
-              role="status"
               style={{
-                padding: "12px 16px",
-                borderRadius: 10,
-                fontSize: 13,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                background: githubMessage.type === "success" ? "#ecfdf5" : "#fef2f2",
-                color: githubMessage.type === "success" ? "#065f46" : "#991b1b",
-                border: `1px solid ${githubMessage.type === "success" ? "#a7f3d0" : "#fecaca"}`,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 16,
               }}
             >
-              {githubMessage.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-              <span>{githubMessage.text}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSaveGithub} className="card" style={{ padding: 28 }}>
-            <h2 style={{ fontSize: 18, letterSpacing: "-.03em", margin: "0 0 16px", color: "var(--ink)" }}>
-              GitHub Profile & Visibility Controls
-            </h2>
-
-            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 20 }}>
-              <div style={{ flex: 1, minWidth: 240 }}>
-                <label htmlFor="github-user-input" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                  Configured GitHub Username or Organization
-                </label>
-                <div style={{ position: "relative" }}>
-                  <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--muted)", fontWeight: 700 }}>
-                    @
-                  </span>
-                  <input
-                    id="github-user-input"
-                    type="text"
-                    value={githubUser}
-                    onChange={(e) => setGithubUser(e.target.value)}
-                    required
-                    placeholder="blank-ui"
-                    className="field"
-                    style={{ paddingLeft: 30 }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ alignSelf: "flex-end", display: "flex", gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={handleSyncRepos}
-                  disabled={githubSyncing || !githubUser.trim()}
-                  className="button button-outline"
-                  style={{ padding: "10px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
-                >
-                  {githubSyncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                  <span>Fetch Repos</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={githubSaving}
-                  className="button"
-                  style={{ padding: "10px 20px", fontSize: 13 }}
-                >
-                  {githubSaving ? "Saving..." : "Save Visibility Settings"}
-                </button>
-              </div>
-            </div>
-
-            {/* Quick manual repo adder */}
-            <div style={{ padding: "14px 18px", borderRadius: 12, background: "var(--paper)", border: "1px solid var(--line)", marginBottom: 24 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
-                Add Custom Repo Name to Showcase
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input
-                  type="text"
-                  value={customRepoInput}
-                  onChange={(e) => setCustomRepoInput(e.target.value)}
-                  placeholder="e.g. Nova, my-web-app"
-                  className="field"
-                  style={{ fontSize: 12, flex: 1 }}
-                />
-                <button
-                  type="button"
-                  onClick={addCustomRepo}
-                  className="button button-outline"
-                  style={{ padding: "8px 14px", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
-                >
-                  <Plus size={14} /> Add
-                </button>
-              </div>
-            </div>
-
-            {/* Selection Grid */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
-                    Select Repositories to Show on Website ({visibleRepos.length} selected)
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                    Checked repositories appear on the studio portfolio and code showcase.
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <input
-                    type="search"
-                    value={repoSearch}
-                    onChange={(e) => setRepoSearch(e.target.value)}
-                    placeholder="Search repos..."
-                    className="field"
-                    style={{ fontSize: 12, padding: "5px 10px", width: 160 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={selectAllRepos}
-                    style={{ background: "none", border: "none", color: "var(--blue)", fontSize: 12, cursor: "pointer", fontWeight: 600 }}
+              {filteredRepos.map((repo) => {
+                const isSelected = visibleRepos.includes(repo.name);
+                return (
+                  <div
+                    key={repo.name}
+                    onClick={() => toggleRepoVisibility(repo.name)}
+                    style={{
+                      background: "var(--surface-raised)",
+                      borderRadius: "var(--radius-tile)",
+                      padding: "18px 20px",
+                      border: isSelected ? "2px solid var(--accent-blue)" : "1px solid var(--border-hairline)",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      transition: "all 0.15s ease",
+                    }}
                   >
-                    Select All
-                  </button>
-                  <span style={{ color: "var(--line)" }}>|</span>
-                  <button
-                    type="button"
-                    onClick={deselectAllRepos}
-                    style={{ background: "none", border: "none", color: "var(--muted)", fontSize: 12, cursor: "pointer", fontWeight: 600 }}
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-
-              {availableRepos.length === 0 ? (
-                <div style={{ padding: "30px 0", textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
-                  No repositories loaded. Click &quot;Fetch Repos&quot; above to discover repositories for @{githubUser}.
-                </div>
-              ) : filteredRepos.length === 0 ? (
-                <div style={{ padding: "20px 0", textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
-                  No repositories match &quot;{repoSearch}&quot;.
-                </div>
-              ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-                  {filteredRepos.map((repo) => {
-                    const isSelected = visibleRepos.includes(repo.name);
-                    return (
-                      <div
-                        key={repo.name}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => toggleRepoVisibility(repo.name)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            toggleRepoVisibility(repo.name);
-                          }
-                        }}
-                        style={{
-                          padding: "14px 16px",
-                          borderRadius: 12,
-                          border: isSelected ? "2px solid #6C4CFF" : "1px solid var(--line)",
-                          background: isSelected ? "rgba(108,76,255,0.04)" : "var(--paper)",
-                          cursor: "pointer",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          gap: 10,
-                          transition: "all 0.15s ease",
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)", display: "flex", alignItems: "center", gap: 6 }}>
-                            <FolderGit2 size={14} style={{ color: isSelected ? "#6C4CFF" : "var(--muted)" }} />
-                            <span>{repo.name}</span>
-                          </div>
-                          {repo.description && (
-                            <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0", lineHeight: 1.4 }}>
-                              {repo.description}
-                            </p>
-                          )}
-                          <div style={{ display: "flex", gap: 10, marginTop: 6, fontSize: 10, color: "var(--muted)" }}>
-                            <span>{repo.language}</span>
-                            {repo.stars > 0 && <span>★ {repo.stars}</span>}
-                          </div>
-                        </div>
-
-                        <div
+                    <div>
+                      {/* Top Row: Language tag, star count, and external link */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <span
                           style={{
-                            width: 20,
-                            height: 20,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "var(--text-secondary)",
+                            background: "var(--card-bg-crm)",
+                            padding: "3px 8px",
                             borderRadius: 6,
-                            border: isSelected ? "none" : "1px solid var(--line)",
-                            background: isSelected ? "#6C4CFF" : "transparent",
-                            display: "grid",
-                            placeItems: "center",
-                            color: "#fff",
-                            flexShrink: 0,
                           }}
                         >
-                          {isSelected && <Check size={14} strokeWidth={3} />}
+                          {repo.language}
+                        </span>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-muted-crm)", fontWeight: 600 }}>
+                            <Star size={12} fill="#F59E0B" color="#F59E0B" /> {repo.stars}
+                          </span>
+                          <a
+                            href={`https://github.com/${githubUser}/${repo.name}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Open ${repo.name} on GitHub`}
+                            style={{ color: "var(--text-muted-crm)" }}
+                          >
+                            <ExternalLink size={13} />
+                          </a>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+
+                      {/* Title & Description */}
+                      <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
+                        {repo.name}
+                      </h4>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: 12,
+                          color: "var(--text-secondary)",
+                          lineHeight: 1.5,
+                          maxHeight: 54,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {repo.description || "Public repository from studio profile."}
+                      </p>
+                    </div>
+
+                    {/* Bottom Pill Status */}
+                    <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "4px 12px",
+                          borderRadius: 99,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: isSelected ? "var(--accent-blue)" : "var(--subtle-fill)",
+                          color: isSelected ? "#FFFFFF" : "var(--text-secondary)",
+                        }}
+                      >
+                        {isSelected ? <Check size={12} strokeWidth={2.5} /> : null}
+                        {isSelected ? "Showcased" : "Hidden"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </form>
+          ) : (
+            <SectionCard title="Repository Search">
+              <EmptyState
+                icon={<GitBranch size={24} />}
+                title="No repositories found"
+                description="Try syncing with GitHub or adjusting your search term."
+              />
+            </SectionCard>
+          )}
         </div>
       )}
 
       {/* ================================================================= */}
-      {/* TAB 2: SCREENSHOT & WORK GALLERY                                  */}
+      {/* TAB 2: SCREENSHOT GALLERY                                         */}
       {/* ================================================================= */}
       {activeTab === "gallery" && (
-        <div style={{ display: "grid", gap: 20 }}>
-          {galleryMessage && (
-            <div
-              role="status"
-              style={{
-                padding: "12px 16px",
-                borderRadius: 10,
-                fontSize: 13,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                background: galleryMessage.type === "success" ? "#ecfdf5" : "#fef2f2",
-                color: galleryMessage.type === "success" ? "#065f46" : "#991b1b",
-                border: `1px solid ${galleryMessage.type === "success" ? "#a7f3d0" : "#fecaca"}`,
-              }}
-            >
-              {galleryMessage.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-              <span>{galleryMessage.text}</span>
-            </div>
-          )}
-
-          {/* Action Header Banner */}
-          <div
-            className="card"
-            style={{
-              padding: "18px 22px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 14,
-              borderLeft: "4px solid #6C4CFF",
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
-                <span>Screenshot & Mockup Showcase Management</span>
-                <span style={{ fontSize: 11, background: "rgba(108,76,255,0.12)", color: "#6C4CFF", padding: "2px 8px", borderRadius: 99, fontWeight: 700 }}>
-                  {galleryItems.length} items
-                </span>
-              </div>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>
-                Add responsive web mockups, mobile screenshots, and client prototypes to display on the public portfolio.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowAddModal(!showAddModal)}
-              className={showAddModal ? "button button-outline" : "button"}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 10 }}
-            >
-              {showAddModal ? (
-                <>
-                  <ChevronUp size={16} /> Hide Add Form
-                </>
-              ) : (
-                <>
-                  <Plus size={16} /> Add Screenshot
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* =============================================================== */}
-          {/* INLINE ADD SCREENSHOT FORM (RENDERED PROMINENTLY AT TOP)        */}
-          {/* =============================================================== */}
-          {showAddModal && (
-            <div
-              className="card animate-fade-in-up admin-showcase-form"
-              style={{
-                padding: "28px 32px",
-                border: "2px solid rgba(108, 76, 255, 0.35)",
-                background: "var(--paper)",
-                borderRadius: 18,
-                boxShadow: "0 10px 30px rgba(108, 76, 255, 0.08)",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                <div>
-                  <div className="eyebrow" style={{ color: "#6C4CFF", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Sparkles size={14} /> Studio Portfolio Showcase
-                  </div>
-                  <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "4px 0 0", color: "var(--ink)" }}>
-                    Add Screenshot or Build Mockup
-                  </h2>
-                  <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
-                    Fill out the fields or click a demo preset below to instantly populate sample metadata.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="button button-outline"
-                  style={{ padding: "6px 14px", fontSize: 12, borderRadius: 8 }}
-                >
-                  ✕ Close
-                </button>
-              </div>
-
-              {/* Quick Presets */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 20, padding: "12px 16px", borderRadius: 12, background: "var(--background)", border: "1px solid var(--line)" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
-                  Quick Fill Demo:
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    applyPreset({
-                      title: "Nova Studio Web Platform",
-                      imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
-                      category: "Full-Stack Application",
-                      repoName: "Nova",
-                      projectUrl: "https://github.com/blank-ui/Nova",
-                      description: "Enterprise multi-role studio platform with live inquiry CRM, authentication, and client dashboards.",
-                    })
-                  }
-                  className="button button-outline"
-                  style={{ padding: "4px 10px", fontSize: 11, borderRadius: 6 }}
-                >
-                  Full-Stack Platform
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    applyPreset({
-                      title: "All Sky Fares Booking Interface",
-                      imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
-                      category: "Dashboard & Operations",
-                      repoName: "Nova",
-                      projectUrl: "https://allskyfares.com",
-                      description: "Modern travel ticketing interface and real-time operations engine for All Sky Fares LLC.",
-                    })
-                  }
-                  className="button button-outline"
-                  style={{ padding: "4px 10px", fontSize: 11, borderRadius: 6 }}
-                >
-                  Operations Dashboard
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    applyPreset({
-                      title: "Modern Dark UI Design System",
-                      imageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
-                      category: "UI/UX Design",
-                      repoName: "Nova",
-                      projectUrl: "",
-                      description: "High-contrast dark-mode component architecture with fluid typography and micro-interactions.",
-                    })
-                  }
-                  className="button button-outline"
-                  style={{ padding: "4px 10px", fontSize: 11, borderRadius: 6 }}
-                >
-                  UI/UX Design
-                </button>
-              </div>
-
-              <form onSubmit={handleAddGalleryItem} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
-                <div style={{ display: "grid", gap: 14 }}>
-                  <div>
-                    <label htmlFor="shot-title" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                      Showcase Title *
-                    </label>
-                    <input
-                      id="shot-title"
-                      type="text"
-                      required
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder="e.g. Nova Studio Web Platform"
-                      className="field"
-                      style={{ width: "100%" }}
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="shot-img" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                      Screenshot / Mockup Image URL *
-                    </label>
-                    <input
-                      id="shot-img"
-                      type="url"
-                      required
-                      value={newImageUrl}
-                      onChange={(e) => setNewImageUrl(e.target.value)}
-                      placeholder="https://images.unsplash.com/... or /assets/..."
-                      className="field"
-                      style={{ width: "100%" }}
-                    />
-                    <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>
-                      Direct public web URL to PNG, JPG, or WEBP image.
-                    </p>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <div>
-                      <label htmlFor="shot-cat" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                        Category
-                      </label>
-                      <select
-                        id="shot-cat"
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        className="field"
-                        style={{ width: "100%" }}
-                      >
-                        <option value="UI/UX Design">UI/UX Design</option>
-                        <option value="Full-Stack Application">Full-Stack Application</option>
-                        <option value="E-Commerce Experience">E-Commerce Experience</option>
-                        <option value="Dashboard & Operations">Dashboard & Operations</option>
-                        <option value="Mobile / Prototype">Mobile / Prototype</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="shot-repo" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                        Linked Repo (Optional)
-                      </label>
-                      <input
-                        id="shot-repo"
-                        type="text"
-                        value={newRepoName}
-                        onChange={(e) => setNewRepoName(e.target.value)}
-                        placeholder="Nova"
-                        className="field"
-                        style={{ width: "100%" }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="shot-url" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                      Live Prototype / Demo URL (Optional)
-                    </label>
-                    <input
-                      id="shot-url"
-                      type="url"
-                      value={newProjectUrl}
-                      onChange={(e) => setNewProjectUrl(e.target.value)}
-                      placeholder="https://..."
-                      className="field"
-                      style={{ width: "100%" }}
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="shot-desc" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                      Description (Optional)
-                    </label>
-                    <textarea
-                      id="shot-desc"
-                      value={newDescription}
-                      onChange={(e) => setNewDescription(e.target.value)}
-                      placeholder="Summary of client challenge, architecture, or design system..."
-                      rows={3}
-                      className="field"
-                      style={{ resize: "vertical", width: "100%" }}
-                    />
-                  </div>
-
-                  <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-                    <button type="submit" disabled={galleryBusy} className="button" style={{ padding: "10px 22px" }}>
-                      {galleryBusy ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : "Save Screenshot"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddModal(false)}
-                      className="button button-outline"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-
-                {/* Live Image Preview Column */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span className="auth-label">Live Screenshot Preview</span>
-                  <div
-                    style={{
-                      height: 250,
-                      borderRadius: 14,
-                      border: "2px dashed var(--line)",
-                      background: "var(--background)",
-                      overflow: "hidden",
-                      display: "grid",
-                      placeItems: "center",
-                      position: "relative",
-                    }}
-                  >
-                    {newImageUrl ? (
-                      <img
-                        src={newImageUrl}
-                        alt="Preview"
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div style={{ textAlign: "center", color: "var(--muted)", padding: 20 }}>
-                        <ImageIcon size={36} style={{ margin: "0 auto 10px", opacity: 0.4 }} />
-                        <span style={{ fontSize: 13, fontWeight: 600 }}>Real-time Mockup Preview</span>
-                        <p style={{ fontSize: 11, margin: "4px 0 0", color: "var(--muted)" }}>
-                          Paste an image link on the left or select a Quick Fill demo above.
-                        </p>
-                      </div>
-                    )}
-                    {newCategory && (
-                      <span
-                        style={{
-                          position: "absolute",
-                          top: 10,
-                          left: 10,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "3px 8px",
-                          borderRadius: 6,
-                          background: "rgba(16,19,34,0.8)",
-                          color: "#fff",
-                          backdropFilter: "blur(4px)",
-                        }}
-                      >
-                        {newCategory}
-                      </span>
-                    )}
-                  </div>
-                  {newTitle && (
-                    <div style={{ padding: 14, borderRadius: 10, background: "var(--background)", border: "1px solid var(--line)" }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>{newTitle}</div>
-                      {newDescription && (
-                        <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0", lineHeight: 1.4 }}>
-                          {newDescription}
-                        </p>
-                      )}
-                      <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>
-                        Category: <strong style={{ color: "var(--blue)" }}>{newCategory}</strong>
-                        {newRepoName && ` · Repo: ${newRepoName}`}
-                        {newProjectUrl && ` · Live Link Attached`}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Category Filter Chips */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
-              Filter:
-            </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Gallery Category Filter Pills */}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
             {[
               { label: "All Items", value: "ALL" },
               { label: "UI/UX Design", value: "UI/UX Design" },
-              { label: "Full-Stack Application", value: "Full-Stack Application" },
-              { label: "Dashboard & Operations", value: "Dashboard & Operations" },
-              { label: "E-Commerce Experience", value: "E-Commerce Experience" },
-              { label: "Mobile / Prototype", value: "Mobile / Prototype" },
-            ].map((cat) => {
-              const isSelected = galleryCategoryFilter === cat.value;
+              { label: "Full-Stack App", value: "Full-Stack App" },
+              { label: "Mobile App", value: "Mobile App" },
+              { label: "SaaS Platform", value: "SaaS Platform" },
+            ].map((tab) => {
+              const isSelected = galleryCategoryFilter === tab.value;
               return (
                 <button
-                  key={cat.value}
+                  key={tab.value}
                   type="button"
-                  onClick={() => setGalleryCategoryFilter(cat.value)}
+                  onClick={() => setGalleryCategoryFilter(tab.value)}
                   style={{
-                    padding: "5px 12px",
-                    borderRadius: 99,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    border: isSelected ? "1px solid #6C4CFF" : "1px solid var(--line)",
-                    background: isSelected ? "rgba(108,76,255,0.12)" : "var(--paper)",
-                    color: isSelected ? "#6C4CFF" : "var(--muted)",
+                    padding: "7px 16px",
+                    borderRadius: "var(--radius-pill)",
+                    fontSize: 12,
+                    fontWeight: isSelected ? 700 : 500,
+                    border: isSelected ? "none" : "1px solid var(--border-hairline)",
+                    background: isSelected ? "var(--ink-crm)" : "var(--surface-raised)",
+                    color: isSelected ? "#FFFFFF" : "var(--text-secondary)",
                     cursor: "pointer",
                     transition: "all 0.15s ease",
                   }}
                 >
-                  {cat.label}
+                  {tab.label}
                 </button>
               );
             })}
           </div>
 
-          {/* Screenshot Items Grid */}
-          {galleryItems.length === 0 ? (
-            <div className="card" style={{ padding: "50px 20px", textAlign: "center", color: "var(--muted)" }}>
-              <ImageIcon size={36} style={{ margin: "0 auto 12px", opacity: 0.5 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", color: "var(--ink)" }}>
-                No screenshots added yet
-              </h3>
-              <p style={{ fontSize: 13, margin: "0 0 16px" }}>
-                Add your first project mockup or screenshot to showcase work on the studio portfolio.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowAddModal(true)}
-                className="button"
-                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <Plus size={14} /> Add First Screenshot
-              </button>
-            </div>
-          ) : filteredGallery.length === 0 ? (
-            <div className="card" style={{ padding: "30px 20px", textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
-              No screenshots match category &quot;{galleryCategoryFilter}&quot;.
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
+          {/* Gallery Items Grid */}
+          {filteredGallery.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gap: 20,
+              }}
+            >
               {filteredGallery.map((item) => (
                 <div
                   key={item.id}
-                  className="card card-hover-glow"
                   style={{
+                    background: "var(--surface-raised)",
+                    borderRadius: "var(--radius-tile)",
                     overflow: "hidden",
+                    border: "1px solid var(--border-hairline)",
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "space-between",
                   }}
                 >
-                  <div>
-                    {/* Image Preview Container */}
-                    <div
-                      style={{
-                        height: 200,
-                        width: "100%",
-                        background: "var(--line)",
-                        position: "relative",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                      <span
-                        style={{
-                          position: "absolute",
-                          top: 12,
-                          left: 12,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "3px 8px",
-                          borderRadius: 6,
-                          background: "rgba(16,19,34,0.75)",
-                          color: "#fff",
-                          backdropFilter: "blur(4px)",
-                        }}
-                      >
-                        {item.category}
-                      </span>
-                    </div>
-
-                    <div style={{ padding: 18 }}>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", color: "var(--ink)" }}>
-                        {item.title}
-                      </h3>
-                      {item.description && (
-                        <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.5 }}>
-                          {item.description}
-                        </p>
-                      )}
-                      {item.repoName && (
-                        <div style={{ fontSize: 11, color: "var(--blue)", fontWeight: 600 }}>
-                          Repo: {item.repoName}
-                        </div>
-                      )}
+                  {/* Thumbnail */}
+                  <div style={{ position: "relative", width: "100%", height: 190, background: "var(--subtle-fill)" }}>
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                    <div style={{ position: "absolute", top: 12, left: 12 }}>
+                      <Badge variant="brand">{item.category}</Badge>
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      padding: "12px 18px",
-                      borderTop: "1px solid var(--line)",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    {item.projectUrl ? (
-                      <a
-                        href={item.projectUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ fontSize: 12, color: "var(--blue)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}
-                      >
-                        <span>Live Preview</span>
-                        <ExternalLink size={12} />
-                      </a>
-                    ) : (
-                      <span style={{ fontSize: 11, color: "var(--muted)" }}>Screenshot only</span>
-                    )}
+                  {/* Body Content */}
+                  <div style={{ padding: "18px 20px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div>
+                      <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
+                        {item.title}
+                      </h4>
+                      {item.description && (
+                        <p style={{ margin: "0 0 14px", fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteGalleryItem(item.id)}
-                      title="Delete screenshot item"
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "#ef4444",
-                        cursor: "pointer",
-                        padding: 4,
-                      }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {/* Footer Actions */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: "1px solid var(--border-hairline-light)" }}>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        {item.projectUrl && (
+                          <a
+                            href={item.projectUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: "var(--accent-blue)",
+                              textDecoration: "none",
+                            }}
+                          >
+                            Live Demo <ExternalLink size={11} />
+                          </a>
+                        )}
+                        {item.repoName && (
+                          <span style={{ fontSize: 11, color: "var(--text-muted-crm)", fontWeight: 600 }}>
+                            {item.repoName}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteGalleryItem(item.id)}
+                        aria-label={`Delete ${item.title}`}
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: "50%",
+                          border: "none",
+                          background: "transparent",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          display: "grid",
+                          placeItems: "center",
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
+          ) : (
+            <SectionCard title="Screenshot Showcase Gallery">
+              <EmptyState
+                icon={<ImageIcon size={24} />}
+                title="No screenshot mockups in gallery"
+                description="Click 'Add Screenshot Item' above to upload mockup previews of your builds."
+              />
+            </SectionCard>
           )}
         </div>
       )}
 
-      <style>{`
-        @media (max-width: 640px) {
-          .admin-showcase-form {
-            padding: 20px 16px !important;
-          }
-        }
-      `}</style>
+      {/* Add Screenshot Modal */}
+      {showAddModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            zIndex: 1000,
+          }}
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--surface-raised)",
+              borderRadius: 24,
+              width: "min(480px, 100%)",
+              padding: 28,
+              boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
+              border: "1px solid var(--border-hairline)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "var(--accent-blue)",
+                    color: "#fff",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <ImageIcon size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>
+                    Add Screenshot Showcase
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted-crm)" }}>
+                    Publish a design or web build to public gallery
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                aria-label="Close"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm)" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddGalleryItem} style={{ display: "grid", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  Project Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. AI-Powered CRM Dashboard"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 14,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--card-bg-crm)",
+                    fontSize: 13,
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  Image URL / Asset Path *
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://images.unsplash.com/photo-..."
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 14,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--card-bg-crm)",
+                    fontSize: 13,
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                    Category
+                  </label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 14,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      fontSize: 13,
+                    }}
+                  >
+                    <option value="UI/UX Design">UI/UX Design</option>
+                    <option value="Full-Stack App">Full-Stack App</option>
+                    <option value="Mobile App">Mobile App</option>
+                    <option value="SaaS Platform">SaaS Platform</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                    Repository (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nova"
+                    value={newRepoName}
+                    onChange={(e) => setNewRepoName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 14,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      fontSize: 13,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  Live Demo URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://app.example.com"
+                  value={newProjectUrl}
+                  onChange={(e) => setNewProjectUrl(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 14,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--card-bg-crm)",
+                    fontSize: 13,
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  Description (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Key deliverables, design system tokens, or technology stack..."
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 14,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--card-bg-crm)",
+                    fontSize: 13,
+                    resize: "vertical",
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    borderRadius: 99,
+                    border: "1px solid var(--border-hairline)",
+                    background: "transparent",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={galleryBusy}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    borderRadius: 99,
+                    border: "none",
+                    background: "var(--ink-crm)",
+                    color: "#FFFFFF",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  {galleryBusy ? "Publishing..." : "Publish Item"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

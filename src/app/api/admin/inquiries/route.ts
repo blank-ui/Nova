@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth-guards";
 import { canOpenAdmin } from "@/lib/auth-policy";
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { Prisma, InquiryStatus } from "@prisma/client";
 
 /**
@@ -92,6 +93,18 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  const clientIp = getClientIp(request);
+  const rateLimit = await consumeRateLimit(`admin-inquiries-patch:${session.user.id}:${clientIp}`, {
+    windowSeconds: 60,
+    max: 60,
+  });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many modification requests. Please wait." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds ?? 60) } }
+    );
+  }
+
   // ---- payload size guard (1 KB) ----
   const contentLength = request.headers.get("content-length");
   if (contentLength && Number(contentLength) > 1024) {
@@ -159,6 +172,18 @@ export async function DELETE(request: Request) {
   const session = await getCurrentSession();
   if (!session || !canOpenAdmin(session.user.role, session.user.twoFactorEnabled)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const clientIp = getClientIp(request);
+  const rateLimit = await consumeRateLimit(`admin-inquiries-delete:${session.user.id}:${clientIp}`, {
+    windowSeconds: 60,
+    max: 30,
+  });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many delete requests. Please wait." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds ?? 60) } }
+    );
   }
 
   const url = new URL(request.url);

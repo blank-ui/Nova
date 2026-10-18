@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
+import Link from "next/link";
 import {
   UserPlus,
   KeyRound,
@@ -11,15 +12,36 @@ import {
   Copy,
   Loader2,
   Search,
-  Filter,
   Check,
+  UserCheck,
+  Shield,
+  ExternalLink,
+  Mail,
+  FolderKanban,
+  Clock,
+  User as UserIcon,
+  X,
 } from "lucide-react";
+import {
+  PageHeader,
+  SectionCard,
+  ProfileCard,
+  Avatar,
+  Badge,
+  DetailRow,
+  DataTable,
+  EmptyState,
+  PillButton,
+  IconButton,
+} from "@/components/admin-ui";
+import { useToast } from "@/components/toast";
 
-interface UserItem {
+export interface UserItem {
   id: string;
   name: string;
   email: string;
   role: string;
+  image?: string | null;
   emailVerified: boolean;
   twoFactorEnabled: boolean;
   banned: boolean;
@@ -32,15 +54,26 @@ interface UserItem {
   };
 }
 
-export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUsers: UserItem[]; currentAdminId: string }) {
+export function AdminUsersManager({
+  initialUsers,
+  currentAdminId,
+}: {
+  initialUsers: UserItem[];
+  currentAdminId: string;
+}) {
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(
+    initialUsers[0]?.id || null
+  );
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState("");
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const toast = useToast();
 
   // Form states for creating a new user
   const [newName, setNewName] = useState("");
@@ -51,14 +84,26 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
   // Loading states for actions
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
 
+  const selectedUser = users.find((u) => u.id === selectedUserId) || users[0] || null;
+
+  // Filtered users
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()) ||
       (u.discordHandle && u.discordHandle.toLowerCase().includes(search.toLowerCase()));
-    const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+    const matchesRole =
+      roleFilter === "ALL"
+        ? true
+        : roleFilter === "SUSPENDED"
+        ? u.banned
+        : u.role === roleFilter;
     return matchesSearch && matchesRole;
   });
+
+  const adminCount = users.filter((u) => u.role === "ADMIN").length;
+  const clientCount = users.filter((u) => u.role === "CLIENT").length;
+  const totalCount = users.length;
 
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
@@ -76,25 +121,32 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
       if (!res.ok) throw new Error(data.error || "Failed to create user.");
 
       setCreatedResult({ setupUrl: data.setupUrl, emailSent: data.emailSent });
-      // Add new user to state
-      setUsers([
-        {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          role: data.user.role,
-          emailVerified: true,
-          twoFactorEnabled: false,
-          banned: false,
-          createdAt: new Date().toISOString(),
-          _count: { projects: 0, authSessions: 0 },
-        },
-        ...users,
-      ]);
+      const newUser: UserItem = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        image: null,
+        emailVerified: true,
+        twoFactorEnabled: false,
+        banned: false,
+        createdAt: new Date().toISOString(),
+        _count: { projects: 0, authSessions: 0 },
+      };
+      setUsers([newUser, ...users]);
+      setSelectedUserId(newUser.id);
       setNewName("");
       setNewEmail("");
+
+      if (data.emailSent) {
+        toast.success(`Account created for ${data.user.name}. Setup email dispatched to ${data.user.email}.`, "User Initiated");
+      } else {
+        toast.info(`Account created for ${data.user.name}. Copy the one-time setup link below.`, "User Created");
+      }
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Error creating user");
+      const msg = err instanceof Error ? err.message : "Error creating user";
+      setCreateError(msg);
+      toast.error(msg, "Creation Failed");
     } finally {
       setCreateLoading(false);
     }
@@ -121,15 +173,22 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
 
       setUsers(users.map((u) => (u.id === user.id ? { ...u, banned: data.banned } : u)));
       setActionMessage({ type: "success", text: data.message });
+      if (data.banned) {
+        toast.warning(`Account for ${user.name} suspended. All active sessions revoked.`, "User Suspended");
+      } else {
+        toast.success(`Account for ${user.name} has been reactivated.`, "User Reactivated");
+      }
     } catch (err) {
-      setActionMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to update user." });
+      const msg = err instanceof Error ? err.message : "Failed to update user.";
+      setActionMessage({ type: "error", text: msg });
+      toast.error(msg, "Status Update Failed");
     } finally {
       setBusyUserId(null);
     }
   }
 
   async function handleResetPassword(user: UserItem) {
-    if (!window.confirm(`Send password reset email to ${user.email}?`)) return;
+    if (!window.confirm(`Send password setup / reset email to ${user.email}?`)) return;
 
     setBusyUserId(user.id);
     setActionMessage(null);
@@ -142,14 +201,19 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to trigger password reset");
 
-      setActionMessage({
-        type: "success",
-        text: data.emailSent
-          ? `Password reset email sent to ${user.email} successfully!`
-          : `Password reset link generated: ${data.resetUrl}`,
-      });
+      const successText = data.emailSent
+        ? `Password setup email sent to ${user.email} successfully!`
+        : `Password link generated: ${data.resetUrl}`;
+      setActionMessage({ type: "success", text: successText });
+      if (data.emailSent) {
+        toast.success(`Password link dispatched to ${user.email}.`, "Email Dispatched");
+      } else {
+        toast.info("Password link generated.", "Link Created");
+      }
     } catch (err) {
-      setActionMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to reset password." });
+      const msg = err instanceof Error ? err.message : "Failed to reset password.";
+      setActionMessage({ type: "error", text: msg });
+      toast.error(msg, "Reset Failed");
     } finally {
       setBusyUserId(null);
     }
@@ -174,52 +238,244 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
       if (!res.ok) throw new Error(data.error || "Failed to delete user");
 
       setUsers(users.filter((u) => u.id !== user.id));
+      if (selectedUserId === user.id) {
+        setSelectedUserId(users.find((u) => u.id !== user.id)?.id || null);
+      }
       setActionMessage({ type: "success", text: `User ${user.email} was permanently deleted.` });
+      toast.success(`User ${user.name} removed.`, "Deleted");
     } catch (err) {
       setActionMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to delete user." });
+      toast.error("Failed to delete user", "Error");
     } finally {
       setBusyUserId(null);
     }
   }
 
+  const columns = [
+    {
+      key: "user",
+      header: "User & Identity",
+      width: "1.8fr",
+      render: (u: UserItem) => {
+        const isCurrentAdmin = u.id === currentAdminId;
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Avatar src={u.image} name={u.name} size="sm" />
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                  {u.name}
+                </span>
+                {isCurrentAdmin && (
+                  <Badge variant="brand">You</Badge>
+                )}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2 }}>
+                {u.email}
+              </div>
+              {u.discordHandle && (
+                <div style={{ fontSize: 10, color: "#5865F2", marginTop: 2 }}>
+                  @{u.discordHandle}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "role",
+      header: "Role",
+      width: "110px",
+      render: (u: UserItem) => (
+        <Badge variant={u.role === "ADMIN" ? "brand" : u.role === "DEVELOPER" ? "success" : "neutral"}>
+          {u.role}
+        </Badge>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      width: "110px",
+      render: (u: UserItem) =>
+        u.banned ? (
+          <Badge variant="warning">Suspended</Badge>
+        ) : (
+          <Badge variant="success">Active</Badge>
+        ),
+    },
+    {
+      key: "projects",
+      header: "Projects",
+      width: "90px",
+      render: (u: UserItem) => (
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>
+          {u._count.projects}
+        </span>
+      ),
+    },
+    {
+      key: "joined",
+      header: "Joined",
+      width: "100px",
+      render: (u: UserItem) => (
+        <span style={{ fontSize: 11, color: "var(--text-muted-crm)", fontWeight: 600 }}>
+          {new Date(u.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      width: "140px",
+      align: "right" as const,
+      render: (u: UserItem) => {
+        const isCurrentAdmin = u.id === currentAdminId;
+        const isBusy = busyUserId === u.id;
+
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+            <Link
+              href={`/admin/users/${u.id}`}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "var(--radius-pill)",
+                background: "var(--subtle-fill)",
+                color: "var(--text-primary)",
+                fontSize: 11,
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+              title="Open full client profile"
+            >
+              Profile
+            </Link>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResetPassword(u);
+              }}
+              disabled={isBusy}
+              aria-label={`Send setup email to ${u.name}`}
+              title="Send setup email"
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                border: "none",
+                background: "transparent",
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <KeyRound size={13} />
+            </button>
+
+            {!isCurrentAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSuspend(u);
+                  }}
+                  disabled={isBusy}
+                  aria-label={u.banned ? "Reactivate user" : "Suspend user"}
+                  title={u.banned ? "Reactivate user" : "Suspend user"}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: "transparent",
+                    color: u.banned ? "#10b981" : "#f59e0b",
+                    cursor: "pointer",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <Ban size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteUser(u);
+                  }}
+                  disabled={isBusy}
+                  aria-label="Delete user"
+                  title="Delete user"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: "transparent",
+                    color: "#dc2626",
+                    cursor: "pointer",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
-    <div style={{ display: "grid", gap: 24 }}>
-      {/* Top Banner and Controls */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 28, letterSpacing: "-.05em", margin: "0 0 6px", color: "var(--ink)" }}>
-            Users & Client Accounts
-          </h1>
-          <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-            Manage client workspaces, create accounts with welcome initiation emails, reset passwords, or suspend access.
-          </p>
-        </div>
+    <div className="animate-fade-in-up">
+      {/* Page Header with Headline Stats Strip */}
+      <PageHeader
+        titleLine1="Users &"
+        titleLine2="Accounts"
+        backHref="/admin"
+        stats={[
+          {
+            icon: <UserIcon size={18} strokeWidth={1.8} />,
+            value: totalCount,
+            badgeLabel: "Accounts",
+            badgeVariant: "neutral",
+            caption: "Provisioned credentials",
+          },
+          {
+            icon: <CheckCircle2 size={18} strokeWidth={1.8} />,
+            value: clientCount,
+            badgeLabel: "Clients",
+            badgeVariant: "info",
+            caption: "Customer client accounts",
+          },
+          {
+            icon: <Shield size={18} strokeWidth={1.8} />,
+            value: adminCount,
+            badgeLabel: "Admins",
+            badgeVariant: "brand",
+            caption: "Workspace operators",
+          },
+        ]}
+      />
 
-        <button
-          type="button"
-          onClick={() => {
-            setShowCreateModal(true);
-            setCreatedResult(null);
-            setCreateError("");
-          }}
-          className="button"
-          style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 12 }}
-        >
-          <UserPlus size={16} />
-          <span>Create New User</span>
-        </button>
-      </div>
-
+      {/* Action status message banner */}
       {actionMessage && (
         <div
           role="status"
           style={{
-            padding: "12px 16px",
-            borderRadius: 10,
-            fontSize: 13,
+            padding: "12px 18px",
+            borderRadius: "var(--radius-row)",
+            fontSize: 12,
+            fontWeight: 600,
             display: "flex",
             alignItems: "center",
             gap: 10,
+            marginBottom: 16,
             background: actionMessage.type === "success" ? "#ecfdf5" : "#fef2f2",
             color: actionMessage.type === "success" ? "#065f46" : "#991b1b",
             border: `1px solid ${actionMessage.type === "success" ? "#a7f3d0" : "#fecaca"}`,
@@ -231,394 +487,567 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
       )}
 
       {/* Filter and Search Bar */}
-      <div className="card" style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
-          <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--muted)" }} />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, or Discord handle..."
-            className="field"
-            style={{ paddingLeft: 38, width: "100%" }}
-          />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 16,
+          flexWrap: "wrap",
+          marginBottom: 20,
+        }}
+      >
+        {/* Role Filter Pills */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+          {[
+            { label: "All Accounts", value: "ALL" },
+            { label: "Clients", value: "CLIENT" },
+            { label: "Developers", value: "DEVELOPER" },
+            { label: "Finance", value: "FINANCE" },
+            { label: "Admins", value: "ADMIN" },
+            { label: "Suspended", value: "SUSPENDED" },
+          ].map((tab) => {
+            const isSelected = roleFilter === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setRoleFilter(tab.value)}
+                style={{
+                  padding: "7px 16px",
+                  borderRadius: "var(--radius-pill)",
+                  fontSize: 12,
+                  fontWeight: isSelected ? 700 : 500,
+                  border: isSelected ? "none" : "1px solid var(--border-hairline)",
+                  background: isSelected ? "var(--ink-crm)" : "var(--surface-raised)",
+                  color: isSelected ? "#FFFFFF" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Filter size={15} style={{ color: "var(--muted)" }} />
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="field"
-            style={{ width: "auto", padding: "8px 12px" }}
+        {/* Search & Create Button */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ position: "relative", minWidth: 240 }}>
+            <Search
+              size={15}
+              style={{
+                position: "absolute",
+                left: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--text-muted-crm)",
+                pointerEvents: "none",
+              }}
+            />
+            <input
+              type="search"
+              placeholder="Search name, email, discord..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 14px 8px 34px",
+                borderRadius: "var(--radius-pill)",
+                border: "1px solid var(--border-hairline)",
+                background: "var(--surface-raised)",
+                color: "var(--text-primary)",
+                fontSize: 12,
+                outline: "none",
+              }}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowCreateModal(true);
+              setCreatedResult(null);
+              setCreateError("");
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "var(--radius-pill)",
+              background: "var(--ink-crm)",
+              color: "#FFFFFF",
+              border: "none",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
           >
-            <option value="ALL">All Roles</option>
-            <option value="CLIENT">Clients Only</option>
-            <option value="DEVELOPER">Developers Only</option>
-            <option value="FINANCE">Finance Only</option>
-            <option value="ADMIN">Administrators Only</option>
-          </select>
-          <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
-            {filteredUsers.length} {filteredUsers.length === 1 ? "user" : "users"}
-          </span>
+            <UserPlus size={15} />
+            <span>New User</span>
+          </button>
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="card" style={{ padding: 24, overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--line)", color: "var(--muted)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".06em" }}>
-              <th style={{ padding: "12px 14px" }}>User</th>
-              <th style={{ padding: "12px 14px" }}>Role</th>
-              <th style={{ padding: "12px 14px" }}>Status</th>
-              <th style={{ padding: "12px 14px" }}>Projects</th>
-              <th style={{ padding: "12px 14px" }}>Joined</th>
-              <th style={{ padding: "12px 14px", textAlign: "right" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ padding: "40px 14px", textAlign: "center", color: "var(--muted)" }}>
-                  No users match your criteria.
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map((u) => {
-                const isCurrentAdmin = u.id === currentAdminId;
-                const isBusy = busyUserId === u.id;
+      {/* Main 2-Column Grid: DataTable Left 65% / ProfileCard Right 35% */}
+      <div
+        className="users-layout-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.8fr) minmax(320px, 1fr)",
+          gap: 20,
+          alignItems: "start",
+          width: "100%",
+        }}
+      >
+        {/* Left Column: Users DataTable */}
+        <div>
+          <SectionCard
+            title={`Account Records (${filteredUsers.length})`}
+            showDefaultActions
+          >
+            <DataTable
+              columns={columns}
+              data={filteredUsers}
+              keyExtractor={(u) => u.id}
+              onRowClick={(u) => setSelectedUserId(u.id)}
+              emptyState={
+                <EmptyState
+                  icon={<UserIcon size={24} />}
+                  title="No accounts match filter"
+                  description="Try adjusting your role filter or search query to find accounts."
+                />
+              }
+            />
+          </SectionCard>
+        </div>
 
-                return (
-                  <tr
-                    key={u.id}
+        {/* Right Column: ProfileCard & Governance Detail Rows */}
+        <div>
+          {selectedUser ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <ProfileCard
+                name={selectedUser.name}
+                role={`${selectedUser.role} · ${selectedUser.banned ? "Suspended" : "Active"}`}
+                avatarUrl={selectedUser.image}
+                badgeLabel={selectedUser.role}
+                badgeVariant={selectedUser.role === "ADMIN" ? "brand" : "neutral"}
+                onEdit={() => handleResetPassword(selectedUser)}
+                onMessage={() => {
+                  window.location.href = `mailto:${selectedUser.email}`;
+                }}
+                onSecurity={() => {
+                  window.location.href = `/admin/users/${selectedUser.id}`;
+                }}
+                onAdd={() => setShowCreateModal(true)}
+              />
+
+              <SectionCard
+                title="Account Credentials & State"
+                headerRight={
+                  <Link
+                    href={`/admin/users/${selectedUser.id}`}
                     style={{
-                      borderBottom: "1px solid var(--line)",
-                      opacity: u.banned ? 0.6 : 1,
-                      transition: "background 0.15s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "var(--accent-blue)",
+                      textDecoration: "none",
                     }}
                   >
-                    <td style={{ padding: "14px" }}>
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontWeight: 700, color: "var(--ink)", display: "flex", alignItems: "center", gap: 6 }}>
-                          {u.name}
-                          {isCurrentAdmin && (
-                            <span style={{ fontSize: 10, background: "rgba(108,76,255,0.1)", color: "#6C4CFF", padding: "1px 6px", borderRadius: 4 }}>
-                              You
-                            </span>
-                          )}
-                        </span>
-                        <span style={{ fontSize: 12, color: "var(--muted)" }}>{u.email}</span>
-                        {u.discordHandle && (
-                          <span style={{ fontSize: 11, color: "#5865F2", marginTop: 2 }}>
-                            @{u.discordHandle}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      <span
+                    Client Workspace <ExternalLink size={12} />
+                  </Link>
+                }
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <DetailRow
+                    icon={<Mail size={16} strokeWidth={1.8} />}
+                    label="Email Address"
+                    value={selectedUser.email}
+                  />
+
+                  <DetailRow
+                    icon={<Shield size={16} strokeWidth={1.8} />}
+                    label="Two-Factor (TOTP)"
+                    value={selectedUser.twoFactorEnabled ? "Enforced" : "Optional"}
+                    action={
+                      <Badge variant={selectedUser.twoFactorEnabled ? "success" : "warning"}>
+                        {selectedUser.twoFactorEnabled ? "Active" : "Not Set"}
+                      </Badge>
+                    }
+                  />
+
+                  <DetailRow
+                    icon={<FolderKanban size={16} strokeWidth={1.8} />}
+                    label="Active Projects"
+                    value={`${selectedUser._count.projects} client project workspaces`}
+                  />
+
+                  <DetailRow
+                    icon={<Clock size={16} strokeWidth={1.8} />}
+                    label="Member Since"
+                    value={new Date(selectedUser.createdAt).toLocaleDateString([], {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  />
+
+                  <DetailRow
+                    icon={<UserCheck size={16} strokeWidth={1.8} />}
+                    label="Account Access"
+                    value={selectedUser.banned ? "Suspended" : "Authorized"}
+                    action={
+                      <Badge variant={selectedUser.banned ? "warning" : "success"}>
+                        {selectedUser.banned ? "Suspended" : "Active"}
+                      </Badge>
+                    }
+                  />
+
+                  {/* Quick Action Button for Selected User */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleResetPassword(selectedUser)}
+                      style={{
+                        padding: "10px",
+                        borderRadius: "var(--radius-pill)",
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--surface-raised)",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <KeyRound size={13} />
+                      Setup Email
+                    </button>
+
+                    {selectedUser.id !== currentAdminId && (
+                      <button
+                        type="button"
+                        onClick={() => handleSuspend(selectedUser)}
                         style={{
+                          padding: "10px",
+                          borderRadius: "var(--radius-pill)",
+                          border: "1px solid var(--border-hairline)",
+                          background: selectedUser.banned ? "#ecfdf5" : "var(--surface-raised)",
+                          color: selectedUser.banned ? "#059669" : "var(--text-primary)",
                           fontSize: 11,
                           fontWeight: 700,
-                          padding: "3px 8px",
-                          borderRadius: 6,
-                          background:
-                            u.role === "ADMIN"
-                              ? "rgba(108,76,255,0.12)"
-                              : u.role === "DEVELOPER"
-                              ? "rgba(16,185,129,0.12)"
-                              : u.role === "FINANCE"
-                              ? "rgba(245,158,11,0.12)"
-                              : "rgba(59,130,246,0.12)",
-                          color:
-                            u.role === "ADMIN"
-                              ? "#6C4CFF"
-                              : u.role === "DEVELOPER"
-                              ? "#059669"
-                              : u.role === "FINANCE"
-                              ? "#d97706"
-                              : "#2563eb",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
                         }}
                       >
-                        {u.role}
-                      </span>
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      {u.banned ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", background: "rgba(220,38,38,0.1)", padding: "2px 8px", borderRadius: 6 }}>
-                          Suspended
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#10b981", background: "rgba(16,185,129,0.1)", padding: "2px 8px", borderRadius: 6 }}>
-                          Active
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ padding: "14px", color: "var(--muted)" }}>
-                      {u._count.projects} projects
-                    </td>
-                    <td style={{ padding: "14px", color: "var(--muted)", fontSize: 12 }}>
-                      {new Date(u.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
-                    </td>
-                    <td style={{ padding: "14px", textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        {/* Reset Password Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleResetPassword(u)}
-                          disabled={isBusy}
-                          className="button button-outline"
-                          style={{ padding: "6px 10px", fontSize: 11, display: "inline-flex", alignItems: "center", gap: 4 }}
-                          title="Generate and send password setup/reset link"
-                        >
-                          <KeyRound size={13} />
-                          <span>Reset PW</span>
-                        </button>
-
-                        {/* Suspend / Reactivate Button */}
-                        {!isCurrentAdmin && (
-                          <button
-                            type="button"
-                            onClick={() => handleSuspend(u)}
-                            disabled={isBusy}
-                            className="button button-outline"
-                            style={{
-                              padding: "6px 10px",
-                              fontSize: 11,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 4,
-                              color: u.banned ? "#10b981" : "#d97706",
-                              borderColor: u.banned ? "rgba(16,185,129,0.3)" : "rgba(217,119,6,0.3)",
-                            }}
-                            title={u.banned ? "Reactivate user account" : "Suspend user account"}
-                          >
-                            <Ban size={13} />
-                            <span>{u.banned ? "Unsuspend" : "Suspend"}</span>
-                          </button>
-                        )}
-
-                        {/* Delete User Button */}
-                        {!isCurrentAdmin && (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteUser(u)}
-                            disabled={isBusy}
-                            className="button button-outline"
-                            style={{
-                              padding: "6px 8px",
-                              color: "#ef4444",
-                              borderColor: "rgba(239,68,68,0.3)",
-                              background: "rgba(239,68,68,0.05)",
-                            }}
-                            title="Permanently delete user"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                        <Ban size={13} />
+                        {selectedUser.banned ? "Reactivate" : "Suspend"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
+          ) : (
+            <SectionCard title="Account Overview">
+              <EmptyState
+                icon={<UserIcon size={20} />}
+                title="No user selected"
+                description="Select an account row from the table to inspect credentials and settings."
+              />
+            </SectionCard>
+          )}
+        </div>
       </div>
 
       {/* Create User Modal */}
       {showCreateModal && (
         <div
-          role="dialog"
-          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
+            background: "rgba(0,0,0,0.55)",
             backdropFilter: "blur(6px)",
-            zIndex: 50,
-            display: "grid",
-            placeItems: "center",
-            padding: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            zIndex: 1000,
           }}
+          onClick={() => setShowCreateModal(false)}
         >
-          <div className="card user-modal-card" style={{ maxWidth: 520, width: "100%", padding: 32, position: "relative" }}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--surface-raised)",
+              borderRadius: 24,
+              width: "min(480px, 100%)",
+              padding: 28,
+              boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
+              border: "1px solid var(--border-hairline)",
+            }}
+          >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div className="eyebrow">Studio Provisioning</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "var(--accent-blue)",
+                    color: "#fff",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <UserPlus size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>
+                    Provision New User
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted-crm)" }}>
+                    Creates account &amp; dispatches initiation setup email
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "var(--muted)" }}
+                aria-label="Close"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm)" }}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
-            <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "0 0 8px", color: "var(--ink)" }}>
-              Create New User Account
-            </h2>
-            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.6 }}>
-              The new user will automatically receive a beautifully formatted initiation email from{" "}
-              <strong>nova@allskyfares.com</strong> containing their secure setup link to set their password.
-            </p>
-
             {createError && (
               <div
-                role="alert"
                 style={{
                   padding: "10px 14px",
-                  borderRadius: 8,
-                  fontSize: 12,
+                  borderRadius: 12,
                   background: "#fef2f2",
-                  color: "#991b1b",
-                  border: "1px solid #fecaca",
-                  marginBottom: 16,
+                  color: "#dc2626",
+                  fontSize: 12,
+                  marginBottom: 14,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
                 }}
               >
-                {createError}
+                <AlertCircle size={15} />
+                <span>{createError}</span>
               </div>
             )}
 
             {createdResult ? (
-              <div style={{ display: "grid", gap: 14 }}>
+              <div style={{ display: "grid", gap: 16 }}>
                 <div
                   style={{
-                    padding: "16px",
-                    borderRadius: 12,
+                    padding: 16,
                     background: "#ecfdf5",
                     border: "1px solid #a7f3d0",
-                    color: "#065f46",
-                    display: "grid",
-                    gap: 8,
+                    borderRadius: 16,
+                    textAlign: "center",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 14 }}>
-                    <CheckCircle2 size={18} />
-                    <span>User created successfully!</span>
+                  <CheckCircle2 size={32} color="#059669" style={{ margin: "0 auto 8px" }} />
+                  <div style={{ fontWeight: 700, color: "#065f46", fontSize: 14 }}>
+                    Account Initialized Successfully!
                   </div>
-                  <p style={{ fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+                  <p style={{ fontSize: 12, color: "#047857", margin: "6px 0 0" }}>
                     {createdResult.emailSent
-                      ? "The initiation email has been dispatched via Hostinger SMTP to their inbox."
-                      : "The user was created. You can share the setup link below directly with them:"}
+                      ? "A welcome initiation email was dispatched to the client with a secure link to set their password."
+                      : "Email dispatch failed. Please share the manual initiation link below:"}
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="setup-link-input" className="auth-label" style={{ fontSize: 11, marginBottom: 4 }}>
-                    One-time Password Setup Link:
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted-crm)", display: "block", marginBottom: 6 }}>
+                    Initiation Link
                   </label>
                   <div style={{ display: "flex", gap: 8 }}>
                     <input
-                      id="setup-link-input"
                       type="text"
                       readOnly
                       value={createdResult.setupUrl}
-                      className="field"
-                      style={{ fontSize: 11, background: "var(--paper)" }}
+                      style={{
+                        flex: 1,
+                        padding: "8px 12px",
+                        borderRadius: 12,
+                        background: "var(--card-bg-crm)",
+                        border: "1px solid var(--border-hairline)",
+                        fontSize: 11,
+                        fontFamily: "monospace",
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(createdResult.setupUrl);
                         setCopiedLink(true);
-                        setTimeout(() => setCopiedLink(false), 2500);
+                        setTimeout(() => setCopiedLink(false), 2000);
                       }}
-                      className="button button-outline"
-                      style={{ padding: "8px 14px", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12 }}
-                      title="Copy URL"
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: 12,
+                        border: "none",
+                        background: "var(--ink-crm)",
+                        color: "#fff",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
                     >
-                      {copiedLink ? (
-                        <>
-                          <Check size={14} style={{ color: "#059669" }} />
-                          <span style={{ color: "#059669", fontWeight: 700 }}>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} />
-                          <span>Copy</span>
-                        </>
-                      )}
+                      {copiedLink ? <Check size={14} /> : <Copy size={14} />}
+                      {copiedLink ? "Copied" : "Copy"}
                     </button>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreatedResult(null);
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: "12px",
+                    borderRadius: 99,
+                    border: "none",
+                    background: "var(--ink-crm)",
+                    color: "#fff",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    marginTop: 8,
                   }}
-                  className="button"
-                  style={{ width: "100%", justifyContent: "center", marginTop: 8 }}
                 >
                   Done
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleCreateUser} style={{ display: "grid", gap: 16 }}>
+              <form onSubmit={handleCreateUser} style={{ display: "grid", gap: 14 }}>
                 <div>
-                  <label htmlFor="user-name" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                    Full Name
+                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                    Full Name *
                   </label>
                   <input
-                    id="user-name"
                     type="text"
                     required
+                    placeholder="e.g. Alex Morgan"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="Jane Doe"
-                    className="field"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 14,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      fontSize: 13,
+                    }}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="user-email" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                    Email Address
+                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                    Email Address *
                   </label>
                   <input
-                    id="user-email"
                     type="email"
                     required
+                    placeholder="client@company.com"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="jane@clientdomain.com"
-                    className="field"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 14,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      fontSize: 13,
+                    }}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="user-role" className="auth-label" style={{ display: "block", marginBottom: 6 }}>
-                    Account Role
+                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                    Access Role *
                   </label>
                   <select
-                    id="user-role"
                     value={newRole}
-                    onChange={(e) => setNewRole(e.target.value as "CLIENT" | "ADMIN" | "DEVELOPER" | "FINANCE")}
-                    className="field"
+                    onChange={(e) =>
+                      setNewRole(e.target.value as "CLIENT" | "ADMIN" | "DEVELOPER" | "FINANCE")
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 14,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      fontSize: 13,
+                    }}
                   >
                     <option value="CLIENT">Client (Standard Portal Access)</option>
-                    <option value="DEVELOPER">Developer (Sprint & Technical Workspace)</option>
-                    <option value="FINANCE">Finance (Invoicing & Budget Workspace)</option>
-                    <option value="ADMIN">Administrator (Full Studio Control)</option>
+                    <option value="DEVELOPER">Developer (Workspace Access)</option>
+                    <option value="FINANCE">Finance (Invoicing &amp; Billing)</option>
+                    <option value="ADMIN">Administrator (Full Access)</option>
                   </select>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="button button-outline"
+                    style={{
+                      flex: 1,
+                      padding: "12px",
+                      borderRadius: 99,
+                      border: "1px solid var(--border-hairline)",
+                      background: "transparent",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: "pointer",
+                    }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" disabled={createLoading} className="button">
+                  <button
+                    type="submit"
+                    disabled={createLoading}
+                    style={{
+                      flex: 1,
+                      padding: "12px",
+                      borderRadius: 99,
+                      border: "none",
+                      background: "var(--ink-crm)",
+                      color: "#FFFFFF",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                    }}
+                  >
                     {createLoading ? (
                       <>
-                        <Loader2 size={14} className="animate-spin" /> Provisioning...
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Provisioning...</span>
                       </>
                     ) : (
-                      "Create & Send Invitation"
+                      "Create Account"
                     )}
                   </button>
                 </div>
@@ -629,9 +1058,9 @@ export function AdminUsersManager({ initialUsers, currentAdminId }: { initialUse
       )}
 
       <style>{`
-        @media (max-width: 640px) {
-          .user-modal-card {
-            padding: 22px 18px !important;
+        @media (max-width: 1040px) {
+          .users-layout-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>

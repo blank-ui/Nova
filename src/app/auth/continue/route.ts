@@ -1,34 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { safeInternalPath } from "@/lib/safe-redirect";
+import { safeInternalPath, getAppBaseUrl } from "@/lib/safe-redirect";
 
 export const dynamic = "force-dynamic";
 
-function getBaseUrl(request: Request): string {
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = request.headers.get("host");
-  const proto = request.headers.get("x-forwarded-proto") || "https";
-
-  const resolvedHost = forwardedHost || host;
-  if (
-    resolvedHost &&
-    !resolvedHost.includes("0.0.0.0") &&
-    !resolvedHost.includes("127.0.0.1") &&
-    !resolvedHost.includes("localhost:3000")
-  ) {
-    return `${proto}://${resolvedHost}`;
-  }
-
-  const configured = process.env.APP_URL || process.env.BETTER_AUTH_URL;
-  if (configured && !configured.includes("0.0.0.0") && !configured.includes("127.0.0.1")) {
-    return configured;
-  }
-
-  return "https://nova.allskyfares.com";
-}
-
 export async function GET(request: Request) {
-  const baseUrl = getBaseUrl(request);
+  const baseUrl = getAppBaseUrl(request);
   const url = new URL(request.url);
   const session = await auth.api.getSession({ headers: request.headers });
 

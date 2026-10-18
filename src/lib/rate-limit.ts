@@ -28,6 +28,10 @@ export async function consumeRateLimit(
   const windowMs = rule.windowSeconds * 1000;
 
   try {
+    if (!prisma?.authRateLimit) {
+      return { allowed: true, retryAfterSeconds: null, remaining: rule.max - 1 };
+    }
+
     const existing = await prisma.authRateLimit.findUnique({
       where: { key },
     });

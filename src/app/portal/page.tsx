@@ -1,26 +1,51 @@
 import Link from "next/link";
-import { ArrowUpRight, FolderKanban, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, FolderKanban, Clock, CheckCircle2, MessageSquare, Mail, Phone, Calendar, Sparkles } from "lucide-react";
 import { requireClient } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { NovaMascotFull } from "@/components/brand";
-
 
 export default async function PortalOverviewPage() {
   const session = await requireClient();
   const isUserAdmin = session.user.role === "ADMIN";
 
-  const projects = await prisma.project.findMany({
-    where: isUserAdmin ? {} : { clientId: session.user.id },
-    include: {
-      milestones: true,
-      tasks: true,
-    },
-    orderBy: { updatedAt: "desc" },
-  });
+  const [projects, clientInquiries, clientUser] = await Promise.all([
+    prisma.project.findMany({
+      where: isUserAdmin ? {} : { clientId: session.user.id },
+      include: {
+        milestones: true,
+        tasks: true,
+      },
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.inquiry.findMany({
+      where: isUserAdmin
+        ? {}
+        : {
+            OR: [
+              { email: session.user.email },
+              ...(session.user.name ? [{ name: { contains: session.user.name } }] : []),
+            ],
+          },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        name: true,
+        email: true,
+        discordHandle: true,
+        role: true,
+        createdAt: true,
+      },
+    }),
+  ]);
 
   const activeProjects = projects.filter((p) => p.status === "IN_PROGRESS" || p.status === "PLANNING" || p.status === "REVIEW");
   const totalTasks = projects.reduce((acc, p) => acc + p.tasks.length, 0);
   const completedTasks = projects.reduce((acc, p) => acc + p.tasks.filter((t) => t.completedAt !== null).length, 0);
+  const clientPhone = clientInquiries[0]?.phone || null;
+  const clientCompany = clientInquiries[0]?.company || "Client Workspace";
 
   return (
     <main className="shell" style={{ padding: "50px 0 80px" }}>
@@ -158,6 +183,202 @@ export default async function PortalOverviewPage() {
             })}
           </div>
         )}
+      </section>
+
+      {/* Project Inquiries & Submissions */}
+      <section style={{ marginTop: 50 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div>
+            <h2 style={{ fontSize: 24, letterSpacing: "-.04em", margin: "0 0 4px" }}>Project Inquiries &amp; Pipeline</h2>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+              Submitted requests, scopes, and proposal pipeline stages with the Nova team.
+            </p>
+          </div>
+          <Link href="/contact" className="button button-outline" style={{ fontSize: 12, padding: "6px 14px", height: "auto" }}>
+            New Inquiry &rarr;
+          </Link>
+        </div>
+
+        {clientInquiries.length === 0 ? (
+          <div className="card" style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+            No prior inquiries logged for this workspace. Use the button above to submit your next initiative.
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+            {clientInquiries.map((inq) => (
+              <div
+                key={inq.id}
+                className="card card-hover-glow"
+                style={{
+                  padding: 22,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        background:
+                          inq.status === "NEW"
+                            ? "rgba(255,181,71,0.15)"
+                            : inq.status === "QUALIFIED" || inq.status === "CONVERTED"
+                            ? "rgba(16,185,129,0.15)"
+                            : "rgba(37,99,235,0.15)",
+                        color:
+                          inq.status === "NEW"
+                            ? "#d97706"
+                            : inq.status === "QUALIFIED" || inq.status === "CONVERTED"
+                            ? "#059669"
+                            : "#2563eb",
+                      }}
+                    >
+                      {inq.status}
+                    </span>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                      {new Date(inq.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                  </div>
+
+                  <h4 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.03em" }}>
+                    {inq.service}
+                  </h4>
+                  <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6, margin: "0 0 14px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    {inq.message}
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>
+                    Budget: {inq.budget || "Custom Scope"}
+                  </span>
+                  <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                    {inq.company || "Direct Engagement"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Workspace Contacts & Direct Channels */}
+      <section style={{ marginTop: 50 }}>
+        <h2 style={{ fontSize: 24, letterSpacing: "-.04em", margin: "0 0 4px" }}>
+          Client Contacts &amp; Studio Channels
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 20px" }}>
+          Direct communication lines with your designated Nova studio engineers and account lead.
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
+          {/* Client Details Card */}
+          <div className="card" style={{ padding: 22 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em", display: "block", marginBottom: 12 }}>
+              Your Account on Record
+            </span>
+            <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
+              <div>
+                <span style={{ color: "var(--muted)", fontSize: 11, display: "block" }}>Full Name</span>
+                <span style={{ fontWeight: 700, color: "var(--ink)" }}>{session.user.name}</span>
+              </div>
+              <div>
+                <span style={{ color: "var(--muted)", fontSize: 11, display: "block" }}>Email</span>
+                <span style={{ fontWeight: 700, color: "var(--ink)" }}>{session.user.email}</span>
+              </div>
+              {clientUser?.discordHandle && (
+                <div>
+                  <span style={{ color: "var(--muted)", fontSize: 11, display: "block" }}>Discord Handle</span>
+                  <span style={{ fontWeight: 700, color: "#5865F2" }}>@{clientUser.discordHandle}</span>
+                </div>
+              )}
+              {clientPhone && (
+                <div>
+                  <span style={{ color: "var(--muted)", fontSize: 11, display: "block" }}>Direct Phone</span>
+                  <span style={{ fontWeight: 700, color: "var(--ink)" }}>{clientPhone}</span>
+                </div>
+              )}
+              <div>
+                <span style={{ color: "var(--muted)", fontSize: 11, display: "block" }}>Organization</span>
+                <span style={{ fontWeight: 600, color: "var(--ink)" }}>{clientCompany}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Dedicated Studio Lead */}
+          <div className="card" style={{ padding: 22 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em", display: "block", marginBottom: 12 }}>
+              Dedicated Studio Lead
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  background: "#101322",
+                  color: "#FFFFFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 800,
+                  fontSize: 16,
+                }}
+              >
+                NS
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: "var(--ink)", fontSize: 15 }}>Nova Studio Engineering</div>
+                <div style={{ fontSize: 12, color: "var(--muted)" }}>Senior Technical Lead</div>
+              </div>
+            </div>
+            <div style={{ display: "grid", gap: 8, fontSize: 12 }}>
+              <a
+                href="mailto:nova@allskyfares.com"
+                style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ink)", textDecoration: "none" }}
+              >
+                <Mail size={14} color="#6C4CFF" />
+                <span>nova@allskyfares.com</span>
+              </a>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--muted)" }}>
+                <Clock size={14} color="#059669" />
+                <span>Mon – Fri, 9:00 AM – 6:00 PM EST</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Communication Hub */}
+          <div className="card" style={{ padding: 22 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em", display: "block", marginBottom: 12 }}>
+              Instant Channels
+            </span>
+            <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6, margin: "0 0 14px" }}>
+              Join our private client Discord lounge or request an immediate call with your engineering team.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Link
+                href="/portal/security"
+                className="button button-outline"
+                style={{ justifyContent: "center", fontSize: 12, padding: "8px 12px" }}
+              >
+                Link Discord &amp; Security Settings
+              </Link>
+              <a
+                href="mailto:nova@allskyfares.com?subject=Project%20Question"
+                className="button"
+                style={{ justifyContent: "center", fontSize: 12, padding: "8px 12px" }}
+              >
+                Send Studio Message
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   );

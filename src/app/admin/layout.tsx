@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth-guards";
-import { AdminNav } from "@/components/admin-nav";
-import { Footer } from "@/components/footer";
+import { prisma } from "@/lib/prisma";
+import { AdminShell } from "@/components/admin-ui";
 
 export default async function AdminLayout({
   children,
@@ -8,12 +8,24 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await requireAdmin({ allowMfaSetup: true });
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      image: true,
+    },
+  });
 
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <AdminNav adminEmail={session.user.email} adminName={session.user.name} />
-      <div style={{ flex: 1 }}>{children}</div>
-      <Footer />
-    </div>
-  );
+  const user = {
+    id: session.user.id,
+    name: dbUser?.name ?? session.user.name ?? "Administrator",
+    email: dbUser?.email ?? session.user.email,
+    role: dbUser?.role ?? session.user.role ?? "ADMIN",
+    image: dbUser?.image ?? session.user.image ?? null,
+  };
+
+  return <AdminShell user={user}>{children}</AdminShell>;
 }

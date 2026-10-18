@@ -77,13 +77,13 @@ export default async function AdminShowcasePage() {
   }));
 
   return (
-    <main className="shell" style={{ padding: "40px 0 80px" }}>
+    <div style={{ width: "100%" }}>
       <AdminShowcaseManager
         initialGithubUser={settings.githubUser}
         initialVisibleRepos={visibleList}
         initialAvailableRepos={allRepos}
         initialGalleryItems={serializedGallery}
       />
-    </main>
+    </div>
   );
 }

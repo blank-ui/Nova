@@ -7,7 +7,8 @@ import { authClient } from "@/lib/auth-client";
 import { PasswordInput } from "@/components/password-input";
 import { evaluatePasswordStrength } from "@/lib/password-policy";
 
-export function ResetPasswordForm({ token }: { token: string }) {
+export function ResetPasswordForm({ token, mode }: { token: string; mode?: string }) {
+  const isSetup = mode === "setup";
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -28,30 +29,50 @@ export function ResetPasswordForm({ token }: { token: string }) {
     try {
       const result = await authClient.resetPassword({ newPassword: password, token });
       if (result.error) {
-        throw new Error("This reset link is invalid or expired. Request a fresh link and try again.");
+        throw new Error(
+          isSetup
+            ? "This activation link is invalid or has expired. Please contact your administrator."
+            : "This reset link is invalid or expired. Request a fresh link and try again."
+        );
       }
       setDone(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The password could not be reset.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : isSetup
+          ? "The password could not be set."
+          : "The password could not be reset."
+      );
     } finally {
       setBusy(false);
     }
   }
 
   if (!token) {
-    return <p role="alert" style={{ color: "#b42318" }}>This reset link is missing its token. Request a new link to continue.</p>;
+    return (
+      <p role="alert" style={{ color: "#b42318" }}>
+        {isSetup
+          ? "This activation link is missing its security token. Please ask your administrator for a new invite."
+          : "This reset link is missing its token. Request a new link to continue."}
+      </p>
+    );
   }
 
   return (
     <div className="card auth-reset" style={{ maxWidth: 500, padding: 32 }}>
-      <h2 style={{ letterSpacing: "-.05em", margin: "0 0 12px" }}>Choose a new password.</h2>
+      <h2 style={{ letterSpacing: "-.05em", margin: "0 0 12px" }}>
+        {isSetup ? "Create your password." : "Choose a new password."}
+      </h2>
       {done ? (
         <>
           <p role="status" style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7 }}>
-            Your password has been updated. Your existing sessions have been revoked.
+            {isSetup
+              ? "Your password has been configured and your account is active! You can now sign in to your workspace."
+              : "Your password has been updated. Your existing sessions have been revoked."}
           </p>
           <Link className="button" href="/login" style={{ marginTop: 14 }}>
-            Sign in
+            Sign in to Workspace
           </Link>
         </>
       ) : (
@@ -59,14 +80,14 @@ export function ResetPasswordForm({ token }: { token: string }) {
           <PasswordInput
             value={password}
             onChange={setPassword}
-            label="New password"
+            label={isSetup ? "Create password" : "New password"}
             autoComplete="new-password"
             showStrengthMeter={true}
             placeholder="6-12 chars with Aa#"
           />
           {error && <p role="alert" style={{ color: "#b42318", fontSize: 12, margin: 0 }}>{error}</p>}
           <button className="button" disabled={busy} style={{ width: "100%", justifyContent: "center" }}>
-            {busy ? "Updating…" : "Update password"}
+            {busy ? (isSetup ? "Activating account…" : "Updating…") : (isSetup ? "Set Password & Activate" : "Update password")}
             <ArrowUpRight size={15} />
           </button>
         </form>

@@ -7,6 +7,8 @@ import {
   sendAccountInitiationEmail,
   sendAdminPasswordResetNotificationEmail,
 } from "@/lib/auth-email";
+import { getAppBaseUrl } from "@/lib/safe-redirect";
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
  * GET /api/admin/users
@@ -75,6 +77,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  const clientIp = getClientIp(request);
+  const rateLimit = await consumeRateLimit(`admin-users-create:${session.user.id}:${clientIp}`, {
+    windowSeconds: 60,
+    max: 20,
+  });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many user creation requests. Please try again shortly." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds ?? 60) } }
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;
@@ -120,16 +134,17 @@ export async function POST(request: Request) {
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 48); // 48 hours
 
+    // Better Auth's resetPassword handler expects verification.value to be the raw user.id string
     await prisma.authVerification.create({
       data: {
         identifier: `reset-password:${token}`,
-        value: JSON.stringify({ userId: user.id, email: user.email }),
+        value: user.id,
         expiresAt,
       },
     });
 
-    const appUrl = process.env.APP_URL || "http://localhost:3000";
-    const setupUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+    const appUrl = getAppBaseUrl(request);
+    const setupUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}&mode=setup`;
 
     // Dispatch initiation email
     let emailSent = false;
@@ -177,6 +192,18 @@ export async function PATCH(request: Request) {
   const session = await getCurrentSession();
   if (!session || !canOpenAdmin(session.user.role, session.user.twoFactorEnabled)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const clientIp = getClientIp(request);
+  const rateLimit = await consumeRateLimit(`admin-users-patch:${session.user.id}:${clientIp}`, {
+    windowSeconds: 60,
+    max: 30,
+  });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many user modification requests. Please wait." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds ?? 60) } }
+    );
   }
 
   let body: Record<string, unknown>;
@@ -246,15 +273,16 @@ export async function PATCH(request: Request) {
       const token = randomBytes(32).toString("hex");
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
 
+      // Better Auth's resetPassword handler expects verification.value to be the raw user.id string
       await prisma.authVerification.create({
         data: {
           identifier: `reset-password:${token}`,
-          value: JSON.stringify({ userId: user.id, email: user.email }),
+          value: user.id,
           expiresAt,
         },
       });
 
-      const appUrl = process.env.APP_URL || "http://localhost:3000";
+      const appUrl = getAppBaseUrl(request);
       const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
       let emailSent = false;

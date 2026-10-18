@@ -19,6 +19,33 @@
   --glass-shadow: 0 22px 80px rgba(30, 36, 58, 0.11);
   --grid-line: rgba(40, 48, 65, 0.038);
   --orb-gradient: radial-gradient(circle, #dcdfff 0%, rgba(225, 227, 255, 0.6) 32%, transparent 70%);
+
+  /* CRM & Admin Design Tokens (Light default) */
+  --page-bg: #E4E7EE;
+  --app-bg: #EEF1F4;
+  --card-bg-crm: #E3E7EC;
+  --surface-raised: #F7F8FA;
+  --subtle-fill: #DDE1E7;
+  --subtle-fill-alt: #D5DAE1;
+  --border-hairline: #C8CED7;
+  --border-hairline-light: #D3D8E0;
+  --text-primary: #141821;
+  --text-secondary: #3A4150;
+  --text-muted-crm: #555C69;
+  --ink-crm: #0C0D10;
+  --left-rail-bg: #1C1F1A;
+  --left-rail-icon: #E8EBE4;
+  --left-rail-btn-border: #3A3F37;
+  --accent-blue: #2F54EB;
+  --accent-teal: #2C6B80;
+  --accent-yellow: #F1E04A;
+  --brand-purple: #6C4CE0;
+
+  --radius-shell: 28px;
+  --radius-card: 24px;
+  --radius-tile: 18px;
+  --radius-row: 16px;
+  --radius-pill: 999px;
 }
 
 [data-theme="dark"],
@@ -40,6 +67,27 @@
   --glass-shadow: 0 22px 80px rgba(0, 0, 0, 0.55);
   --grid-line: rgba(255, 255, 255, 0.032);
   --orb-gradient: radial-gradient(circle, rgba(108, 76, 255, 0.35) 0%, rgba(108, 76, 255, 0.12) 36%, transparent 70%);
+
+  /* CRM & Admin Design Tokens (Dark) */
+  --page-bg: #0C0E14;
+  --app-bg: #131722;
+  --card-bg-crm: #1A2030;
+  --surface-raised: #222A3F;
+  --subtle-fill: #2B344D;
+  --subtle-fill-alt: #343E5B;
+  --border-hairline: #2D374E;
+  --border-hairline-light: #384462;
+  --text-primary: #F0F3F9;
+  --text-secondary: #C0C8D8;
+  --text-muted-crm: #8E99AF;
+  --ink-crm: #F0F3F9;
+  --left-rail-bg: #121413;
+  --left-rail-icon: #E8EBE4;
+  --left-rail-btn-border: #2D332B;
+  --accent-blue: #3E63FF;
+  --accent-teal: #378099;
+  --accent-yellow: #F1E04A;
+  --brand-purple: #7D5FFF;
 }
 
 * {
