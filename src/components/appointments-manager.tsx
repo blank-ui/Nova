@@ -682,46 +682,50 @@ export function AppointmentsManager({
         )}
       </SectionCard>
 
-      {/* Set / Request Appointment Slide-Over Drawer */}
+      {/* Set / Request Appointment Centered Modal Dialog */}
       {modalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.55)",
-            backdropFilter: "blur(4px)",
+            background: "rgba(10, 12, 18, 0.65)",
+            backdropFilter: "blur(6px)",
             display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "stretch",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 16,
             zIndex: 1000,
           }}
           onClick={() => setModalOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="drawer-slide-in drawer-responsive"
+            className="animate-fade-in-up"
             style={{
-              background: "var(--surface-raised)",
-              width: "min(500px, 100%)",
-              height: "100%",
-              maxHeight: "100vh",
-              boxShadow: "-16px 0 48px rgba(0,0,0,0.35)",
-              borderLeft: "1px solid var(--border-hairline)",
+              background: "var(--card-bg-crm)",
+              width: "100%",
+              maxWidth: 520,
+              maxHeight: "min(90vh, 720px)",
+              borderRadius: "var(--radius-card)",
+              border: "1px solid var(--border-hairline-light)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
             }}
           >
-            {/* Fixed Drawer Header */}
+            {/* Modal Header */}
             <div
               style={{
                 flexShrink: 0,
                 padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline)",
+                borderBottom: "1px solid var(--border-hairline-light)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                background: "var(--surface-raised)",
+                background: "var(--card-bg-crm)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -760,8 +764,8 @@ export function AppointmentsManager({
                   height: 32,
                   borderRadius: "50%",
                   border: "1px solid var(--border-hairline)",
-                  background: "var(--card-bg-crm)",
-                  color: "var(--text-muted-crm)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-secondary)",
                   cursor: "pointer",
                   display: "grid",
                   placeItems: "center",
@@ -797,7 +801,7 @@ export function AppointmentsManager({
                 }}
               >
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                     Meeting Title / Purpose <span style={{ color: "var(--accent-blue)" }}>*</span>
                   </label>
                   <input
@@ -809,9 +813,9 @@ export function AppointmentsManager({
                     style={{
                       width: "100%",
                       padding: "10px 14px",
-                      borderRadius: 10,
+                      borderRadius: 12,
                       border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
+                      background: "var(--surface-raised)",
                       color: "var(--text-primary)",
                       fontSize: 13,
                       outline: "none",
@@ -822,7 +826,7 @@ export function AppointmentsManager({
 
                 {isStaff && clientsList.length > 0 && (
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                       Client Workspace <span style={{ color: "var(--accent-blue)" }}>*</span>
                     </label>
                     <select
@@ -831,9 +835,9 @@ export function AppointmentsManager({
                       style={{
                         width: "100%",
                         padding: "10px 14px",
-                        borderRadius: 10,
+                        borderRadius: 12,
                         border: "1px solid var(--border-hairline)",
-                        background: "var(--card-bg-crm)",
+                        background: "var(--surface-raised)",
                         color: "var(--text-primary)",
                         fontSize: 13,
                         outline: "none",
@@ -853,7 +857,7 @@ export function AppointmentsManager({
                 {/* 2-Column Date & Time Grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                       Date <span style={{ color: "var(--accent-blue)" }}>*</span>
                     </label>
                     <input
@@ -865,9 +869,9 @@ export function AppointmentsManager({
                       style={{
                         width: "100%",
                         padding: "10px 12px",
-                        borderRadius: 10,
+                        borderRadius: 12,
                         border: "1px solid var(--border-hairline)",
-                        background: "var(--card-bg-crm)",
+                        background: "var(--surface-raised)",
                         color: "var(--text-primary)",
                         fontSize: 13,
                         outline: "none",
@@ -877,7 +881,7 @@ export function AppointmentsManager({
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                       Time <span style={{ color: "var(--accent-blue)" }}>*</span>
                     </label>
                     <input
@@ -889,9 +893,9 @@ export function AppointmentsManager({
                       style={{
                         width: "100%",
                         padding: "10px 12px",
-                        borderRadius: 10,
+                        borderRadius: 12,
                         border: "1px solid var(--border-hairline)",
-                        background: "var(--card-bg-crm)",
+                        background: "var(--surface-raised)",
                         color: "var(--text-primary)",
                         fontSize: 13,
                         outline: "none",
@@ -903,7 +907,7 @@ export function AppointmentsManager({
 
                 {/* Interactive Duration Segmented Pills */}
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                     Session Duration
                   </label>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
@@ -927,8 +931,8 @@ export function AppointmentsManager({
                               : "1px solid var(--border-hairline)",
                             background: active
                               ? "var(--accent-blue)"
-                              : "var(--card-bg-crm)",
-                            color: active ? "#ffffff" : "var(--text-primary)",
+                              : "var(--surface-raised)",
+                            color: active ? "#ffffff" : "var(--text-secondary)",
                             fontSize: 12,
                             fontWeight: active ? 700 : 500,
                             cursor: "pointer",
@@ -945,7 +949,7 @@ export function AppointmentsManager({
 
                 {isStaff && (
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                       Meeting Link (Google Meet / Zoom)
                     </label>
                     <input
@@ -956,9 +960,9 @@ export function AppointmentsManager({
                       style={{
                         width: "100%",
                         padding: "10px 14px",
-                        borderRadius: 10,
+                        borderRadius: 12,
                         border: "1px solid var(--border-hairline)",
-                        background: "var(--card-bg-crm)",
+                        background: "var(--surface-raised)",
                         color: "var(--text-primary)",
                         fontSize: 13,
                         outline: "none",
@@ -969,7 +973,7 @@ export function AppointmentsManager({
                 )}
 
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                     Description / Agenda <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
                   </label>
                   <textarea
@@ -981,9 +985,9 @@ export function AppointmentsManager({
                       width: "100%",
                       minHeight: 56,
                       padding: "10px 14px",
-                      borderRadius: 10,
+                      borderRadius: 12,
                       border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
+                      background: "var(--surface-raised)",
                       color: "var(--text-primary)",
                       fontSize: 13,
                       resize: "vertical",
@@ -1000,9 +1004,10 @@ export function AppointmentsManager({
                 style={{
                   flexShrink: 0,
                   padding: "16px 24px",
-                  borderTop: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
+                  borderTop: "1px solid var(--border-hairline-light)",
+                  background: "var(--card-bg-crm)",
                   display: "flex",
+                  justifyContent: "flex-end",
                   gap: 12,
                   alignItems: "center",
                 }}
@@ -1011,11 +1016,10 @@ export function AppointmentsManager({
                   type="button"
                   onClick={() => setModalOpen(false)}
                   style={{
-                    flex: 1,
-                    padding: "11px 16px",
+                    padding: "10px 20px",
                     borderRadius: "var(--radius-pill)",
                     border: "1px solid var(--border-hairline)",
-                    background: "transparent",
+                    background: "var(--surface-raised)",
                     color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
@@ -1029,8 +1033,7 @@ export function AppointmentsManager({
                   type="submit"
                   disabled={actionBusy}
                   style={{
-                    flex: 1.4,
-                    padding: "11px 18px",
+                    padding: "10px 24px",
                     borderRadius: "var(--radius-pill)",
                     border: "none",
                     background: "var(--ink-crm)",
@@ -1054,46 +1057,50 @@ export function AppointmentsManager({
         </div>
       )}
 
-      {/* Edit / Reschedule Slide-Over Drawer */}
+      {/* Edit / Reschedule Centered Modal Dialog */}
       {editingItem && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.55)",
-            backdropFilter: "blur(4px)",
+            background: "rgba(10, 12, 18, 0.65)",
+            backdropFilter: "blur(6px)",
             display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "stretch",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 16,
             zIndex: 1000,
           }}
           onClick={() => setEditingItem(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="drawer-slide-in drawer-responsive"
+            className="animate-fade-in-up"
             style={{
-              background: "var(--surface-raised)",
-              width: "min(460px, 100%)",
-              height: "100%",
-              maxHeight: "100vh",
-              boxShadow: "-16px 0 48px rgba(0,0,0,0.35)",
-              borderLeft: "1px solid var(--border-hairline)",
+              background: "var(--card-bg-crm)",
+              width: "100%",
+              maxWidth: 480,
+              maxHeight: "min(90vh, 600px)",
+              borderRadius: "var(--radius-card)",
+              border: "1px solid var(--border-hairline-light)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
             }}
           >
-            {/* Fixed Drawer Header */}
+            {/* Modal Header */}
             <div
               style={{
                 flexShrink: 0,
                 padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline)",
+                borderBottom: "1px solid var(--border-hairline-light)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                background: "var(--surface-raised)",
+                background: "var(--card-bg-crm)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1130,8 +1137,8 @@ export function AppointmentsManager({
                   height: 32,
                   borderRadius: "50%",
                   border: "1px solid var(--border-hairline)",
-                  background: "var(--card-bg-crm)",
-                  color: "var(--text-muted-crm)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-secondary)",
                   cursor: "pointer",
                   display: "grid",
                   placeItems: "center",
@@ -1167,7 +1174,7 @@ export function AppointmentsManager({
                 }}
               >
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                     Date &amp; Time
                   </label>
                   <input
@@ -1178,9 +1185,9 @@ export function AppointmentsManager({
                     style={{
                       width: "100%",
                       padding: "10px 14px",
-                      borderRadius: 10,
+                      borderRadius: 12,
                       border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
+                      background: "var(--surface-raised)",
                       color: "var(--text-primary)",
                       fontSize: 13,
                       outline: "none",
@@ -1190,7 +1197,7 @@ export function AppointmentsManager({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                     Meeting Link
                   </label>
                   <input
@@ -1201,9 +1208,9 @@ export function AppointmentsManager({
                     style={{
                       width: "100%",
                       padding: "10px 14px",
-                      borderRadius: 10,
+                      borderRadius: 12,
                       border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
+                      background: "var(--surface-raised)",
                       color: "var(--text-primary)",
                       fontSize: 13,
                       outline: "none",
@@ -1218,9 +1225,10 @@ export function AppointmentsManager({
                 style={{
                   flexShrink: 0,
                   padding: "16px 24px",
-                  borderTop: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
+                  borderTop: "1px solid var(--border-hairline-light)",
+                  background: "var(--card-bg-crm)",
                   display: "flex",
+                  justifyContent: "flex-end",
                   gap: 12,
                   alignItems: "center",
                 }}
@@ -1229,11 +1237,10 @@ export function AppointmentsManager({
                   type="button"
                   onClick={() => setEditingItem(null)}
                   style={{
-                    flex: 1,
-                    padding: "11px 16px",
+                    padding: "10px 20px",
                     borderRadius: "var(--radius-pill)",
                     border: "1px solid var(--border-hairline)",
-                    background: "transparent",
+                    background: "var(--surface-raised)",
                     color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
@@ -1247,8 +1254,7 @@ export function AppointmentsManager({
                   type="submit"
                   disabled={actionBusy}
                   style={{
-                    flex: 1.4,
-                    padding: "11px 18px",
+                    padding: "10px 24px",
                     borderRadius: "var(--radius-pill)",
                     border: "none",
                     background: "var(--ink-crm)",

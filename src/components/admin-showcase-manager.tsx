@@ -817,46 +817,61 @@ export function AdminShowcaseManager({
         </div>
       )}
 
-      {/* Add Screenshot Slide-Over Drawer */}
+      {/* Add Screenshot Centered Modal Dialog */}
       {showAddModal && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.45)",
-            backdropFilter: "blur(3px)",
+            background: "rgba(10, 12, 18, 0.65)",
+            backdropFilter: "blur(6px)",
             display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "stretch",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 16,
             zIndex: 1000,
           }}
           onClick={() => setShowAddModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="drawer-slide-in drawer-responsive"
+            className="animate-fade-in-up"
             style={{
-              background: "var(--surface-raised)",
-              width: "min(500px, 100%)",
-              height: "100%",
-              maxHeight: "100vh",
-              padding: "28px 24px",
-              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
-              borderLeft: "1px solid var(--border-hairline)",
+              background: "var(--card-bg-crm)",
+              width: "100%",
+              maxWidth: 520,
+              maxHeight: "min(90vh, 720px)",
+              borderRadius: "var(--radius-card)",
+              border: "1px solid var(--border-hairline-light)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
               display: "flex",
               flexDirection: "column",
-              overflowY: "auto",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            {/* Modal Header */}
+            <div
+              style={{
+                flexShrink: 0,
+                padding: "20px 24px 16px",
+                borderBottom: "1px solid var(--border-hairline-light)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "var(--card-bg-crm)",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: "var(--accent-blue)",
-                    color: "#fff",
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: "rgba(14, 165, 233, 0.12)",
+                    border: "1px solid rgba(14, 165, 233, 0.25)",
+                    color: "var(--accent-blue)",
                     display: "grid",
                     placeItems: "center",
                     flexShrink: 0,
@@ -865,7 +880,7 @@ export function AdminShowcaseManager({
                   <ImageIcon size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
                     Add Screenshot Showcase
                   </h3>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
@@ -882,163 +897,212 @@ export function AdminShowcaseManager({
                   height: 32,
                   borderRadius: "50%",
                   border: "1px solid var(--border-hairline)",
-                  background: "var(--card-bg-crm)",
-                  color: "var(--text-primary)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-secondary)",
                   cursor: "pointer",
                   display: "grid",
                   placeItems: "center",
                   flexShrink: 0,
+                  transition: "color 0.15s ease, background 0.15s ease",
                 }}
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
 
-            <form onSubmit={handleAddGalleryItem} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Project Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. AI-Powered CRM Dashboard"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Image URL / Asset Path *
-                </label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <form
+              onSubmit={handleAddGalleryItem}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: "1 1 auto",
+                minHeight: 0,
+                overflow: "hidden",
+              }}
+            >
+              {/* Scrollable Form Body */}
+              <div
+                className="drawer-content"
+                style={{
+                  flex: "1 1 auto",
+                  overflowY: "auto",
+                  padding: "20px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
+                }}
+              >
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                    Category
-                  </label>
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      borderRadius: 14,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                    }}
-                  >
-                    <option value="UI/UX Design">UI/UX Design</option>
-                    <option value="Full-Stack App">Full-Stack App</option>
-                    <option value="Mobile App">Mobile App</option>
-                    <option value="SaaS Platform">SaaS Platform</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                    Repository (Optional)
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Project Title <span style={{ color: "var(--accent-blue)" }}>*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Nova"
-                    value={newRepoName}
-                    onChange={(e) => setNewRepoName(e.target.value)}
+                    required
+                    placeholder="e.g. AI-Powered CRM Dashboard"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      borderRadius: 14,
+                      padding: "10px 14px",
+                      borderRadius: 12,
                       border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
+                      background: "var(--surface-raised)",
                       color: "var(--text-primary)",
                       fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Image URL / Asset Path <span style={{ color: "var(--accent-blue)" }}>*</span>
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://images.unsplash.com/photo-..."
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                      Category
+                    </label>
+                    <select
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: 12,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--surface-raised)",
+                        color: "var(--text-primary)",
+                        fontSize: 13,
+                        outline: "none",
+                        boxSizing: "border-box",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="UI/UX Design">UI/UX Design</option>
+                      <option value="Full-Stack App">Full-Stack App</option>
+                      <option value="Mobile App">Mobile App</option>
+                      <option value="SaaS Platform">SaaS Platform</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                      Repository (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nova"
+                      value={newRepoName}
+                      onChange={(e) => setNewRepoName(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: 12,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--surface-raised)",
+                        color: "var(--text-primary)",
+                        fontSize: 13,
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Live Demo URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://app.example.com"
+                    value={newProjectUrl}
+                    onChange={(e) => setNewProjectUrl(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Description <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Key deliverables, design system tokens, or technology stack..."
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: 56,
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      resize: "vertical",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      fontFamily: "inherit",
                     }}
                   />
                 </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Live Demo URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://app.example.com"
-                  value={newProjectUrl}
-                  onChange={(e) => setNewProjectUrl(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Description (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Key deliverables, design system tokens, or technology stack..."
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                    resize: "vertical",
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
+              {/* Pinned Sticky Footer */}
+              <div
+                style={{
+                  flexShrink: 0,
+                  padding: "16px 24px",
+                  borderTop: "1px solid var(--border-hairline-light)",
+                  background: "var(--card-bg-crm)",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  alignItems: "center",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
                   style={{
-                    flex: 1,
-                    padding: "12px",
-                    borderRadius: 99,
+                    padding: "10px 20px",
+                    borderRadius: "var(--radius-pill)",
                     border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
+                    background: "var(--surface-raised)",
                     color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
@@ -1052,9 +1116,8 @@ export function AdminShowcaseManager({
                   type="submit"
                   disabled={galleryBusy}
                   style={{
-                    flex: 1.3,
-                    padding: "12px",
-                    borderRadius: 99,
+                    padding: "10px 24px",
+                    borderRadius: "var(--radius-pill)",
                     border: "none",
                     background: "var(--ink-crm)",
                     color: "var(--ink-crm-text, #FFFFFF)",

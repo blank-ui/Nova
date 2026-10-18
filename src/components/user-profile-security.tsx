@@ -768,7 +768,7 @@ export function UserProfileSecurity({
 
           <form onSubmit={handleProfileSave} style={{ display: "grid", gap: 20, maxWidth: 640 }}>
             <div>
-              <label htmlFor="display-name" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
+              <label htmlFor="display-name" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-secondary, var(--ink))" }}>
                 Display Name *
               </label>
               <input
@@ -786,7 +786,7 @@ export function UserProfileSecurity({
             {/* Phone Number & Date of Birth (Responsive 2-column grid) */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
               <div>
-                <label htmlFor="profile-phone" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
+                <label htmlFor="profile-phone" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-secondary, var(--ink))" }}>
                   Phone Number
                 </label>
                 <input
@@ -805,7 +805,7 @@ export function UserProfileSecurity({
               </div>
 
               <div>
-                <label htmlFor="profile-dob" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
+                <label htmlFor="profile-dob" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-secondary, var(--ink))" }}>
                   Date of Birth
                 </label>
                 <input
@@ -825,7 +825,7 @@ export function UserProfileSecurity({
 
             {/* Role Card */}
             <div>
-              <span style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
+              <span style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-secondary, var(--ink))" }}>
                 Account Role &amp; Permissions
               </span>
               <div
@@ -835,8 +835,8 @@ export function UserProfileSecurity({
                   justifyContent: "space-between",
                   padding: "16px 20px",
                   borderRadius: 14,
-                  background: "var(--paper)",
-                  border: "1px solid var(--line)",
+                  background: "var(--surface-raised, var(--paper))",
+                  border: "1px solid var(--border-hairline, var(--line))",
                   gap: 16,
                   flexWrap: "wrap",
                 }}
@@ -1285,14 +1285,14 @@ export function UserProfileSecurity({
                 role="status"
                 style={{
                   padding: "10px 14px",
-                  borderRadius: 8,
+                  borderRadius: 10,
                   fontSize: 13,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: passwordMessage.type === "success" ? "#ecfdf5" : "#fef2f2",
-                  color: passwordMessage.type === "success" ? "#065f46" : "#991b1b",
-                  border: `1px solid ${passwordMessage.type === "success" ? "#a7f3d0" : "#fecaca"}`,
+                  background: passwordMessage.type === "success" ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
+                  color: passwordMessage.type === "success" ? "#10b981" : "#ef4444",
+                  border: `1px solid ${passwordMessage.type === "success" ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
                 }}
               >
                 {passwordMessage.type === "success" ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
@@ -1329,7 +1329,7 @@ export function UserProfileSecurity({
           {/* ACTIVE MFA VIEW */}
           {mfaEnabled ? (
             <div style={{ display: "grid", gap: 20 }}>
-              <div style={{ padding: 18, borderRadius: 12, background: "var(--paper)", border: "1px solid var(--line)" }}>
+              <div style={{ padding: 18, borderRadius: 12, background: "var(--surface-raised, var(--paper))", border: "1px solid var(--border-hairline, var(--line))" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <h3 style={{ fontSize: 15, margin: 0 }}>Recovery Backup Codes</h3>
@@ -1349,7 +1349,7 @@ export function UserProfileSecurity({
                 </div>
 
                 {backupCodes.length > 0 && (
-                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border-hairline, var(--line))" }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--amber)", marginBottom: 6 }}>
                       New Backup Codes (Save these now, they will not be shown again):
                     </div>
@@ -1357,8 +1357,8 @@ export function UserProfileSecurity({
                       style={{
                         padding: 12,
                         borderRadius: 8,
-                        background: "var(--ink)",
-                        color: "var(--paper)",
+                        background: "var(--ink-crm, var(--ink))",
+                        color: "var(--ink-crm-text, var(--paper))",
                         fontFamily: "'DM Mono', monospace",
                         fontSize: 12,
                         lineHeight: 1.6,
@@ -1378,16 +1378,16 @@ export function UserProfileSecurity({
                     type="button"
                     onClick={() => setShowDisableConfirm(true)}
                     className="button button-outline"
-                    style={{ color: "#b91c1c", borderColor: "#fecaca" }}
+                    style={{ color: "#ef4444", borderColor: "rgba(239, 68, 68, 0.3)" }}
                   >
                     Disable Multi-Factor Authentication
                   </button>
                 ) : (
-                  <form onSubmit={handleDisableMfa} style={{ padding: 18, borderRadius: 12, border: "1px solid #fecaca", background: "#fff1f2", maxWidth: 440 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#991b1b", marginBottom: 6 }}>
+                  <form onSubmit={handleDisableMfa} style={{ padding: 18, borderRadius: 12, border: "1px solid rgba(239, 68, 68, 0.3)", background: "rgba(239, 68, 68, 0.08)", maxWidth: 440 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#ef4444", marginBottom: 6 }}>
                       Confirm MFA Disablement
                     </div>
-                    <p style={{ fontSize: 12, color: "#7f1d1d", lineHeight: 1.6, margin: "0 0 14px" }}>
+                    <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, margin: "0 0 14px" }}>
                       Disabling MFA lowers your account security. Confirm your password to proceed.
                     </p>
                     <input
@@ -1400,7 +1400,7 @@ export function UserProfileSecurity({
                       style={{ marginBottom: 12 }}
                     />
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button type="submit" disabled={mfaBusy} className="button" style={{ background: "#b91c1c", color: "white" }}>
+                      <button type="submit" disabled={mfaBusy} className="button" style={{ background: "#dc2626", color: "white" }}>
                         {mfaBusy ? "Disabling..." : "Confirm & Disable"}
                       </button>
                       <button type="button" onClick={() => setShowDisableConfirm(false)} className="button button-outline">

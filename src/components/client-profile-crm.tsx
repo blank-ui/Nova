@@ -1737,41 +1737,55 @@ export function ClientProfileCRM({
         </div>
       </div>
 
-      {/* Drawer: Create Real Project */}
+      {/* Centered Modal: Create Real Project */}
       {createProjectModal && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.45)",
-            backdropFilter: "blur(3px)",
+            background: "rgba(10, 12, 18, 0.65)",
+            backdropFilter: "blur(6px)",
             display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "stretch",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 16,
             zIndex: 1000,
           }}
           onClick={() => setCreateProjectModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="drawer-slide-in drawer-responsive"
+            className="animate-fade-in-up"
             style={{
-              background: "var(--surface-raised, var(--paper))",
-              width: "min(480px, 100%)",
-              height: "100%",
-              maxHeight: "100vh",
-              padding: "28px 24px",
-              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
-              borderLeft: "1px solid var(--border-hairline, var(--line))",
+              background: "var(--card-bg-crm)",
+              width: "100%",
+              maxWidth: 500,
+              maxHeight: "min(90vh, 640px)",
+              borderRadius: "var(--radius-card)",
+              border: "1px solid var(--border-hairline-light)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
               display: "flex",
               flexDirection: "column",
-              overflowY: "auto",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            {/* Modal Header */}
+            <div
+              style={{
+                flexShrink: 0,
+                padding: "20px 24px 16px",
+                borderBottom: "1px solid var(--border-hairline-light)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "var(--card-bg-crm)",
+              }}
+            >
               <div>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>Provision Project</h3>
-                <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Provision Project</h3>
+                <p style={{ fontSize: 12, color: "var(--text-muted-crm)", margin: "2px 0 0" }}>
                   Create an active development project in the workspace for <strong>{user.name}</strong>.
                 </p>
               </div>
@@ -1783,59 +1797,137 @@ export function ClientProfileCRM({
                   width: 32,
                   height: 32,
                   borderRadius: "50%",
-                  border: "1px solid var(--border-hairline, var(--line))",
-                  background: "var(--card-bg-crm, var(--card-bg))",
-                  color: "var(--text-primary)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-secondary)",
                   cursor: "pointer",
                   display: "grid",
                   placeItems: "center",
                   flexShrink: 0,
+                  transition: "color 0.15s ease, background 0.15s ease",
                 }}
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
-            <form onSubmit={handleCreateRealProject} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
-              <div>
-                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
-                  Project Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  placeholder="e.g. NextGen Web Platform"
-                  className="field"
-                />
+
+            <form
+              onSubmit={handleCreateRealProject}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: "1 1 auto",
+                minHeight: 0,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                className="drawer-content"
+                style={{
+                  flex: "1 1 auto",
+                  overflowY: "auto",
+                  padding: "20px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
+                }}
+              >
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Project Name <span style={{ color: "var(--accent-blue)" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    placeholder="e.g. NextGen Web Platform"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Scope / Description <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={newProjectDesc}
+                    onChange={(e) => setNewProjectDesc(e.target.value)}
+                    placeholder="Project deliverables, tech stack, and goals..."
+                    style={{
+                      width: "100%",
+                      minHeight: 70,
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      resize: "vertical",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
-                  Scope / Description
-                </label>
-                <textarea
-                  rows={4}
-                  value={newProjectDesc}
-                  onChange={(e) => setNewProjectDesc(e.target.value)}
-                  placeholder="Project deliverables, tech stack, and goals..."
-                  className="field"
-                  style={{ resize: "vertical" }}
-                />
-              </div>
-              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
+
+              {/* Pinned Sticky Footer */}
+              <div
+                style={{
+                  flexShrink: 0,
+                  padding: "16px 24px",
+                  borderTop: "1px solid var(--border-hairline-light)",
+                  background: "var(--card-bg-crm)",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  alignItems: "center",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setCreateProjectModal(false)}
-                  className="button button-outline"
-                  style={{ flex: 1, justifyContent: "center" }}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "var(--radius-pill)",
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingProject}
-                  className="button"
-                  style={{ flex: 1.3, justifyContent: "center" }}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "var(--radius-pill)",
+                    border: "none",
+                    background: "var(--ink-crm)",
+                    color: "var(--ink-crm-text, #FFFFFF)",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: isCreatingProject ? "not-allowed" : "pointer",
+                    opacity: isCreatingProject ? 0.7 : 1,
+                    transition: "all 0.15s ease",
+                  }}
                 >
                   {isCreatingProject ? "Creating…" : "Create Project"}
                 </button>
@@ -1845,41 +1937,55 @@ export function ClientProfileCRM({
         </div>
       )}
 
-      {/* Drawer: Edit Contact Details */}
+      {/* Centered Modal: Edit Contact Details */}
       {editContactModal && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.45)",
-            backdropFilter: "blur(3px)",
+            background: "rgba(10, 12, 18, 0.65)",
+            backdropFilter: "blur(6px)",
             display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "stretch",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 16,
             zIndex: 1000,
           }}
           onClick={() => setEditContactModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="drawer-slide-in drawer-responsive"
+            className="animate-fade-in-up"
             style={{
-              background: "var(--surface-raised, var(--paper))",
-              width: "min(460px, 100%)",
-              height: "100%",
-              maxHeight: "100vh",
-              padding: "28px 24px",
-              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
-              borderLeft: "1px solid var(--border-hairline, var(--line))",
+              background: "var(--card-bg-crm)",
+              width: "100%",
+              maxWidth: 480,
+              maxHeight: "min(90vh, 600px)",
+              borderRadius: "var(--radius-card)",
+              border: "1px solid var(--border-hairline-light)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
               display: "flex",
               flexDirection: "column",
-              overflowY: "auto",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            {/* Modal Header */}
+            <div
+              style={{
+                flexShrink: 0,
+                padding: "20px 24px 16px",
+                borderBottom: "1px solid var(--border-hairline-light)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "var(--card-bg-crm)",
+              }}
+            >
               <div>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>Client Contact Details</h3>
-                <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Client Contact Details</h3>
+                <p style={{ fontSize: 12, color: "var(--text-muted-crm)", margin: "2px 0 0" }}>
                   Update client parameters on record.
                 </p>
               </div>
@@ -1891,64 +1997,169 @@ export function ClientProfileCRM({
                   width: 32,
                   height: 32,
                   borderRadius: "50%",
-                  border: "1px solid var(--border-hairline, var(--line))",
-                  background: "var(--card-bg-crm, var(--card-bg))",
-                  color: "var(--text-primary)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-secondary)",
                   cursor: "pointer",
                   display: "grid",
                   placeItems: "center",
                   flexShrink: 0,
+                  transition: "color 0.15s ease, background 0.15s ease",
                 }}
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
+
+            <div
+              className="drawer-content"
+              style={{
+                flex: "1 1 auto",
+                overflowY: "auto",
+                padding: "20px 24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
               <div>
-                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                   Full Name
                 </label>
-                <input type="text" defaultValue={user.name} className="field" />
+                <input
+                  type="text"
+                  defaultValue={user.name}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
               </div>
+
               <div>
-                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                   Company Name
                 </label>
-                <input type="text" defaultValue={companyName} placeholder="Not specified" className="field" />
+                <input
+                  type="text"
+                  defaultValue={companyName}
+                  placeholder="Not specified"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
               </div>
+
               <div>
-                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                   Phone Number
                 </label>
-                <input type="text" defaultValue={phoneNumber} placeholder="Not provided" className="field" />
+                <input
+                  type="text"
+                  defaultValue={phoneNumber}
+                  placeholder="Not provided"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
               </div>
+
               <div>
-                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
                   Discord Handle
                 </label>
-                <input type="text" defaultValue={user.discordHandle || ""} placeholder="username" className="field" />
-              </div>
-              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
-                <button
-                  type="button"
-                  onClick={() => setEditContactModal(false)}
-                  className="button button-outline"
-                  style={{ flex: 1, justifyContent: "center" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditContactModal(false);
-                    toast.success("Client parameters updated.", "Saved");
+                <input
+                  type="text"
+                  defaultValue={user.discordHandle || ""}
+                  placeholder="username"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
                   }}
-                  className="button"
-                  style={{ flex: 1.3, justifyContent: "center" }}
-                >
-                  Save Details
-                </button>
+                />
               </div>
+            </div>
+
+            {/* Pinned Sticky Footer */}
+            <div
+              style={{
+                flexShrink: 0,
+                padding: "16px 24px",
+                borderTop: "1px solid var(--border-hairline-light)",
+                background: "var(--card-bg-crm)",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 12,
+                alignItems: "center",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setEditContactModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditContactModal(false);
+                  toast.success("Client parameters updated.", "Saved");
+                }}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "none",
+                  background: "var(--ink-crm)",
+                  color: "var(--ink-crm-text, #FFFFFF)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                Save Details
+              </button>
             </div>
           </div>
         </div>

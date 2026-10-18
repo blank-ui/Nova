@@ -567,16 +567,19 @@ button, input, textarea, select {
   animation: slideInRight 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@media (max-width: 640px) {
-  .drawer-responsive {
-    width: 100vw !important;
-    max-width: 100vw !important;
-  }
-}
-
 .drawer-content {
   scrollbar-width: thin;
   scrollbar-color: var(--border-hairline) transparent;
+}
+
+/* Centered Form Modal Dialogs */
+@media (max-width: 640px) {
+  [role="dialog"] > div.animate-fade-in-up {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px !important;
+    max-height: 94vh !important;
+  }
 }
 
 .drawer-content::-webkit-scrollbar {
