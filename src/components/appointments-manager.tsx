@@ -688,8 +688,8 @@ export function AppointmentsManager({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.45)",
-            backdropFilter: "blur(3px)",
+            background: "rgba(10, 12, 18, 0.55)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             justifyContent: "flex-end",
             alignItems: "stretch",
@@ -702,26 +702,37 @@ export function AppointmentsManager({
             className="drawer-slide-in drawer-responsive"
             style={{
               background: "var(--surface-raised)",
-              width: "min(520px, 100%)",
+              width: "min(500px, 100%)",
               height: "100%",
               maxHeight: "100vh",
-              padding: "28px 24px",
-              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              boxShadow: "-16px 0 48px rgba(0,0,0,0.35)",
               borderLeft: "1px solid var(--border-hairline)",
               display: "flex",
               flexDirection: "column",
-              overflowY: "auto",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            {/* Fixed Drawer Header */}
+            <div
+              style={{
+                flexShrink: 0,
+                padding: "20px 24px 16px",
+                borderBottom: "1px solid var(--border-hairline)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "var(--surface-raised)",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: "var(--accent-blue)",
-                    color: "#fff",
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: "rgba(14, 165, 233, 0.12)",
+                    border: "1px solid rgba(14, 165, 233, 0.25)",
+                    color: "var(--accent-blue)",
                     display: "grid",
                     placeItems: "center",
                     flexShrink: 0,
@@ -730,7 +741,7 @@ export function AppointmentsManager({
                   <Calendar size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
                     {isStaff ? "Set Client Appointment" : "Request Studio Appointment"}
                   </h3>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
@@ -750,192 +761,261 @@ export function AppointmentsManager({
                   borderRadius: "50%",
                   border: "1px solid var(--border-hairline)",
                   background: "var(--card-bg-crm)",
-                  color: "var(--text-primary)",
+                  color: "var(--text-muted-crm)",
                   cursor: "pointer",
                   display: "grid",
                   placeItems: "center",
                   flexShrink: 0,
+                  transition: "color 0.15s ease, background 0.15s ease",
                 }}
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateAppointment} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Meeting Title / Purpose *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Design Architecture Review & Sprint Scoping"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              {isStaff && clientsList.length > 0 && (
+            {/* Form Wrapping Scrollable Body & Pinned Footer */}
+            <form
+              onSubmit={handleCreateAppointment}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: "1 1 auto",
+                minHeight: 0,
+                overflow: "hidden",
+              }}
+            >
+              {/* Scrollable Form Body */}
+              <div
+                className="drawer-content"
+                style={{
+                  flex: "1 1 auto",
+                  overflowY: "auto",
+                  padding: "20px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
+                }}
+              >
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                    Client Workspace *
+                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Meeting Title / Purpose <span style={{ color: "var(--accent-blue)" }}>*</span>
                   </label>
-                  <select
-                    value={selectedClientId}
-                    onChange={(e) => setSelectedClientId(e.target.value)}
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Design Architecture Review & Sprint Scoping"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      borderRadius: 14,
+                      padding: "10px 14px",
+                      borderRadius: 10,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
                       color: "var(--text-primary)",
                       fontSize: 13,
-                    }}
-                  >
-                    {clientsList.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                    Date *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    min={todayStr}
-                    value={dateStr}
-                    onChange={(e) => setDateStr(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: 14,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
-                      color: "var(--text-primary)",
-                      fontSize: 12,
+                      outline: "none",
+                      boxSizing: "border-box",
                     }}
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                    Time *
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    min={timeMin}
-                    value={timeStr}
-                    onChange={(e) => setTimeStr(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: 14,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
-                      color: "var(--text-primary)",
-                      fontSize: 12,
-                    }}
-                  />
+                {isStaff && clientsList.length > 0 && (
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                      Client Workspace <span style={{ color: "var(--accent-blue)" }}>*</span>
+                    </label>
+                    <select
+                      value={selectedClientId}
+                      onChange={(e) => setSelectedClientId(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--card-bg-crm)",
+                        color: "var(--text-primary)",
+                        fontSize: 13,
+                        outline: "none",
+                        boxSizing: "border-box",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {clientsList.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 2-Column Date & Time Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                      Date <span style={{ color: "var(--accent-blue)" }}>*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      min={todayStr}
+                      value={dateStr}
+                      onChange={(e) => setDateStr(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--card-bg-crm)",
+                        color: "var(--text-primary)",
+                        fontSize: 13,
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                      Time <span style={{ color: "var(--accent-blue)" }}>*</span>
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      min={timeMin}
+                      value={timeStr}
+                      onChange={(e) => setTimeStr(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--card-bg-crm)",
+                        color: "var(--text-primary)",
+                        fontSize: 13,
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
                 </div>
 
+                {/* Interactive Duration Segmented Pills */}
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                    Duration
+                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Session Duration
                   </label>
-                  <select
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: 14,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--card-bg-crm)",
-                      color: "var(--text-primary)",
-                      fontSize: 12,
-                    }}
-                  >
-                    <option value="15">15 min</option>
-                    <option value="30">30 min</option>
-                    <option value="45">45 min</option>
-                    <option value="60">60 min</option>
-                  </select>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                    {[
+                      { label: "15 min", value: "15" },
+                      { label: "30 min", value: "30" },
+                      { label: "45 min", value: "45" },
+                      { label: "60 min", value: "60" },
+                    ].map((pill) => {
+                      const active = duration === pill.value;
+                      return (
+                        <button
+                          key={pill.value}
+                          type="button"
+                          onClick={() => setDuration(pill.value)}
+                          style={{
+                            padding: "9px 0",
+                            borderRadius: 10,
+                            border: active
+                              ? "1px solid var(--accent-blue)"
+                              : "1px solid var(--border-hairline)",
+                            background: active
+                              ? "var(--accent-blue)"
+                              : "var(--card-bg-crm)",
+                            color: active ? "#ffffff" : "var(--text-primary)",
+                            fontSize: 12,
+                            fontWeight: active ? 700 : 500,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            textAlign: "center",
+                          }}
+                        >
+                          {pill.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {isStaff && (
+                {isStaff && (
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                      Meeting Link (Google Meet / Zoom)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://meet.google.com/..."
+                      value={meetingLink}
+                      onChange={(e) => setMeetingLink(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--card-bg-crm)",
+                        color: "var(--text-primary)",
+                        fontSize: 13,
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                )}
+
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                    Meeting Link (Google Meet / Zoom)
+                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Description / Agenda <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
                   </label>
-                  <input
-                    type="url"
-                    placeholder="https://meet.google.com/..."
-                    value={meetingLink}
-                    onChange={(e) => setMeetingLink(e.target.value)}
+                  <textarea
+                    rows={2}
+                    placeholder="Key deliverables, topics or questions to cover..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      borderRadius: 14,
+                      minHeight: 56,
+                      padding: "10px 14px",
+                      borderRadius: 10,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
                       color: "var(--text-primary)",
                       fontSize: 13,
+                      resize: "vertical",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      fontFamily: "inherit",
                     }}
                   />
                 </div>
-              )}
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Description / Agenda (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Key deliverables, topics or questions to cover..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                    resize: "vertical",
-                  }}
-                />
               </div>
 
-              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
+              {/* Pinned Sticky Footer - Always Visible */}
+              <div
+                style={{
+                  flexShrink: 0,
+                  padding: "16px 24px",
+                  borderTop: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "center",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
                   style={{
                     flex: 1,
-                    padding: "12px",
-                    borderRadius: 99,
+                    padding: "11px 16px",
+                    borderRadius: "var(--radius-pill)",
                     border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
+                    background: "transparent",
                     color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
@@ -949,9 +1029,9 @@ export function AppointmentsManager({
                   type="submit"
                   disabled={actionBusy}
                   style={{
-                    flex: 1.3,
-                    padding: "12px",
-                    borderRadius: 99,
+                    flex: 1.4,
+                    padding: "11px 18px",
+                    borderRadius: "var(--radius-pill)",
                     border: "none",
                     background: "var(--ink-crm)",
                     color: "var(--ink-crm-text, #FFFFFF)",
@@ -980,8 +1060,8 @@ export function AppointmentsManager({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.45)",
-            backdropFilter: "blur(3px)",
+            background: "rgba(10, 12, 18, 0.55)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             justifyContent: "flex-end",
             alignItems: "stretch",
@@ -994,36 +1074,47 @@ export function AppointmentsManager({
             className="drawer-slide-in drawer-responsive"
             style={{
               background: "var(--surface-raised)",
-              width: "min(480px, 100%)",
+              width: "min(460px, 100%)",
               height: "100%",
               maxHeight: "100vh",
-              padding: "28px 24px",
-              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              boxShadow: "-16px 0 48px rgba(0,0,0,0.35)",
               borderLeft: "1px solid var(--border-hairline)",
               display: "flex",
               flexDirection: "column",
-              overflowY: "auto",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            {/* Fixed Drawer Header */}
+            <div
+              style={{
+                flexShrink: 0,
+                padding: "20px 24px 16px",
+                borderBottom: "1px solid var(--border-hairline)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "var(--surface-raised)",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: "var(--accent-blue)",
-                    color: "#fff",
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: "rgba(14, 165, 233, 0.12)",
+                    border: "1px solid rgba(14, 165, 233, 0.25)",
+                    color: "var(--accent-blue)",
                     display: "grid",
                     placeItems: "center",
                     flexShrink: 0,
                   }}
                 >
-                  <Edit2 size={18} />
+                  <Edit2 size={17} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
-                    Update Appointment Details
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+                    Update Appointment
                   </h3>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
                     Reschedule session or update conference link
@@ -1040,70 +1131,109 @@ export function AppointmentsManager({
                   borderRadius: "50%",
                   border: "1px solid var(--border-hairline)",
                   background: "var(--card-bg-crm)",
-                  color: "var(--text-primary)",
+                  color: "var(--text-muted-crm)",
                   cursor: "pointer",
                   display: "grid",
                   placeItems: "center",
                   flexShrink: 0,
+                  transition: "color 0.15s ease, background 0.15s ease",
                 }}
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Date &amp; Time
-                </label>
-                <input
-                  type="datetime-local"
-                  min={getLocalDatetimeString()}
-                  value={editDateStr}
-                  onChange={(e) => setEditDateStr(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                  }}
-                />
+            {/* Form Wrapping Scrollable Body & Pinned Footer */}
+            <form
+              onSubmit={handleSaveEdit}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: "1 1 auto",
+                minHeight: 0,
+                overflow: "hidden",
+              }}
+            >
+              {/* Scrollable Form Body */}
+              <div
+                className="drawer-content"
+                style={{
+                  flex: "1 1 auto",
+                  overflowY: "auto",
+                  padding: "20px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
+                }}
+              >
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Date &amp; Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    min={getLocalDatetimeString()}
+                    value={editDateStr}
+                    onChange={(e) => setEditDateStr(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Meeting Link
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://meet.google.com/..."
+                    value={editMeetingLink}
+                    onChange={(e) => setEditMeetingLink(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Meeting Link
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://meet.google.com/..."
-                  value={editMeetingLink}
-                  onChange={(e) => setEditMeetingLink(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
+              {/* Pinned Sticky Footer - Always Visible */}
+              <div
+                style={{
+                  flexShrink: 0,
+                  padding: "16px 24px",
+                  borderTop: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "center",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
                   style={{
                     flex: 1,
-                    padding: "12px",
-                    borderRadius: 99,
+                    padding: "11px 16px",
+                    borderRadius: "var(--radius-pill)",
                     border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
+                    background: "transparent",
                     color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
@@ -1117,9 +1247,9 @@ export function AppointmentsManager({
                   type="submit"
                   disabled={actionBusy}
                   style={{
-                    flex: 1.3,
-                    padding: "12px",
-                    borderRadius: 99,
+                    flex: 1.4,
+                    padding: "11px 18px",
+                    borderRadius: "var(--radius-pill)",
                     border: "none",
                     background: "var(--ink-crm)",
                     color: "var(--ink-crm-text, #FFFFFF)",

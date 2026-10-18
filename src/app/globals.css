@@ -571,6 +571,27 @@ button, input, textarea, select {
   .drawer-responsive {
     width: 100vw !important;
     max-width: 100vw !important;
-    padding: 20px 16px !important;
   }
+}
+
+.drawer-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hairline) transparent;
+}
+
+.drawer-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.drawer-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.drawer-content::-webkit-scrollbar-thumb {
+  background: var(--border-hairline);
+  border-radius: 99px;
+}
+
+.drawer-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted-crm);
 }
