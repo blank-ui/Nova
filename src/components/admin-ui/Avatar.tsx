@@ -1,30 +1,70 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { AvatarMenu } from "./AvatarMenu";
 
 export interface AvatarProps {
   src?: string | null;
   name?: string | null;
   size?: "sm" | "md" | "lg";
+  userId?: string;
   className?: string;
   cameraButton?: React.ReactNode;
+  editable?: boolean;
+  onAvatarChanged?: (newUrl: string | null) => void;
 }
 
 export function Avatar({
   src,
   name = "User",
   size = "md",
+  userId,
   className = "",
   cameraButton,
+  editable = false,
+  onAvatarChanged,
 }: AvatarProps) {
-  const initial = (name || "U").trim()[0]?.toUpperCase() || "U";
+  const [currentSrc, setCurrentSrc] = useState<string | null>(src || null);
+  const [isHovered, setIsHovered] = useState(false);
 
+  useEffect(() => {
+    setCurrentSrc(src || null);
+  }, [src]);
+
+  // Listen to cross-component live avatar update events
+  useEffect(() => {
+    function handleAvatarEvent(e: Event) {
+      const customEvent = e as CustomEvent<{ userId?: string; avatarUrl: string | null }>;
+      if (!customEvent.detail) return;
+      if (!userId || customEvent.detail.userId === userId) {
+        setCurrentSrc(customEvent.detail.avatarUrl);
+        onAvatarChanged?.(customEvent.detail.avatarUrl);
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("nova:avatar-updated", handleAvatarEvent);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("nova:avatar-updated", handleAvatarEvent);
+      }
+    };
+  }, [userId, onAvatarChanged]);
+
+  const initial = (name || "U").trim()[0]?.toUpperCase() || "U";
   const sizePx = size === "sm" ? 32 : size === "md" ? 44 : 104;
   const fontSize = size === "sm" ? 13 : size === "md" ? 17 : 42;
 
+  const showCamera = cameraButton || (editable && size === "lg");
+
   return (
     <div
-      className={className}
+      className={`avatar-wrapper ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
       style={{
         position: "relative",
         width: sizePx,
@@ -34,9 +74,9 @@ export function Avatar({
         display: "inline-block",
       }}
     >
-      {src ? (
+      {currentSrc ? (
         <img
-          src={src}
+          src={currentSrc}
           alt={`${name || "User"}'s profile photo`}
           style={{
             width: "100%",
@@ -49,7 +89,7 @@ export function Avatar({
         />
       ) : (
         <div
-          aria-label={`${name || "User"}'s profile`}
+          aria-label={`${name || "User"}'s profile photo`}
           style={{
             width: "100%",
             height: "100%",
@@ -70,16 +110,29 @@ export function Avatar({
         </div>
       )}
 
-      {cameraButton && (
+      {/* Camera button anchor for lg ProfileCard avatars */}
+      {showCamera && (
         <div
           style={{
             position: "absolute",
             bottom: 0,
             right: 0,
             zIndex: 3,
+            opacity: isHovered || cameraButton ? 1 : 0.85,
+            transition: "opacity 0.15s ease",
           }}
         >
-          {cameraButton}
+          {cameraButton || (
+            <AvatarMenu
+              currentAvatarUrl={currentSrc}
+              userId={userId}
+              userName={name || "User"}
+              onAvatarChanged={(newUrl) => {
+                setCurrentSrc(newUrl);
+                onAvatarChanged?.(newUrl);
+              }}
+            />
+          )}
         </div>
       )}
     </div>

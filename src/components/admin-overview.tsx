@@ -373,6 +373,7 @@ export function AdminOverview({ user, metrics, recentInquiries }: AdminOverviewP
             role={user.role}
             subtitle="Workspace owner · Nova"
             image={user.image}
+            userId={user.id}
             openHref="/admin/security"
             actions={[
               {

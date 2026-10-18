@@ -632,6 +632,7 @@ export function AdminUsersManager({
                 name={selectedUser.name}
                 role={`${selectedUser.role} · ${selectedUser.banned ? "Suspended" : "Active"}`}
                 avatarUrl={selectedUser.image}
+                userId={selectedUser.id}
                 badgeLabel={selectedUser.role}
                 badgeVariant={selectedUser.role === "ADMIN" ? "brand" : "neutral"}
                 onEdit={() => handleResetPassword(selectedUser)}

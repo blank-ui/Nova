@@ -12,3 +12,5 @@ export * from "./LeftRail";
 export * from "./TopBar";
 export * from "./AdminShell";
 export * from "./PageHeader";
+export * from "./AvatarMenu";
+export * from "./AvatarCropModal";

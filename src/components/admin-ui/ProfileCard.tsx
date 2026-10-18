@@ -18,6 +18,8 @@ export interface ProfileCardProps {
   subtitle?: string;
   image?: string | null;
   avatarUrl?: string | null;
+  userId?: string;
+  editable?: boolean;
   badgeLabel?: string;
   badgeVariant?: BadgeVariant;
   openHref?: string;
@@ -37,6 +39,8 @@ export function ProfileCard({
   subtitle = "Workspace owner · Nova",
   image,
   avatarUrl,
+  userId,
+  editable = true,
   badgeLabel,
   badgeVariant,
   openHref,
@@ -124,6 +128,8 @@ export function ProfileCard({
           src={displayImage}
           name={name}
           size="lg"
+          userId={userId}
+          editable={editable}
           cameraButton={cameraButton}
         />
       </div>
