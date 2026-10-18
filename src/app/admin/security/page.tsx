@@ -10,7 +10,7 @@ export default async function AdminSecurity() {
   const session = await requireAdmin({ allowMfaSetup: true });
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { discordHandle: true, image: true },
+    select: { discordHandle: true, image: true, phone: true, dateOfBirth: true },
   });
 
   const isMfaActive = Boolean(session.user.twoFactorEnabled);
@@ -105,6 +105,8 @@ export default async function AdminSecurity() {
           name: session.user.name,
           email: session.user.email,
           role: "ADMIN",
+          phone: user?.phone ?? null,
+          dateOfBirth: user?.dateOfBirth ?? null,
           image: user?.image ?? session.user.image ?? null,
           twoFactorEnabled: session.user.twoFactorEnabled ?? false,
           discordHandle: user?.discordHandle ?? "superr_nova_",

@@ -1737,47 +1737,68 @@ export function ClientProfileCRM({
         </div>
       </div>
 
-      {/* Modal: Create Real Project */}
+      {/* Drawer: Create Real Project */}
       {createProjectModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.45)",
-            backdropFilter: "blur(4px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 100,
+            justifyContent: "flex-end",
+            alignItems: "stretch",
+            zIndex: 1000,
           }}
+          onClick={() => setCreateProjectModal(false)}
         >
           <div
-            className="card"
+            onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
-              maxWidth: 460,
-              width: "100%",
-              padding: 24,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+              background: "var(--surface-raised, var(--paper))",
+              width: "min(480px, 100%)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline, var(--line))",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Provision Project</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>Provision Project</h3>
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
+                  Create an active development project in the workspace for <strong>{user.name}</strong>.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setCreateProjectModal(false)}
-                style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted)" }}
+                aria-label="Close"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border-hairline, var(--line))",
+                  background: "var(--card-bg-crm, var(--card-bg))",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
-            <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 16px" }}>
-              Create an active development project in the workspace for <strong>{user.name}</strong>.
-            </p>
-            <form onSubmit={handleCreateRealProject} style={{ display: "grid", gap: 14 }}>
+            <form onSubmit={handleCreateRealProject} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
               <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
-                  Project Name
+                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
+                  Project Name *
                 </label>
                 <input
                   type="text"
@@ -1789,11 +1810,11 @@ export function ClientProfileCRM({
                 />
               </div>
               <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
+                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
                   Scope / Description
                 </label>
                 <textarea
-                  rows={3}
+                  rows={4}
                   value={newProjectDesc}
                   onChange={(e) => setNewProjectDesc(e.target.value)}
                   placeholder="Project deliverables, tech stack, and goals..."
@@ -1801,92 +1822,133 @@ export function ClientProfileCRM({
                   style={{ resize: "vertical" }}
                 />
               </div>
-              <button
-                type="submit"
-                disabled={isCreatingProject}
-                className="button"
-                style={{ width: "100%", justifyContent: "center", marginTop: 6 }}
-              >
-                {isCreatingProject ? "Creating…" : "Create Project"}
-              </button>
+              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
+                <button
+                  type="button"
+                  onClick={() => setCreateProjectModal(false)}
+                  className="button button-outline"
+                  style={{ flex: 1, justifyContent: "center" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingProject}
+                  className="button"
+                  style={{ flex: 1.3, justifyContent: "center" }}
+                >
+                  {isCreatingProject ? "Creating…" : "Create Project"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal: Edit Contact Details */}
+      {/* Drawer: Edit Contact Details */}
       {editContactModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.45)",
-            backdropFilter: "blur(4px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 100,
+            justifyContent: "flex-end",
+            alignItems: "stretch",
+            zIndex: 1000,
           }}
+          onClick={() => setEditContactModal(false)}
         >
           <div
-            className="card"
+            onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
-              maxWidth: 440,
-              width: "100%",
-              padding: 24,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+              background: "var(--surface-raised, var(--paper))",
+              width: "min(460px, 100%)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline, var(--line))",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Client Contact Details</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>Client Contact Details</h3>
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
+                  Update client parameters on record.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setEditContactModal(false)}
-                style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted)" }}
+                aria-label="Close"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border-hairline, var(--line))",
+                  background: "var(--card-bg-crm, var(--card-bg))",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
-            <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 16px" }}>
-              Update client parameters on record.
-            </p>
-            <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
               <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
+                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
                   Full Name
                 </label>
                 <input type="text" defaultValue={user.name} className="field" />
               </div>
               <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
+                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
                   Company Name
                 </label>
                 <input type="text" defaultValue={companyName} placeholder="Not specified" className="field" />
               </div>
               <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
+                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
                   Phone Number
                 </label>
                 <input type="text" defaultValue={phoneNumber} placeholder="Not provided" className="field" />
               </div>
               <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
+                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--text-primary)" }}>
                   Discord Handle
                 </label>
                 <input type="text" defaultValue={user.discordHandle || ""} placeholder="username" className="field" />
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditContactModal(false);
-                  toast.success("Client parameters updated.", "Saved");
-                }}
-                className="button"
-                style={{ width: "100%", justifyContent: "center", marginTop: 8 }}
-              >
-                Save Details
-              </button>
+              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
+                <button
+                  type="button"
+                  onClick={() => setEditContactModal(false)}
+                  className="button button-outline"
+                  style={{ flex: 1, justifyContent: "center" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditContactModal(false);
+                    toast.success("Client parameters updated.", "Saved");
+                  }}
+                  className="button"
+                  style={{ flex: 1.3, justifyContent: "center" }}
+                >
+                  Save Details
+                </button>
+              </div>
             </div>
           </div>
         </div>

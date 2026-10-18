@@ -746,7 +746,7 @@ export function AdminDashboardCRM({
                         background: isSelected
                           ? "#2563EB"
                           : hasItem
-                          ? "var(--paper-alt, rgba(0,0,0,0.04))"
+                          ? "var(--subtle-fill, rgba(255,255,255,0.06))"
                           : "transparent",
                         color: isSelected ? "#FFFFFF" : "var(--ink)",
                         fontWeight: isSelected || hasItem ? 700 : 500,
@@ -780,7 +780,7 @@ export function AdminDashboardCRM({
                   marginTop: 18,
                   padding: "12px 14px",
                   borderRadius: 12,
-                  background: "var(--paper-alt, rgba(0,0,0,0.02))",
+                  background: "var(--subtle-fill, rgba(255,255,255,0.04))",
                   border: "1px solid var(--line)",
                   display: "flex",
                   alignItems: "center",
@@ -1521,24 +1521,29 @@ export function AdminDashboardCRM({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-end",
+            alignItems: "stretch",
             zIndex: 1000,
-            padding: 20,
           }}
+          onClick={() => setCreateProjectModal(false)}
         >
           <div
-            className="crm-card animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
-              background: "var(--paper)",
-              borderRadius: 24,
-              maxWidth: 480,
-              width: "100%",
-              padding: 28,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+              background: "var(--surface-raised, var(--paper))",
+              width: "min(500px, 100%)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline, var(--line))",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>

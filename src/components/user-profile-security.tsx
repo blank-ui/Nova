@@ -27,6 +27,8 @@ interface UserProfileSecurityProps {
     name: string;
     email: string;
     role: string;
+    phone?: string | null;
+    dateOfBirth?: string | Date | null;
     image?: string | null;
     twoFactorEnabled: boolean;
     discordHandle?: string | null;
@@ -81,9 +83,24 @@ export function UserProfileSecurity({
 
   // Profile fields state
   const [name, setName] = useState(initialUser.name);
+  const [phone, setPhone] = useState(initialUser.phone ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(() => {
+    if (!initialUser.dateOfBirth) return "";
+    const d = new Date(initialUser.dateOfBirth);
+    return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+  });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialUser.image ?? null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const initialDobStr = initialUser.dateOfBirth
+    ? new Date(initialUser.dateOfBirth).toISOString().split("T")[0]
+    : "";
+  const isProfileDirty =
+    name.trim() !== initialUser.name ||
+    phone.trim() !== (initialUser.phone ?? "") ||
+    dateOfBirth !== initialDobStr;
+  const maxDobStr = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     function onAvatarUpdated(e: Event) {
@@ -237,19 +254,47 @@ export function UserProfileSecurity({
       toast.error(msg, "Validation Error");
       return;
     }
+
+    if (dateOfBirth) {
+      const parsedDob = new Date(dateOfBirth);
+      if (isNaN(parsedDob.getTime()) || parsedDob > new Date()) {
+        const msg = "Date of birth cannot be in the future.";
+        setProfileMessage({ type: "error", text: msg });
+        toast.error(msg, "Validation Error");
+        return;
+      }
+    }
+
     setProfileSaving(true);
     setProfileMessage(null);
     try {
-      const res = await fetch("/api/auth/update-user", {
-        method: "POST",
+      // 1. Update user profile (name, phone, dateOfBirth) in database
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed }),
+        body: JSON.stringify({
+          name: trimmed,
+          phone: phone.trim() || null,
+          dateOfBirth: dateOfBirth ? dateOfBirth : null,
+        }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(data?.message || "Failed to update profile information.");
+        throw new Error(data?.error || "Failed to update profile information.");
       }
-      setProfileMessage({ type: "success", text: "Profile updated successfully." });
+
+      // 2. Also keep Better Auth session cookie updated if name changed
+      if (trimmed !== initialUser.name) {
+        await fetch("/api/auth/update-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: trimmed }),
+        }).catch(() => null);
+      }
+
+      refetchSession?.();
+
+      setProfileMessage({ type: "success", text: "Profile information updated successfully." });
       toast.success("Profile information updated successfully.", "Profile Saved");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Profile update failed.";
@@ -721,10 +766,10 @@ export function UserProfileSecurity({
             </div>
           </div>
 
-          <form onSubmit={handleProfileSave} style={{ display: "grid", gap: 22, maxWidth: 520 }}>
+          <form onSubmit={handleProfileSave} style={{ display: "grid", gap: 20, maxWidth: 640 }}>
             <div>
-              <label htmlFor="display-name" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
-                Display Name
+              <label htmlFor="display-name" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
+                Display Name *
               </label>
               <input
                 id="display-name"
@@ -738,10 +783,50 @@ export function UserProfileSecurity({
               />
             </div>
 
+            {/* Phone Number & Date of Birth (Responsive 2-column grid) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              <div>
+                <label htmlFor="profile-phone" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
+                  Phone Number
+                </label>
+                <input
+                  id="profile-phone"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  maxLength={30}
+                  className="field"
+                  style={{ width: "100%" }}
+                />
+                <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginTop: 4 }}>
+                  For direct updates, consultation scheduling &amp; verification.
+                </span>
+              </div>
+
+              <div>
+                <label htmlFor="profile-dob" style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
+                  Date of Birth
+                </label>
+                <input
+                  id="profile-dob"
+                  type="date"
+                  max={maxDobStr}
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="field"
+                  style={{ width: "100%" }}
+                />
+                <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginTop: 4 }}>
+                  Account identity verification and age compliance.
+                </span>
+              </div>
+            </div>
+
             {/* Role Card */}
             <div>
               <span style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>
-                Account Role & Permissions
+                Account Role &amp; Permissions
               </span>
               <div
                 style={{
@@ -826,14 +911,14 @@ export function UserProfileSecurity({
                 role="status"
                 style={{
                   padding: "10px 14px",
-                  borderRadius: 8,
+                  borderRadius: 10,
                   fontSize: 13,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: profileMessage.type === "success" ? "#ecfdf5" : "#fef2f2",
-                  color: profileMessage.type === "success" ? "#065f46" : "#991b1b",
-                  border: `1px solid ${profileMessage.type === "success" ? "#a7f3d0" : "#fecaca"}`,
+                  background: profileMessage.type === "success" ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
+                  color: profileMessage.type === "success" ? "#10b981" : "#ef4444",
+                  border: `1px solid ${profileMessage.type === "success" ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
                 }}
               >
                 {profileMessage.type === "success" ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
@@ -850,13 +935,18 @@ export function UserProfileSecurity({
                 borderTop: "1px solid var(--line)",
               }}
             >
-              <button type="submit" disabled={profileSaving || name === initialUser.name} className="button" style={{ minWidth: 140 }}>
+              <button type="submit" disabled={profileSaving || !isProfileDirty} className="button" style={{ minWidth: 140 }}>
                 {profileSaving ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : "Save Changes"}
               </button>
-              {name !== initialUser.name && (
+              {isProfileDirty && (
                 <button
                   type="button"
-                  onClick={() => { setName(initialUser.name); setProfileMessage(null); }}
+                  onClick={() => {
+                    setName(initialUser.name);
+                    setPhone(initialUser.phone ?? "");
+                    setDateOfBirth(initialDobStr);
+                    setProfileMessage(null);
+                  }}
                   className="button button-outline"
                 >
                   Cancel

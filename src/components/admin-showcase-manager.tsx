@@ -327,7 +327,7 @@ export function AdminShowcaseManager({
               fontWeight: activeTab === "github" ? 700 : 500,
               border: activeTab === "github" ? "none" : "1px solid var(--border-hairline)",
               background: activeTab === "github" ? "var(--ink-crm)" : "var(--surface-raised)",
-              color: activeTab === "github" ? "#FFFFFF" : "var(--text-secondary)",
+              color: activeTab === "github" ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
               cursor: "pointer",
             }}
           >
@@ -348,7 +348,7 @@ export function AdminShowcaseManager({
               fontWeight: activeTab === "gallery" ? 700 : 500,
               border: activeTab === "gallery" ? "none" : "1px solid var(--border-hairline)",
               background: activeTab === "gallery" ? "var(--ink-crm)" : "var(--surface-raised)",
-              color: activeTab === "gallery" ? "#FFFFFF" : "var(--text-secondary)",
+              color: activeTab === "gallery" ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
               cursor: "pointer",
             }}
           >
@@ -817,53 +817,58 @@ export function AdminShowcaseManager({
         </div>
       )}
 
-      {/* Add Screenshot Modal */}
+      {/* Add Screenshot Slide-Over Drawer */}
       {showAddModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
+            justifyContent: "flex-end",
+            alignItems: "stretch",
             zIndex: 1000,
           }}
           onClick={() => setShowAddModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
               background: "var(--surface-raised)",
-              borderRadius: 24,
-              width: "min(480px, 100%)",
-              padding: 28,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
-              border: "1px solid var(--border-hairline)",
+              width: "min(500px, 100%)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline)",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     borderRadius: "50%",
                     background: "var(--accent-blue)",
                     color: "#fff",
                     display: "grid",
                     placeItems: "center",
+                    flexShrink: 0,
                   }}
                 >
                   <ImageIcon size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                     Add Screenshot Showcase
                   </h3>
-                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted-crm)" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
                     Publish a design or web build to public gallery
                   </p>
                 </div>
@@ -872,15 +877,26 @@ export function AdminShowcaseManager({
                 type="button"
                 onClick={() => setShowAddModal(false)}
                 aria-label="Close"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm)" }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--card-bg-crm)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleAddGalleryItem} style={{ display: "grid", gap: 14 }}>
+            <form onSubmit={handleAddGalleryItem} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Project Title *
                 </label>
                 <input
@@ -891,17 +907,18 @@ export function AdminShowcaseManager({
                   onChange={(e) => setNewTitle(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Image URL / Asset Path *
                 </label>
                 <input
@@ -912,10 +929,11 @@ export function AdminShowcaseManager({
                   onChange={(e) => setNewImageUrl(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                   }}
                 />
@@ -923,7 +941,7 @@ export function AdminShowcaseManager({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Category
                   </label>
                   <select
@@ -931,10 +949,11 @@ export function AdminShowcaseManager({
                     onChange={(e) => setNewCategory(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   >
@@ -946,7 +965,7 @@ export function AdminShowcaseManager({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Repository (Optional)
                   </label>
                   <input
@@ -956,10 +975,11 @@ export function AdminShowcaseManager({
                     onChange={(e) => setNewRepoName(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   />
@@ -967,7 +987,7 @@ export function AdminShowcaseManager({
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Live Demo URL (Optional)
                 </label>
                 <input
@@ -977,37 +997,39 @@ export function AdminShowcaseManager({
                   onChange={(e) => setNewProjectUrl(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Description (Optional)
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   placeholder="Key deliverables, design system tokens, or technology stack..."
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                     resize: "vertical",
                   }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
@@ -1016,10 +1038,12 @@ export function AdminShowcaseManager({
                     padding: "12px",
                     borderRadius: 99,
                     border: "1px solid var(--border-hairline)",
-                    background: "transparent",
+                    background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
                     cursor: "pointer",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   Cancel
@@ -1028,7 +1052,7 @@ export function AdminShowcaseManager({
                   type="submit"
                   disabled={galleryBusy}
                   style={{
-                    flex: 1,
+                    flex: 1.3,
                     padding: "12px",
                     borderRadius: 99,
                     border: "none",
@@ -1036,11 +1060,13 @@ export function AdminShowcaseManager({
                     color: "var(--ink-crm-text, #FFFFFF)",
                     fontWeight: 700,
                     fontSize: 13,
-                    cursor: "pointer",
+                    cursor: galleryBusy ? "not-allowed" : "pointer",
+                    opacity: galleryBusy ? 0.7 : 1,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 8,
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {galleryBusy ? "Publishing..." : "Publish Item"}

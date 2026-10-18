@@ -105,6 +105,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
     }
 
+    // Reject appointment dates in the past (allowing 60s grace for network/clock drift)
+    if (appointmentDate.getTime() < Date.now() - 60000) {
+      return NextResponse.json(
+        { error: "Appointments cannot be scheduled in the past. Please select an upcoming date and time." },
+        { status: 400 }
+      );
+    }
+
     const isStaff = ["ADMIN", "DEVELOPER", "FINANCE"].includes(session.user.role ?? "");
 
     // Determine who is requesting and who is assigned

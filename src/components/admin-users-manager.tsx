@@ -878,53 +878,58 @@ export function AdminUsersManager({
         </div>
       </div>
 
-      {/* Create User Modal */}
+      {/* Create User Slide-Over Drawer */}
       {showCreateModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
+            justifyContent: "flex-end",
+            alignItems: "stretch",
             zIndex: 1000,
           }}
           onClick={() => setShowCreateModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
               background: "var(--surface-raised)",
-              borderRadius: 24,
-              width: "min(480px, 100%)",
-              padding: 28,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
-              border: "1px solid var(--border-hairline)",
+              width: "min(500px, 100%)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline)",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     borderRadius: "50%",
                     background: "var(--accent-blue)",
                     color: "#fff",
                     display: "grid",
                     placeItems: "center",
+                    flexShrink: 0,
                   }}
                 >
                   <UserPlus size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                     Provision New User
                   </h3>
-                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted-crm)" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
                     Creates account &amp; dispatches initiation setup email
                   </p>
                 </div>
@@ -933,9 +938,20 @@ export function AdminUsersManager({
                 type="button"
                 onClick={() => setShowCreateModal(false)}
                 aria-label="Close"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm)" }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--card-bg-crm)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
@@ -944,8 +960,9 @@ export function AdminUsersManager({
                 style={{
                   padding: "10px 14px",
                   borderRadius: 12,
-                  background: "#fef2f2",
-                  color: "#dc2626",
+                  background: "rgba(239, 68, 68, 0.12)",
+                  color: "#ef4444",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
                   fontSize: 12,
                   marginBottom: 14,
                   display: "flex",
@@ -962,18 +979,18 @@ export function AdminUsersManager({
               <div style={{ display: "grid", gap: 16 }}>
                 <div
                   style={{
-                    padding: 16,
-                    background: "#ecfdf5",
-                    border: "1px solid #a7f3d0",
+                    padding: 18,
+                    background: "rgba(16, 185, 129, 0.12)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
                     borderRadius: 16,
                     textAlign: "center",
                   }}
                 >
-                  <CheckCircle2 size={32} color="#059669" style={{ margin: "0 auto 8px" }} />
-                  <div style={{ fontWeight: 700, color: "#065f46", fontSize: 14 }}>
+                  <CheckCircle2 size={32} color="#10b981" style={{ margin: "0 auto 8px" }} />
+                  <div style={{ fontWeight: 700, color: "#10b981", fontSize: 14 }}>
                     Account Initialized Successfully!
                   </div>
-                  <p style={{ fontSize: 12, color: "#047857", margin: "6px 0 0" }}>
+                  <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "6px 0 0" }}>
                     {createdResult.emailSent
                       ? "A welcome initiation email was dispatched to the client with a secure link to set their password."
                       : "Email dispatch failed. Please share the manual initiation link below:"}
@@ -981,7 +998,7 @@ export function AdminUsersManager({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted-crm)", display: "block", marginBottom: 6 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
                     Initiation Link
                   </label>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -991,9 +1008,10 @@ export function AdminUsersManager({
                       value={createdResult.setupUrl}
                       style={{
                         flex: 1,
-                        padding: "8px 12px",
+                        padding: "10px 12px",
                         borderRadius: 12,
                         background: "var(--card-bg-crm)",
+                        color: "var(--text-primary)",
                         border: "1px solid var(--border-hairline)",
                         fontSize: 11,
                         fontFamily: "monospace",
@@ -1045,9 +1063,9 @@ export function AdminUsersManager({
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleCreateUser} style={{ display: "grid", gap: 14 }}>
+              <form onSubmit={handleCreateUser} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Full Name *
                   </label>
                   <input
@@ -1058,17 +1076,18 @@ export function AdminUsersManager({
                     onChange={(e) => setNewName(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Email Address *
                   </label>
                   <input
@@ -1079,17 +1098,18 @@ export function AdminUsersManager({
                     onChange={(e) => setNewEmail(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Access Role *
                   </label>
                   <select
@@ -1099,10 +1119,11 @@ export function AdminUsersManager({
                     }
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   >
@@ -1114,7 +1135,7 @@ export function AdminUsersManager({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Phone Number {newRole !== "CLIENT" ? "*" : "(Optional)"}
                   </label>
                   <input
@@ -1125,22 +1146,23 @@ export function AdminUsersManager({
                     onChange={(e) => setNewPhone(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   />
                   {newRole !== "CLIENT" && (
-                    <span style={{ fontSize: 10, color: "var(--text-muted-crm)", marginTop: 3, display: "block" }}>
+                    <span style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 4, display: "block" }}>
                       Required for staff notifications &amp; emergency access.
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Date of Birth {newRole !== "CLIENT" ? "*" : "(Optional)"}
                   </label>
                   <input
@@ -1150,21 +1172,22 @@ export function AdminUsersManager({
                     onChange={(e) => setNewDob(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   />
                   {newRole !== "CLIENT" && (
-                    <span style={{ fontSize: 10, color: "var(--text-muted-crm)", marginTop: 3, display: "block" }}>
+                    <span style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 4, display: "block" }}>
                       Required for staff employee records &amp; identity compliance.
                     </span>
                   )}
                 </div>
 
-                <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
@@ -1173,10 +1196,12 @@ export function AdminUsersManager({
                       padding: "12px",
                       borderRadius: 99,
                       border: "1px solid var(--border-hairline)",
-                      background: "transparent",
+                      background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontWeight: 600,
                       fontSize: 13,
                       cursor: "pointer",
+                      transition: "all 0.15s ease",
                     }}
                   >
                     Cancel
@@ -1185,7 +1210,7 @@ export function AdminUsersManager({
                     type="submit"
                     disabled={createLoading}
                     style={{
-                      flex: 1,
+                      flex: 1.3,
                       padding: "12px",
                       borderRadius: 99,
                       border: "none",
@@ -1193,11 +1218,13 @@ export function AdminUsersManager({
                       color: "var(--ink-crm-text, #FFFFFF)",
                       fontWeight: 700,
                       fontSize: 13,
-                      cursor: "pointer",
+                      cursor: createLoading ? "not-allowed" : "pointer",
+                      opacity: createLoading ? 0.7 : 1,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
+                      transition: "all 0.15s ease",
                     }}
                   >
                     {createLoading ? (

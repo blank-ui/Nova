@@ -382,43 +382,47 @@ export function LeftRail() {
         </div>
       )}
 
-      {/* Quick Create Project Modal */}
+      {/* Quick Create Project Slide-Over Drawer */}
       {createOpen && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
+            justifyContent: "flex-end",
+            alignItems: "stretch",
             zIndex: 1000,
           }}
           onClick={() => setCreateOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
               background: "var(--surface-raised)",
-              borderRadius: 24,
               width: "min(480px, 100%)",
-              padding: 28,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
-              border: "1px solid var(--border-hairline)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline)",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--accent-blue)", color: "#fff", display: "grid", placeItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent-blue)", color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}>
                   <Plus size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                     Quick Provision Project
                   </h3>
-                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted-crm)" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
                     Instantly create an active workspace project
                   </p>
                 </div>
@@ -427,15 +431,26 @@ export function LeftRail() {
                 type="button"
                 onClick={() => setCreateOpen(false)}
                 aria-label="Close"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm)" }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--card-bg-crm)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleQuickProjectCreate} style={{ display: "grid", gap: 14 }}>
+            <form onSubmit={handleQuickProjectCreate} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Project Name *
                 </label>
                 <input
@@ -446,17 +461,18 @@ export function LeftRail() {
                   onChange={(e) => setProjectName(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Scope / Summary (Optional)
                 </label>
                 <textarea
@@ -466,17 +482,18 @@ export function LeftRail() {
                   onChange={(e) => setProjectDesc(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                     resize: "vertical",
                   }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
                 <button
                   type="button"
                   onClick={() => setCreateOpen(false)}
@@ -485,10 +502,12 @@ export function LeftRail() {
                     padding: "12px",
                     borderRadius: 99,
                     border: "1px solid var(--border-hairline)",
-                    background: "transparent",
+                    background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
                     cursor: "pointer",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   Cancel
@@ -497,15 +516,17 @@ export function LeftRail() {
                   type="submit"
                   disabled={isSubmitting}
                   style={{
-                    flex: 1,
+                    flex: 1.3,
                     padding: "12px",
                     borderRadius: 99,
                     border: "none",
                     background: "var(--ink-crm)",
-                    color: "#FFFFFF",
+                    color: "var(--ink-crm-text, #FFFFFF)",
                     fontWeight: 700,
                     fontSize: 13,
-                    cursor: "pointer",
+                    cursor: isSubmitting ? "not-allowed" : "pointer",
+                    opacity: isSubmitting ? 0.7 : 1,
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {isSubmitting ? "Provisioning..." : "Provision Project"}

@@ -60,6 +60,15 @@ export interface AppointmentsManagerProps {
   clientsList?: { id: string; name: string; email: string }[];
 }
 
+function getLocalDatetimeString(date: Date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const mins = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${mins}`;
+}
+
 export function AppointmentsManager({
   initialAppointments,
   currentUserId,
@@ -82,6 +91,13 @@ export function AppointmentsManager({
   const [duration, setDuration] = useState("30");
   const [meetingLink, setMeetingLink] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(clientsList[0]?.id || "");
+
+  // Date/Time restrictions: cannot book in the past
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const currentTimeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const isTodaySelected = dateStr === todayStr;
+  const timeMin = isTodaySelected ? currentTimeStr : undefined;
 
   // Reschedule / Link modal
   const [editingItem, setEditingItem] = useState<AppointmentItem | null>(null);
@@ -129,6 +145,11 @@ export function AppointmentsManager({
     const combinedDateTime = new Date(`${dateStr}T${timeStr || "12:00"}:00`);
     if (isNaN(combinedDateTime.getTime())) {
       toast.error("Invalid date or time format.", "Invalid Input");
+      return;
+    }
+
+    if (combinedDateTime.getTime() < Date.now() - 60000) {
+      toast.error("Appointment date and time cannot be in the past.", "Invalid Time");
       return;
     }
 
@@ -200,7 +221,17 @@ export function AppointmentsManager({
       if (editMeetingLink !== undefined) updatePayload.meetingLink = editMeetingLink.trim() || null;
       if (editDateStr) {
         const parsed = new Date(editDateStr);
-        if (!isNaN(parsed.getTime())) updatePayload.date = parsed.toISOString();
+        if (isNaN(parsed.getTime())) {
+          toast.error("Invalid date format.", "Invalid Input");
+          setActionBusy(false);
+          return;
+        }
+        if (parsed.getTime() < Date.now() - 60000) {
+          toast.error("Appointment date and time cannot be in the past.", "Invalid Time");
+          setActionBusy(false);
+          return;
+        }
+        updatePayload.date = parsed.toISOString();
       }
 
       const res = await fetch("/api/appointments", {
@@ -586,7 +617,7 @@ export function AppointmentsManager({
                           onClick={() => {
                             setEditingItem(app);
                             setEditMeetingLink(app.meetingLink || "");
-                            setEditDateStr(app.date ? new Date(app.date).toISOString().slice(0, 16) : "");
+                            setEditDateStr(app.date ? getLocalDatetimeString(new Date(app.date)) : "");
                           }}
                           title="Edit Details / Link"
                           style={{
@@ -651,53 +682,58 @@ export function AppointmentsManager({
         )}
       </SectionCard>
 
-      {/* Set / Request Appointment Modal */}
+      {/* Set / Request Appointment Slide-Over Drawer */}
       {modalOpen && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
+            justifyContent: "flex-end",
+            alignItems: "stretch",
             zIndex: 1000,
           }}
           onClick={() => setModalOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
               background: "var(--surface-raised)",
-              borderRadius: 24,
-              width: "min(500px, 100%)",
-              padding: 28,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
-              border: "1px solid var(--border-hairline)",
+              width: "min(520px, 100%)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline)",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     borderRadius: "50%",
                     background: "var(--accent-blue)",
                     color: "#fff",
                     display: "grid",
                     placeItems: "center",
+                    flexShrink: 0,
                   }}
                 >
                   <Calendar size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                     {isStaff ? "Set Client Appointment" : "Request Studio Appointment"}
                   </h3>
-                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted-crm)" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
                     {isStaff
                       ? "Directly provision and schedule an initiative session"
                       : "Choose a convenient date & topic for project discussion"}
@@ -708,29 +744,41 @@ export function AppointmentsManager({
                 type="button"
                 onClick={() => setModalOpen(false)}
                 aria-label="Close"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm)" }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--card-bg-crm)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateAppointment} style={{ display: "grid", gap: 14 }}>
+            <form onSubmit={handleCreateAppointment} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Meeting Title / Purpose *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Design Architecture Review &amp; Sprint Scoping"
+                  placeholder="e.g. Design Architecture Review & Sprint Scoping"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                   }}
                 />
@@ -738,7 +786,7 @@ export function AppointmentsManager({
 
               {isStaff && clientsList.length > 0 && (
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Client Workspace *
                   </label>
                   <select
@@ -746,10 +794,11 @@ export function AppointmentsManager({
                     onChange={(e) => setSelectedClientId(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   >
@@ -764,12 +813,13 @@ export function AppointmentsManager({
 
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Date *
                   </label>
                   <input
                     type="date"
                     required
+                    min={todayStr}
                     value={dateStr}
                     onChange={(e) => setDateStr(e.target.value)}
                     style={{
@@ -778,18 +828,20 @@ export function AppointmentsManager({
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 12,
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Time *
                   </label>
                   <input
                     type="time"
                     required
+                    min={timeMin}
                     value={timeStr}
                     onChange={(e) => setTimeStr(e.target.value)}
                     style={{
@@ -798,13 +850,14 @@ export function AppointmentsManager({
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 12,
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Duration
                   </label>
                   <select
@@ -816,6 +869,7 @@ export function AppointmentsManager({
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 12,
                     }}
                   >
@@ -829,7 +883,7 @@ export function AppointmentsManager({
 
               {isStaff && (
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                     Meeting Link (Google Meet / Zoom)
                   </label>
                   <input
@@ -839,10 +893,11 @@ export function AppointmentsManager({
                     onChange={(e) => setMeetingLink(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       borderRadius: 14,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--card-bg-crm)",
+                      color: "var(--text-primary)",
                       fontSize: 13,
                     }}
                   />
@@ -850,27 +905,28 @@ export function AppointmentsManager({
               )}
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Description / Agenda (Optional)
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   placeholder="Key deliverables, topics or questions to cover..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                     resize: "vertical",
                   }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
@@ -879,10 +935,12 @@ export function AppointmentsManager({
                     padding: "12px",
                     borderRadius: 99,
                     border: "1px solid var(--border-hairline)",
-                    background: "transparent",
+                    background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
                     cursor: "pointer",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   Cancel
@@ -891,7 +949,7 @@ export function AppointmentsManager({
                   type="submit"
                   disabled={actionBusy}
                   style={{
-                    flex: 1,
+                    flex: 1.3,
                     padding: "12px",
                     borderRadius: 99,
                     border: "none",
@@ -899,7 +957,9 @@ export function AppointmentsManager({
                     color: "var(--ink-crm-text, #FFFFFF)",
                     fontWeight: 700,
                     fontSize: 13,
-                    cursor: "pointer",
+                    cursor: actionBusy ? "not-allowed" : "pointer",
+                    opacity: actionBusy ? 0.7 : 1,
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {actionBusy
@@ -914,68 +974,107 @@ export function AppointmentsManager({
         </div>
       )}
 
-      {/* Edit / Reschedule Modal */}
+      {/* Edit / Reschedule Slide-Over Drawer */}
       {editingItem && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(10, 12, 18, 0.45)",
+            backdropFilter: "blur(3px)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
+            justifyContent: "flex-end",
+            alignItems: "stretch",
             zIndex: 1000,
           }}
           onClick={() => setEditingItem(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="drawer-slide-in drawer-responsive"
             style={{
               background: "var(--surface-raised)",
-              borderRadius: 24,
-              width: "min(460px, 100%)",
-              padding: 28,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
-              border: "1px solid var(--border-hairline)",
+              width: "min(480px, 100%)",
+              height: "100%",
+              maxHeight: "100vh",
+              padding: "28px 24px",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
+              borderLeft: "1px solid var(--border-hairline)",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
-                Update Appointment Details
-              </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    background: "var(--accent-blue)",
+                    color: "#fff",
+                    display: "grid",
+                    placeItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Edit2 size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
+                    Update Appointment Details
+                  </h3>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
+                    Reschedule session or update conference link
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setEditingItem(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm)" }}
+                aria-label="Close"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--card-bg-crm)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} style={{ display: "grid", gap: 14 }}>
+            <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
-                  Date &amp; Time (ISO/Local)
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
+                  Date &amp; Time
                 </label>
                 <input
                   type="datetime-local"
+                  min={getLocalDatetimeString()}
                   value={editDateStr}
                   onChange={(e) => setEditDateStr(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, display: "block", marginBottom: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
                   Meeting Link
                 </label>
                 <input
@@ -985,16 +1084,17 @@ export function AppointmentsManager({
                   onChange={(e) => setEditMeetingLink(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius: 14,
                     border: "1px solid var(--border-hairline)",
                     background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontSize: 13,
                   }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
@@ -1003,10 +1103,12 @@ export function AppointmentsManager({
                     padding: "12px",
                     borderRadius: 99,
                     border: "1px solid var(--border-hairline)",
-                    background: "transparent",
+                    background: "var(--card-bg-crm)",
+                    color: "var(--text-primary)",
                     fontWeight: 600,
                     fontSize: 13,
                     cursor: "pointer",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   Cancel
@@ -1015,7 +1117,7 @@ export function AppointmentsManager({
                   type="submit"
                   disabled={actionBusy}
                   style={{
-                    flex: 1,
+                    flex: 1.3,
                     padding: "12px",
                     borderRadius: 99,
                     border: "none",
@@ -1023,7 +1125,9 @@ export function AppointmentsManager({
                     color: "var(--ink-crm-text, #FFFFFF)",
                     fontWeight: 700,
                     fontSize: 13,
-                    cursor: "pointer",
+                    cursor: actionBusy ? "not-allowed" : "pointer",
+                    opacity: actionBusy ? 0.7 : 1,
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {actionBusy ? "Saving..." : "Save Changes"}

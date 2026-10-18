@@ -155,6 +155,26 @@ describe("Appointments API (/api/appointments)", () => {
         })
       );
     });
+
+    it("rejects appointments scheduled in the past", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({
+        user: { id: "client-1", role: "CLIENT", name: "Client One" },
+      } as any);
+
+      const pastDate = new Date(Date.now() - 3600000 * 24).toISOString();
+      const req = new Request("http://localhost:3000/api/appointments", {
+        method: "POST",
+        body: JSON.stringify({
+          title: "Past Meeting",
+          date: pastDate,
+        }),
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toMatch(/past/i);
+    });
   });
 
   describe("PATCH /api/appointments", () => {
