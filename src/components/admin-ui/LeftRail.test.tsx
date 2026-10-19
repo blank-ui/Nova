@@ -35,12 +35,12 @@ describe("LeftRail Navigation", () => {
     expect(html).toContain('aria-label="Team Discussions"');
   });
 
-  it("renders Team Discussion navigation item for CLIENT users", () => {
+  it("does not render Team Discussion navigation item for CLIENT users (internal only)", () => {
     currentPath = "/portal";
     const clientUser = { id: "client-1", email: "client@nova.test", name: "Client", role: "CLIENT" };
     const html = renderToStaticMarkup(<LeftRail user={clientUser} />);
-    expect(html).toContain('href="/portal/discussions"');
-    expect(html).toContain('aria-label="Team Discussion"');
+    expect(html).not.toContain('href="/portal/discussions"');
+    expect(html).not.toContain('aria-label="Team Discussion"');
   });
 
   it("renders Team Discussion navigation item for DEVELOPER users", () => {

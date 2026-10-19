@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Mail,
@@ -107,6 +108,7 @@ export function ClientProfileCRM({
   pageTitle = "Customer Information",
   showHeader = true,
 }: ClientProfileCRMProps) {
+  const router = useRouter();
   const toast = useToast();
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [funnelView, setFunnelView] = useState<"total" | "weighted">("total");
@@ -188,15 +190,15 @@ export function ClientProfileCRM({
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("action") === "create-project" || params.get("create") === "project") {
-        setCreateProjectModal(true);
+        router.push("/admin/scope");
       }
     }
     function onOpen() {
-      setCreateProjectModal(true);
+      router.push("/admin/scope");
     }
     window.addEventListener("nova:open-create-project", onOpen);
     return () => window.removeEventListener("nova:open-create-project", onOpen);
-  }, []);
+  }, [router]);
 
   // Dynamic Calendar Date Helper
   const [currentDate] = useState(() => new Date());
@@ -961,7 +963,7 @@ export function ClientProfileCRM({
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   type="button"
-                  onClick={() => setCreateProjectModal(true)}
+                  onClick={() => router.push("/admin/scope")}
                   className="button button-outline"
                   style={{ padding: "6px 12px", fontSize: 11, display: "inline-flex", alignItems: "center", gap: 4 }}
                 >
@@ -1013,7 +1015,7 @@ export function ClientProfileCRM({
                 </p>
                 <button
                   type="button"
-                  onClick={() => setCreateProjectModal(true)}
+                  onClick={() => router.push("/admin/scope")}
                   className="button"
                   style={{ fontSize: 12, padding: "8px 16px" }}
                 >
@@ -1944,7 +1946,7 @@ export function ClientProfileCRM({
               {/* Add Real Project */}
               <button
                 type="button"
-                onClick={() => setCreateProjectModal(true)}
+                onClick={() => router.push("/admin/scope")}
                 className="crm-action-circle"
                 title="Create Project for Client"
                 style={{

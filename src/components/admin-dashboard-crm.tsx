@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   TrendingUp,
   FolderKanban,
@@ -91,6 +91,7 @@ export function AdminDashboardCRM({
   totalGalleryCount,
 }: AdminDashboardCRMProps) {
   const toast = useToast();
+  const router = useRouter();
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [funnelView, setFunnelView] = useState<"total" | "weighted">("total");
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<number | null>(null);
@@ -106,14 +107,14 @@ export function AdminDashboardCRM({
 
   useEffect(() => {
     if (searchParams?.get("action") === "create-project" || searchParams?.get("create") === "project") {
-      setCreateProjectModal(true);
+      router.push("/admin/scope");
     }
     function onOpen() {
-      setCreateProjectModal(true);
+      router.push("/admin/scope");
     }
     window.addEventListener("nova:open-create-project", onOpen);
     return () => window.removeEventListener("nova:open-create-project", onOpen);
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const adminFirstName = sessionUser.name ? sessionUser.name.trim().split(/\s+/)[0] : "Admin";
 
@@ -636,7 +637,7 @@ export function AdminDashboardCRM({
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   type="button"
-                  onClick={() => setCreateProjectModal(true)}
+                  onClick={() => router.push("/admin/scope")}
                   className="button button-outline"
                   style={{ padding: "6px 12px", fontSize: 11, display: "inline-flex", alignItems: "center", gap: 4 }}
                 >
@@ -687,7 +688,7 @@ export function AdminDashboardCRM({
                 </p>
                 <button
                   type="button"
-                  onClick={() => setCreateProjectModal(true)}
+                  onClick={() => router.push("/admin/scope")}
                   className="button"
                   style={{ fontSize: 12, padding: "8px 16px" }}
                 >

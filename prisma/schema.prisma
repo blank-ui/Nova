@@ -52,6 +52,8 @@ model User {
   appointmentsRequested Appointment[] @relation("AppointmentsRequested")
   appointmentsAssigned  Appointment[] @relation("AppointmentsAssigned")
   invoices              Invoice[]
+  sentTeamMessages      TeamMessage[] @relation("SentTeamMessages")
+  receivedTeamMessages  TeamMessage[] @relation("ReceivedTeamMessages")
   @@index([role, createdAt])
   @@index([discordId])
 }
@@ -301,4 +303,20 @@ model Invoice {
   @@index([status])
   @@index([invoiceNumber])
 }
+
+model TeamMessage {
+  id          String    @id @default(cuid())
+  senderId    String
+  recipientId String?   // If null, it is an internal channel message (e.g., general, engineering, finance)
+  channel     String?   @default("general") // "general" | "engineering" | "finance" | null (when 1-on-1 direct message)
+  body        String    @db.Text
+  createdAt   DateTime  @default(now())
+
+  sender    User  @relation("SentTeamMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User? @relation("ReceivedTeamMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([channel, createdAt])
+}
+
 

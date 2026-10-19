@@ -86,11 +86,7 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       label: "Provision Workspace Project (+)",
       isAction: true,
       onClick: () => {
-        if (pathname?.startsWith("/admin/projects") || pathname === "/admin") {
-          window.dispatchEvent(new CustomEvent("nova:open-create-project"));
-        } else {
-          router.push("/admin/projects?create=project");
-        }
+        router.push("/portal/scope");
       },
       icon: <Plus size={18} strokeWidth={1.8} />,
     },
@@ -145,12 +141,6 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       label: "Initiatives & Deliverables",
       href: "/portal/projects",
       icon: <Folder size={18} strokeWidth={1.8} />,
-    },
-    {
-      id: "discussions",
-      label: "Team Discussion",
-      href: "/portal/discussions",
-      icon: <MessagesSquare size={18} strokeWidth={1.8} />,
     },
     {
       id: "appointments",
@@ -531,10 +521,10 @@ export function LeftRail({ user }: LeftRailProps = {}) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setSearchOpen(false); router.push("/portal/discussions"); }}
+                    onClick={() => { setSearchOpen(false); router.push("/portal/scope"); }}
                     style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
                   >
-                    Team Discussion
+                    Request Scope
                   </button>
                   <button
                     type="button"

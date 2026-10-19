@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   FolderKanban,
   CheckCircle2,
@@ -48,13 +49,15 @@ export interface PortalProject {
 
 export interface PortalInquiry {
   id: string;
+  name?: string;
+  email?: string;
   service: string;
   budget: string | null;
   company: string | null;
   message: string;
   status: string;
-  referenceUrl: string | null;
-  referenceImage: string | null;
+  referenceUrl?: string | null;
+  referenceImage?: string | null;
   createdAt: string;
 }
 
@@ -77,6 +80,7 @@ export function ClientPortalTracker({
   availableClients = [],
   isAdminPreview = false,
 }: ClientPortalTrackerProps) {
+  const router = useRouter();
   const [activeInquiryDetail, setActiveInquiryDetail] = useState<PortalInquiry | null>(null);
   const [isScopeModalOpen, setIsScopeModalOpen] = useState(false);
   const isStaff = userRole === "DEVELOPER" || userRole === "ADMIN" || userRole === "FINANCE";
@@ -85,10 +89,10 @@ export function ClientPortalTracker({
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("action") === "scope" || params.get("create") === "scope") {
-        setIsScopeModalOpen(true);
+        router.push("/portal/scope");
       }
     }
-  }, []);
+  }, [router]);
 
   const activeProjects = projects.filter(
     (p) => p.status === "IN_PROGRESS" || p.status === "PLANNING" || p.status === "REVIEW"
@@ -230,9 +234,8 @@ export function ClientPortalTracker({
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={() => setIsScopeModalOpen(true)}
+          <Link
+            href="/portal/scope"
             className="button"
             style={{
               padding: "10px 18px",
@@ -242,6 +245,7 @@ export function ClientPortalTracker({
               gap: 6,
               cursor: "pointer",
               border: "none",
+              textDecoration: "none",
             }}
           >
             <span>
@@ -254,7 +258,7 @@ export function ClientPortalTracker({
                 : "+ Request New Scope"}
             </span>
             <ArrowUpRight size={14} />
-          </button>
+          </Link>
           <Link
             href="/portal/appointments"
             className="button button-outline"
@@ -362,25 +366,23 @@ export function ClientPortalTracker({
               When your scope or proposal is approved by Nova studio engineers, your dedicated project workspace, milestones, and deliverables will appear right here.
             </p>
             {isStaff ? (
-              <button
-                type="button"
-                onClick={() => setIsScopeModalOpen(true)}
+              <Link
+                href="/portal/scope"
                 className="button"
-                style={{ display: "inline-flex", gap: 6, fontSize: 13, border: "none", cursor: "pointer" }}
+                style={{ display: "inline-flex", gap: 6, fontSize: 13, border: "none", cursor: "pointer", textDecoration: "none" }}
               >
                 <span>+ Take / Provision Scope</span>
                 <ArrowUpRight size={14} />
-              </button>
+              </Link>
             ) : (
-              <button
-                type="button"
-                onClick={() => setIsScopeModalOpen(true)}
+              <Link
+                href="/portal/scope"
                 className="button"
-                style={{ display: "inline-flex", gap: 6, fontSize: 13, border: "none", cursor: "pointer" }}
+                style={{ display: "inline-flex", gap: 6, fontSize: 13, border: "none", cursor: "pointer", textDecoration: "none" }}
               >
                 <span>Submit Project Scope</span>
                 <ArrowUpRight size={14} />
-              </button>
+              </Link>
             )}
           </div>
         ) : (

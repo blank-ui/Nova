@@ -106,7 +106,7 @@ export default async function FinanceWorkspace() {
           <PillButton variant="primary" href="/finance/invoices" icon={<Receipt size={14} />}>
             Billing &amp; Invoices
           </PillButton>
-          <PillButton variant="outline" href="/portal/projects?action=scope" icon={<DollarSign size={14} />}>
+          <PillButton variant="outline" href="/portal/scope" icon={<DollarSign size={14} />}>
             + Request Financial Scope
           </PillButton>
           <PillButton variant="outline" href="/portal/projects" icon={<FolderKanban size={14} />}>

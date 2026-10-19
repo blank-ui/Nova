@@ -59,6 +59,32 @@ export function ProjectMessages({
     }
   }, [messages]);
 
+  // Auto-refresh messages every 4 seconds
+  useEffect(() => {
+    let isCancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/portal/projects/${projectId}/messages?limit=50`);
+        if (!res.ok || isCancelled) return;
+        const json = await res.json();
+        if (json.data && Array.isArray(json.data)) {
+          setMessages((prev) => {
+            const hasNew = json.data.length !== prev.length || 
+              (json.data.length > 0 && json.data[json.data.length - 1]?.id !== prev[prev.length - 1]?.id);
+            return hasNew ? json.data : prev;
+          });
+        }
+      } catch {
+        // Ignore background polling network glitches
+      }
+    }, 4000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [projectId]);
+
   const handleLoadMore = async () => {
     if (!nextCursor || isLoadingMore) return;
     try {

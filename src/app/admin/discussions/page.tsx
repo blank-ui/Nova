@@ -1,72 +1,95 @@
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { TeamDiscussionsManager, ProjectDiscussionSummary } from "@/components/team-discussions-manager";
+import {
+  TeamDiscussionsManager,
+  TeamMember,
+  ProjectItem,
+} from "@/components/team-discussions-manager";
 
 export default async function AdminDiscussionsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ projectId?: string }>;
+  searchParams?: Promise<{
+    recipientId?: string;
+    channel?: string;
+    projectId?: string;
+    mode?: "project" | "channel" | "direct";
+  }>;
 }) {
   const session = await requireAdmin();
   const resolvedParams = searchParams ? await searchParams : {};
 
-  const rawProjects = await prisma.project.findMany({
-    include: {
-      client: {
-        select: { id: true, name: true, email: true },
+  // Fetch all projects and team members
+  const [projectsRaw, teamMembers]: [any[], TeamMember[]] = await Promise.all([
+    prisma.project.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        status: true,
+        paymentStatus: true,
+        client: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            messages: true,
+          },
+        },
+        updatedAt: true,
       },
-      messages: {
-        take: 1,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.user.findMany({
+      where: {
+        role: { in: ["ADMIN", "DEVELOPER", "FINANCE"] },
       },
-      _count: {
-        select: { messages: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        image: true,
       },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
-  // Get author names for latest messages
-  const authorIds = Array.from(
-    new Set(rawProjects.flatMap((p) => p.messages.map((m) => m.authorId)).filter(Boolean))
-  );
+  const projects: ProjectItem[] = projectsRaw.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    status: p.status,
+    paymentStatus: p.paymentStatus,
+    client: p.client,
+    _count: p._count,
+    updatedAt: p.updatedAt ? p.updatedAt.toISOString() : undefined,
+  }));
 
-  const authors =
-    authorIds.length > 0
-      ? await prisma.user.findMany({
-          where: { id: { in: authorIds } },
-          select: { id: true, name: true },
-        })
-      : [];
-
-  const authorMap = new Map(authors.map((a) => [a.id, a.name]));
-
-  const projects: ProjectDiscussionSummary[] = rawProjects.map((p) => {
-    const latest = p.messages[0];
-    return {
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      status: p.status,
-      updatedAt: p.updatedAt.toISOString(),
-      client: p.client,
-      messageCount: p._count.messages,
-      lastMessage: latest
-        ? {
-            body: latest.body,
-            createdAt: latest.createdAt.toISOString(),
-            authorName: authorMap.get(latest.authorId) || "Team Member",
-          }
-        : null,
-    };
-  });
+  const initialMode: "project" | "channel" | "direct" =
+    resolvedParams.mode ||
+    (resolvedParams.projectId
+      ? "project"
+      : resolvedParams.recipientId
+      ? "direct"
+      : resolvedParams.channel
+      ? "channel"
+      : "channel");
 
   return (
     <TeamDiscussionsManager
-      projects={projects}
       currentUserId={session.user.id}
       currentUserRole={session.user.role ?? "ADMIN"}
+      teamMembers={teamMembers}
+      projects={projects}
       initialProjectId={resolvedParams.projectId}
+      initialRecipientId={resolvedParams.recipientId}
+      initialChannel={resolvedParams.channel}
+      initialMode={initialMode}
     />
   );
 }

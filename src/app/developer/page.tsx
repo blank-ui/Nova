@@ -114,8 +114,14 @@ export default async function DeveloperWorkspace() {
           <PillButton variant="primary" href="/developer/repos" icon={<GitBranch size={14} />}>
             Studio Repositories
           </PillButton>
+          <PillButton variant="outline" href="/portal/scope" icon={<FolderKanban size={14} />}>
+            + Take Engineering Scope
+          </PillButton>
           <PillButton variant="outline" href="/portal/projects" icon={<FolderKanban size={14} />}>
             Client Projects ({projects.length})
+          </PillButton>
+          <PillButton variant="subtle" href="/portal/appointments" icon={<Calendar size={14} />}>
+            Consultations Schedule
           </PillButton>
           <PillButton
             variant="subtle"
