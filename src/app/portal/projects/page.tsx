@@ -9,86 +9,111 @@ export default async function PortalProjectsPage({
 }) {
   const session = await requireClient();
   const isUserAdmin = session.user.role === "ADMIN";
+  const isStaff = session.user.role === "ADMIN" || session.user.role === "DEVELOPER" || session.user.role === "FINANCE";
   const resolvedParams = searchParams ? await searchParams : {};
-  const targetId = isUserAdmin && resolvedParams.clientId ? resolvedParams.clientId : session.user.id;
 
-  let clientUser = await prisma.user.findUnique({
-    where: { id: targetId },
-    include: {
-      projects: {
+  let projectsData: Array<any> = [];
+  let inquiriesData: Array<any> = [];
+  let availableClients: Array<{ id: string; name: string; email: string }> = [];
+  let displayUserName = session.user.name || "Client";
+  let displayUserEmail = session.user.email || "";
+
+  if (isStaff) {
+    availableClients = await prisma.user.findMany({
+      where: { role: "CLIENT" },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: "asc" },
+    });
+  }
+
+  if (isStaff && !resolvedParams.clientId) {
+    // Staff view: load all studio projects and inquiries
+    const [allProjects, allInquiries] = await Promise.all([
+      prisma.project.findMany({
         include: {
-          milestones: true,
-          tasks: true,
+          client: { select: { id: true, name: true, email: true } },
+          milestones: { orderBy: { dueAt: "asc" } },
+          tasks: { orderBy: { dueAt: "asc" } },
         },
         orderBy: { updatedAt: "desc" },
-      },
-    },
-  });
+      }),
+      prisma.inquiry.findMany({
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
 
-  // If admin is viewing and no specific client was given, fallback to first CLIENT user or current session user
-  if (!clientUser && isUserAdmin) {
-    clientUser = await prisma.user.findFirst({
-      where: { role: "CLIENT" },
+    projectsData = allProjects;
+    inquiriesData = allInquiries;
+    displayUserName = session.user.name || (session.user.role === "DEVELOPER" ? "Engineer Console" : "Studio Admin");
+  } else {
+    // Client view or specific client filter
+    const targetId = isStaff && resolvedParams.clientId ? resolvedParams.clientId : session.user.id;
+
+    let clientUser = await prisma.user.findUnique({
+      where: { id: targetId },
       include: {
         projects: {
           include: {
-            milestones: true,
-            tasks: true,
+            client: { select: { id: true, name: true, email: true } },
+            milestones: { orderBy: { dueAt: "asc" } },
+            tasks: { orderBy: { dueAt: "asc" } },
           },
           orderBy: { updatedAt: "desc" },
         },
       },
     });
-  }
 
-  if (!clientUser) {
-    clientUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        projects: {
-          include: {
-            milestones: true,
-            tasks: true,
+    if (!clientUser) {
+      clientUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: {
+          projects: {
+            include: {
+              client: { select: { id: true, name: true, email: true } },
+              milestones: { orderBy: { dueAt: "asc" } },
+              tasks: { orderBy: { dueAt: "asc" } },
+            },
+            orderBy: { updatedAt: "desc" },
           },
-          orderBy: { updatedAt: "desc" },
         },
-      },
-    });
+      });
+    }
+
+    if (clientUser) {
+      displayUserName = clientUser.name;
+      displayUserEmail = clientUser.email;
+      projectsData = clientUser.projects;
+
+      inquiriesData = await prisma.inquiry.findMany({
+        where: { email: clientUser.email },
+        orderBy: { createdAt: "desc" },
+      });
+    }
   }
 
-  if (!clientUser) {
-    return (
-      <main className="shell" style={{ padding: "40px 0" }}>
-        <p>No workspace record found.</p>
-      </main>
-    );
-  }
-
-  // Fetch all inquiries associated with this client's email
-  const inquiries = await prisma.inquiry.findMany({
-    where: isUserAdmin && !resolvedParams.clientId
-      ? {}
-      : { email: clientUser.email },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const serializedProjects = clientUser.projects.map((p) => ({
-    ...p,
+  const serializedProjects = projectsData.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    status: p.status,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
-    milestones: p.milestones.map((m) => ({
-      ...m,
+    client: p.client ? { id: p.client.id, name: p.client.name, email: p.client.email } : null,
+    milestones: (p.milestones || []).map((m: any) => ({
+      id: m.id,
+      title: m.title,
       dueAt: m.dueAt ? m.dueAt.toISOString() : null,
       completedAt: m.completedAt ? m.completedAt.toISOString() : null,
     })),
-    tasks: p.tasks.map((t) => ({
-      ...t,
+    tasks: (p.tasks || []).map((t: any) => ({
+      id: t.id,
+      title: t.title,
       dueAt: t.dueAt ? t.dueAt.toISOString() : null,
       completedAt: t.completedAt ? t.completedAt.toISOString() : null,
     })),
   }));
 
-  const serializedInquiries = inquiries.map((inq) => ({
+  const serializedInquiries = inquiriesData.map((inq) => ({
     id: inq.id,
     service: inq.service,
     budget: inq.budget,
@@ -101,12 +126,14 @@ export default async function PortalProjectsPage({
   }));
 
   return (
-    <div className="animate-fade-in-up" style={{ width: "100%", padding: "20px 0" }}>
+    <div className="animate-fade-in-up" style={{ width: "100%", padding: "12px 0" }}>
       <ClientPortalTracker
-        userName={clientUser.name}
-        userEmail={clientUser.email}
+        userName={displayUserName}
+        userEmail={displayUserEmail}
+        userRole={session.user.role ?? "CLIENT"}
         projects={serializedProjects}
         inquiries={serializedInquiries}
+        availableClients={availableClients}
         isAdminPreview={isUserAdmin}
       />
     </div>

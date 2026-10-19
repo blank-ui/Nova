@@ -16,7 +16,9 @@ import {
   FileText,
   Mail,
   ShieldCheck,
+  Building,
 } from "lucide-react";
+import { ScopeActionsModal, type ClientOption } from "./scope-actions-modal";
 
 export interface PortalProjectMilestone {
   id: string;
@@ -39,6 +41,7 @@ export interface PortalProject {
   status: string;
   createdAt: string;
   updatedAt: string;
+  client?: { id: string; name: string; email: string } | null;
   milestones: PortalProjectMilestone[];
   tasks: PortalProjectTask[];
 }
@@ -58,19 +61,25 @@ export interface PortalInquiry {
 interface ClientPortalTrackerProps {
   userName: string;
   userEmail: string;
+  userRole?: string;
   projects: PortalProject[];
   inquiries: PortalInquiry[];
+  availableClients?: ClientOption[];
   isAdminPreview?: boolean;
 }
 
 export function ClientPortalTracker({
   userName,
   userEmail,
+  userRole = "CLIENT",
   projects,
   inquiries,
+  availableClients = [],
   isAdminPreview = false,
 }: ClientPortalTrackerProps) {
   const [activeInquiryDetail, setActiveInquiryDetail] = useState<PortalInquiry | null>(null);
+  const [isScopeModalOpen, setIsScopeModalOpen] = useState(false);
+  const isStaff = userRole === "DEVELOPER" || userRole === "ADMIN" || userRole === "FINANCE";
 
   const activeProjects = projects.filter(
     (p) => p.status === "IN_PROGRESS" || p.status === "PLANNING" || p.status === "REVIEW"
@@ -212,14 +221,23 @@ export function ClientPortalTracker({
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link
-            href="/contact"
+          <button
+            type="button"
+            onClick={() => setIsScopeModalOpen(true)}
             className="button"
-            style={{ padding: "10px 18px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+            style={{
+              padding: "10px 18px",
+              fontSize: 13,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              cursor: "pointer",
+              border: "none",
+            }}
           >
             <span>+ Request New Scope</span>
             <ArrowUpRight size={14} />
-          </Link>
+          </button>
           <Link
             href="/portal/appointments"
             className="button button-outline"
@@ -326,10 +344,27 @@ export function ClientPortalTracker({
             <p style={{ fontSize: 13, color: "var(--muted)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.7 }}>
               When your scope or proposal is approved by Nova studio engineers, your dedicated project workspace, milestones, and deliverables will appear right here.
             </p>
-            <Link href="/contact" className="button" style={{ display: "inline-flex", gap: 6, fontSize: 13 }}>
-              <span>Submit Project Inquiry</span>
-              <ArrowUpRight size={14} />
-            </Link>
+            {isStaff ? (
+              <button
+                type="button"
+                onClick={() => setIsScopeModalOpen(true)}
+                className="button"
+                style={{ display: "inline-flex", gap: 6, fontSize: 13, border: "none", cursor: "pointer" }}
+              >
+                <span>+ Take / Provision Scope</span>
+                <ArrowUpRight size={14} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsScopeModalOpen(true)}
+                className="button"
+                style={{ display: "inline-flex", gap: 6, fontSize: 13, border: "none", cursor: "pointer" }}
+              >
+                <span>Submit Project Scope</span>
+                <ArrowUpRight size={14} />
+              </button>
+            )}
           </div>
         ) : (
           <div style={{ display: "grid", gap: 18 }}>
@@ -351,7 +386,7 @@ export function ClientPortalTracker({
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
                         <span
                           style={{
                             fontSize: 11,
@@ -365,6 +400,11 @@ export function ClientPortalTracker({
                         >
                           {statusInfo.title}
                         </span>
+                        {proj.client && (
+                          <span style={{ fontSize: 12, color: "var(--brand-primary, #6366F1)", fontWeight: 700 }}>
+                            Client: {proj.client.name} ({proj.client.email})
+                          </span>
+                        )}
                         <span style={{ fontSize: 12, color: "var(--muted)" }}>
                           Last activity {new Date(proj.updatedAt).toLocaleDateString()}
                         </span>
@@ -835,6 +875,16 @@ export function ClientPortalTracker({
           </div>
         </div>
       )}
+
+      {/* Scope & Project Actions Modal */}
+      <ScopeActionsModal
+        isOpen={isScopeModalOpen}
+        onClose={() => setIsScopeModalOpen(false)}
+        userRole={userRole}
+        projects={projects}
+        inquiries={inquiries}
+        availableClients={availableClients}
+      />
     </div>
   );
 }

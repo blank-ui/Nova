@@ -11,6 +11,9 @@ export async function getAuthorizedProject(projectId: string) {
   if (canOpenAdmin(session.user.role, session.user.twoFactorEnabled ?? false)) {
     return prisma.project.findUnique({ where: { id: projectId }, include: { milestones: true, tasks: true } });
   }
+  if (session.user.role === "DEVELOPER" || session.user.role === "FINANCE") {
+    return prisma.project.findUnique({ where: { id: projectId }, include: { milestones: true, tasks: true } });
+  }
   if (session.user.role !== "CLIENT") return null;
   return prisma.project.findFirst({
     where: { id: projectId, clientId: session.user.id },
