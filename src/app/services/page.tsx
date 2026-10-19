@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { PublicPage, CTA } from "@/components/public-page";
 import {
@@ -10,88 +12,91 @@ import {
   ArrowUpRight,
   CheckCircle2,
 } from "lucide-react";
-
-const serviceList = [
-  {
-    icon: <Globe size={24} />,
-    title: "Websites & Brand Experiences",
-    text: "Distinctive, lightning-fast marketing websites built around your positioning, narrative, and conversion goals.",
-    deliverables: [
-      "Custom responsive layout & design system",
-      "Next.js App Router static/dynamic rendering",
-      "Interactive fluid motion & dark/light theme support",
-      "Search engine optimization (SEO) & structured schema",
-    ],
-    badge: "Most Popular",
-  },
-  {
-    icon: <Layers size={24} />,
-    title: "Custom Web Applications & SaaS",
-    text: "Purpose-built platforms and customer portals designed to scale with your user base and complex data models.",
-    deliverables: [
-      "Type-safe full-stack Next.js & React 19 architecture",
-      "Prisma ORM with PostgreSQL or MySQL databases",
-      "Role-based access control (RBAC) & TOTP multi-factor auth",
-      "Stripe / Razorpay payment and billing integration",
-    ],
-    badge: "Core Expertise",
-  },
-  {
-    icon: <LineChart size={24} />,
-    title: "Operational Dashboards & CRM Systems",
-    text: "Focused internal tools that eliminate manual spreadsheet chaos and bring mission-critical metrics into one clean workspace.",
-    deliverables: [
-      "Inquiry and lead pipeline tracking with status workflows",
-      "Interactive data visualization and real-time metric charts",
-      "User role isolation (Admin, Developer, Finance, Client)",
-      "Audit logs, activity history, and granular security controls",
-    ],
-    badge: "Enterprise",
-  },
-  {
-    icon: <Figma size={24} />,
-    title: "Product Design & Prototyping",
-    text: "Transforming vague requirements into clickable prototypes, cohesive component libraries, and validated UX journeys.",
-    deliverables: [
-      "High-fidelity responsive UI mockups & component tokens",
-      "Interactive prototypes to test flows before writing code",
-      "Information architecture, user personas, and customer journey mapping",
-      "Design systems handoff with complete CSS guidelines",
-    ],
-    badge: "Design",
-  },
-  {
-    icon: <Cpu size={24} />,
-    title: "APIs, Integrations & Automation",
-    text: "Connecting disjointed SaaS platforms, automating repetitive back-office tasks, and building resilient API integrations.",
-    deliverables: [
-      "Third-party API integrations (GitHub, Discord, Google, Hostinger)",
-      "Transactional email workflows with beautiful responsive HTML templates",
-      "Webhook listeners with idempotent delivery and signature validation",
-      "Automated rate-limiting and anti-abuse defense layers",
-    ],
-    badge: "Infrastructure",
-  },
-  {
-    icon: <HeartPulse size={24} />,
-    title: "Ongoing Architecture & Continuous Care",
-    text: "Reliable maintenance, dependency security upgrades, performance auditing, and direct architectural advisory.",
-    deliverables: [
-      "Monthly package security patching & Next.js upgrades",
-      "Core Web Vitals monitoring and database query tuning",
-      "Priority SLA bug resolution with direct founder communication",
-      "Staged staging environments and automated regression suites",
-    ],
-    badge: "Partnership",
-  },
-];
+import { useLanguage } from "@/components/language-provider";
 
 export default function Services() {
+  const { t } = useLanguage();
+
+  const serviceList = [
+    {
+      icon: <Globe size={24} />,
+      title: t("services_page.card1_title", "Websites & Brand Experiences"),
+      text: t("services_page.card1_desc", "Distinctive, lightning-fast marketing websites built around your positioning, narrative, and conversion goals."),
+      deliverables: [
+        "Custom responsive layout & design system",
+        "Next.js App Router static/dynamic rendering",
+        "Interactive fluid motion & dark/light theme support",
+        "Search engine optimization (SEO) & structured schema",
+      ],
+      badge: "Most Popular",
+    },
+    {
+      icon: <Layers size={24} />,
+      title: t("services_page.card2_title", "Custom Web Applications & SaaS"),
+      text: t("services_page.card2_desc", "Purpose-built platforms and customer portals designed to scale with your user base and complex data models."),
+      deliverables: [
+        "Type-safe full-stack Next.js & React 19 architecture",
+        "Prisma ORM with PostgreSQL or MySQL databases",
+        "Role-based access control (RBAC) & TOTP multi-factor auth",
+        "Stripe / Razorpay payment and billing integration",
+      ],
+      badge: "Core Expertise",
+    },
+    {
+      icon: <LineChart size={24} />,
+      title: t("services_page.card3_title", "Operational Dashboards & CRM Systems"),
+      text: t("services_page.card3_desc", "Focused internal tools that eliminate manual spreadsheet chaos and bring mission-critical metrics into one clean workspace."),
+      deliverables: [
+        "Inquiry and lead pipeline tracking with status workflows",
+        "Interactive data visualization and real-time metric charts",
+        "User role isolation (Admin, Developer, Finance, Client)",
+        "Audit logs, activity history, and granular security controls",
+      ],
+      badge: "Enterprise",
+    },
+    {
+      icon: <Figma size={24} />,
+      title: t("services_page.card4_title", "Product Design & Prototyping"),
+      text: t("services_page.card4_desc", "Transforming vague requirements into clickable prototypes, cohesive component libraries, and validated UX journeys."),
+      deliverables: [
+        "High-fidelity responsive UI mockups & component tokens",
+        "Interactive prototypes to test flows before writing code",
+        "Information architecture, user personas, and customer journey mapping",
+        "Design systems handoff with complete CSS guidelines",
+      ],
+      badge: "Design",
+    },
+    {
+      icon: <Cpu size={24} />,
+      title: t("services_page.card5_title", "APIs, Integrations & Automation"),
+      text: t("services_page.card5_desc", "Connecting disjointed SaaS platforms, automating repetitive back-office tasks, and building resilient API integrations."),
+      deliverables: [
+        "Third-party API integrations (GitHub, Discord, Google, Hostinger)",
+        "Transactional email workflows with beautiful responsive HTML templates",
+        "Webhook listeners with idempotent delivery and signature validation",
+        "Automated rate-limiting and anti-abuse defense layers",
+      ],
+      badge: "Infrastructure",
+    },
+    {
+      icon: <HeartPulse size={24} />,
+      title: t("services_page.card6_title", "Ongoing Architecture & Continuous Care"),
+      text: t("services_page.card6_desc", "Reliable maintenance, dependency security upgrades, performance auditing, and direct architectural advisory."),
+      deliverables: [
+        "Monthly package security patching & Next.js upgrades",
+        "Core Web Vitals monitoring and database query tuning",
+        "Priority SLA bug resolution with direct founder communication",
+        "Staged staging environments and automated regression suites",
+      ],
+      badge: "Partnership",
+    },
+  ];
+
   return (
     <PublicPage
-      eyebrow="Capabilities · Clear thinking, careful making"
-      title={<>Digital capabilities that<br />move your business forward.</>}
-      subtitle="We bring strategy, product design, and modern software engineering together to deliver digital experiences and tools that solve real bottlenecks."
+      eyebrow={t("services_page.eyebrow", "Capabilities · Clear thinking, careful making")}
+      title={t("services_page.title", "Digital capabilities that move your business forward.")}
+      subtitle={t("services_page.subtitle", "We bring strategy, product design, and modern software engineering together to deliver digital experiences and tools that solve real bottlenecks.")}
     >
       <div style={{ display: "grid", gap: 48 }}>
         {/* Services Grid */}
@@ -150,7 +155,7 @@ export default function Services() {
 
                 <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)", letterSpacing: ".06em", marginBottom: 10 }}>
-                    Key Deliverables:
+                    {t("services_page.deliverables", "Key Deliverables:")}
                   </div>
                   <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
                     {service.deliverables.map((item) => (
@@ -176,7 +181,7 @@ export default function Services() {
                     textDecoration: "none",
                   }}
                 >
-                  Inquire about this service <ArrowUpRight size={14} />
+                  {t("hero.start_project", "Inquire about this service")} <ArrowUpRight size={14} />
                 </Link>
               </div>
             </div>
@@ -187,38 +192,35 @@ export default function Services() {
         <div
           className="card"
           style={{
-            padding: "36px 40px",
+            padding: "clamp(24px, 4vw, 36px) clamp(20px, 4vw, 40px)",
             borderRadius: 20,
             background: "var(--lav)",
             border: "1px solid var(--line)",
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
             gap: 24,
             alignItems: "center",
           }}
         >
           <div>
             <div className="eyebrow" style={{ color: "var(--blue)" }}>
-              Transparent Scoping
+              {t("process.eyebrow", "Transparent Scoping")}
             </div>
             <h3 style={{ fontSize: 24, letterSpacing: "-.04em", margin: "10px 0 10px", color: "var(--ink)", fontWeight: 700 }}>
-              Fixed milestone scopes. No surprise invoices.
+              {t("services_page.banner_title", "Fixed milestone scopes. No surprise invoices.")}
             </h3>
             <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
-              Every engagement starts with a clearly defined specification, timeline milestones, and deliverables. You always know what is being built, when it will be delivered, and exactly what it costs.
+              {t("services_page.banner_desc", "Every engagement starts with a clearly defined specification, timeline milestones, and deliverables. You always know what is being built, when it will be delivered, and exactly what it costs.")}
             </p>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Link className="button" href="/contact" style={{ padding: "14px 24px", fontSize: 14 }}>
-              Discuss your project scope <ArrowUpRight size={15} />
+              {t("hero.start_project", "Discuss your project scope")} <ArrowUpRight size={15} />
             </Link>
           </div>
         </div>
 
-        <CTA
-          title="Ready to elevate your digital presence?"
-          subtitle="Tell us where you are, and where you want to be."
-        />
+        <CTA />
       </div>
     </PublicPage>
   );

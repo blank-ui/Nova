@@ -1,11 +1,26 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, AlertCircle, Clock, ShieldCheck, Mail, Sparkles } from "lucide-react";
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ShieldCheck,
+  Mail,
+  Sparkles,
+  Link2,
+  UploadCloud,
+  Image as ImageIcon,
+  X,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { NovaMascotAvatar } from "@/components/brand";
+import { useLanguage } from "@/components/language-provider";
 
 const SERVICES = [
   "Website design & development",
@@ -24,12 +39,55 @@ const BUDGETS = [
   "Still working it out",
 ];
 
+const MAX_CLIENT_DOB = new Date(Date.now() - 13 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
 export default function ContactPage() {
+  const { t } = useLanguage();
   const [state, setState] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [error, setError] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [selectedBudget, setSelectedBudget] = useState("");
   const [charCount, setCharCount] = useState(0);
+  const [referenceUrl, setReferenceUrl] = useState("");
+  const [referenceImageUrl, setReferenceImageUrl] = useState("");
+  const [isUploadingRefImage, setIsUploadingRefImage] = useState(false);
+  const [refUploadError, setRefUploadError] = useState("");
+  const refFileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleReferenceFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      setRefUploadError("Please choose a valid JPEG, PNG, WebP, or GIF image.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setRefUploadError("Image file cannot exceed 10 MB.");
+      return;
+    }
+
+    setRefUploadError("");
+    setIsUploadingRefImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/inquiries/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+
+      setReferenceImageUrl(data.url);
+    } catch (err) {
+      setRefUploadError(err instanceof Error ? err.message : "Failed to upload reference image");
+    } finally {
+      setIsUploadingRefImage(false);
+      if (refFileInputRef.current) refFileInputRef.current.value = "";
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -87,7 +145,7 @@ export default function ContactPage() {
               style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 14 }}
             >
               <Sparkles size={13} style={{ color: "var(--blue)" }} />
-              Start a conversation
+              {t("contact_page.eyebrow", "Start a conversation")}
             </div>
             <h1
               style={{
@@ -99,8 +157,8 @@ export default function ContactPage() {
                 color: "var(--ink)",
               }}
             >
-              Tell us what<br />
-              <span style={{ color: "var(--blue)" }}>you&apos;re imagining.</span>
+              {t("contact_page.title1", "Tell us what")}<br />
+              <span style={{ color: "var(--blue)" }}>{t("contact_page.title2", "you're imagining.")}</span>
             </h1>
             <p
               style={{
@@ -111,8 +169,7 @@ export default function ContactPage() {
                 margin: 0,
               }}
             >
-              A few details are enough to get started. We will review your goals with care,
-              advise on architecture, and provide a concrete path forward.
+              {t("contact_page.subtitle", "A few details are enough to get started. We will review your goals with care, advise on architecture, and provide a concrete path forward.")}
             </p>
           </div>
         </section>
@@ -190,6 +247,9 @@ export default function ContactPage() {
                     setSelectedService("");
                     setSelectedBudget("");
                     setCharCount(0);
+                    setReferenceUrl("");
+                    setReferenceImageUrl("");
+                    setRefUploadError("");
                   }}
                   className="button button-outline"
                   style={{ marginTop: 18 }}
@@ -203,7 +263,7 @@ export default function ContactPage() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
                     gap: 18,
                   }}
                 >
@@ -309,6 +369,8 @@ export default function ContactPage() {
                     name="dateOfBirth"
                     autoComplete="bday"
                     required
+                    max={MAX_CLIENT_DOB}
+                    style={{ colorScheme: "dark light" }}
                   />
                   <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>
                     Used for client account verification and project agreement onboarding.
@@ -509,6 +571,214 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {/* Reference & Inspiration Section */}
+                <div
+                  style={{
+                    padding: "20px 22px",
+                    borderRadius: 16,
+                    background: "var(--surface-raised, rgba(0,0,0,0.02))",
+                    border: "1px dashed var(--line)",
+                    display: "grid",
+                    gap: 16,
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <Sparkles size={14} style={{ color: "var(--blue)" }} />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
+                        Reference Materials &amp; Inspiration
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: "var(--muted)", marginLeft: "auto" }}>
+                        optional
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
+                      Share a design benchmark link (Figma, Dribbble, benchmark website) or upload a mockup sketch / screenshot.
+                    </p>
+                  </div>
+
+                  {/* Reference URL Input */}
+                  <div>
+                    <label
+                      htmlFor="contact-reference-url"
+                      style={{
+                        display: "block",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "var(--ink)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Inspiration URL / Benchmark Link
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        id="contact-reference-url"
+                        name="referenceUrl"
+                        type="url"
+                        value={referenceUrl}
+                        onChange={(e) => setReferenceUrl(e.target.value)}
+                        placeholder="https://figma.com/design/... or https://dribbble.com/shots/..."
+                        className="field"
+                        style={{ width: "100%", paddingLeft: 36 }}
+                      />
+                      <Link2
+                        size={15}
+                        style={{
+                          position: "absolute",
+                          left: 12,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          color: "var(--muted)",
+                          pointerEvents: "none",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Reference Image Upload */}
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "var(--ink)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Reference Mockup or Screenshot (PNG, JPG, WebP up to 10MB)
+                    </label>
+
+                    <input
+                      ref={refFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      style={{ display: "none" }}
+                      onChange={handleReferenceFileChange}
+                    />
+                    <input type="hidden" name="referenceImage" value={referenceImageUrl} />
+
+                    {referenceImageUrl ? (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "10px 14px",
+                          borderRadius: 12,
+                          background: "var(--card-bg, #ffffff)",
+                          border: "1px solid var(--line)",
+                        }}
+                      >
+                        <img
+                          src={referenceImageUrl}
+                          alt="Reference mockup preview"
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 8,
+                            objectFit: "cover",
+                            border: "1px solid var(--line)",
+                          }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "var(--ink)",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            Reference image uploaded
+                          </div>
+                          <a
+                            href={referenceImageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              fontSize: 11,
+                              color: "var(--blue)",
+                              textDecoration: "underline",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            Preview full image <ExternalLink size={10} />
+                          </a>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setReferenceImageUrl("")}
+                          title="Remove image"
+                          style={{
+                            border: "none",
+                            background: "rgba(239, 68, 68, 0.1)",
+                            color: "#EF4444",
+                            padding: 6,
+                            borderRadius: "50%",
+                            cursor: "pointer",
+                            display: "grid",
+                            placeItems: "center",
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={isUploadingRefImage}
+                        onClick={() => refFileInputRef.current?.click()}
+                        style={{
+                          width: "100%",
+                          padding: "16px",
+                          borderRadius: 12,
+                          background: "var(--card-bg, #ffffff)",
+                          border: "1px dashed var(--line)",
+                          color: "var(--muted)",
+                          cursor: isUploadingRefImage ? "wait" : "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
+                          transition: "all 0.18s ease",
+                        }}
+                      >
+                        {isUploadingRefImage ? (
+                          <>
+                            <Loader2 size={20} className="animate-spin" style={{ color: "var(--blue)" }} />
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>
+                              Uploading reference image...
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud size={20} style={{ color: "var(--blue)" }} />
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>
+                              Click to choose reference mockup / screenshot
+                            </span>
+                            <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                              PNG, JPG, WebP, or GIF (max 10MB)
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {refUploadError && (
+                      <p style={{ margin: "6px 0 0", fontSize: 11, color: "#EF4444" }}>
+                        {refUploadError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 {/* Honeypot field for spam prevention */}
                 <div aria-hidden="true" style={{ position: "absolute", left: "-10000px" }}>
                   <label htmlFor="contact-website">
@@ -553,7 +823,7 @@ export default function ContactPage() {
                       cursor: state === "sending" ? "wait" : "pointer",
                     }}
                   >
-                    <span>{state === "sending" ? "Sending note…" : "Send your note"}</span>
+                    <span>{state === "sending" ? t("contact.submitting", "Sending note…") : t("contact.submit", "Send your note")}</span>
                     <ArrowUpRight size={16} />
                   </button>
 

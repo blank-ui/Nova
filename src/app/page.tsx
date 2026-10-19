@@ -17,6 +17,7 @@ import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { NovaMark, AnimatedNovaMascot, NovaMascotAvatar } from "@/components/brand";
 import { prisma } from "@/lib/prisma";
+import { T } from "@/components/language-provider";
 
 const services = [
   {
@@ -110,7 +111,7 @@ export default async function Home() {
                 }}
               >
                 <Sparkles size={13} />
-                <span>Independent Digital Studio · India & Global</span>
+                <span><T k="hero.eyebrow" fallback="Independent Digital Studio · India & Global" /></span>
               </div>
 
               <span
@@ -135,7 +136,7 @@ export default async function Home() {
             {/* Main Headline */}
             <h1
               style={{
-                fontSize: "clamp(56px, 8.4vw, 110px)",
+                fontSize: "clamp(36px, 7.5vw, 104px)",
                 lineHeight: 0.98,
                 letterSpacing: "-.085em",
                 fontWeight: 700,
@@ -144,11 +145,12 @@ export default async function Home() {
                 color: "var(--ink)",
               }}
             >
-              Digital, <span style={{ color: "var(--muted)", fontWeight: 400 }}>considered.</span>
+              <T k="hero.title_start" fallback="Digital, " />
+              <span style={{ color: "var(--muted)", fontWeight: 400 }}>considered.</span>
               <br />
               Built for{" "}
               <span style={{ position: "relative", display: "inline-block", color: "var(--blue)" }}>
-                what&apos;s next.
+                <T k="hero.title_highlight" fallback="what's next." />
                 <span
                   style={{
                     position: "absolute",
@@ -183,15 +185,15 @@ export default async function Home() {
                   margin: 0,
                 }}
               >
-                We partner with ambitious founders and established teams to build bespoke websites, custom platforms, and operational systems that move businesses forward.
+                <T k="hero.description" fallback="We partner with ambitious founders and established teams to build bespoke websites, custom platforms, and operational systems that move businesses forward." />
               </p>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <Link className="button" href="/contact" style={{ padding: "14px 24px", fontSize: 14 }}>
-                  Start a project <ArrowUpRight size={16} />
+                  <T k="hero.start_project" fallback="Start a project" /> <ArrowUpRight size={16} />
                 </Link>
                 <Link className="button button-outline" href="/portfolio" style={{ padding: "14px 22px", fontSize: 14 }}>
-                  Explore our work <ArrowRight size={15} />
+                  <T k="hero.explore_work" fallback="Explore our work" /> <ArrowRight size={15} />
                 </Link>
               </div>
             </div>
@@ -211,15 +213,15 @@ export default async function Home() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckCircle2 size={16} style={{ color: "#10b981" }} />
-                <span>100% Core Web Vitals Ready</span>
+                <span><T k="hero.stat_speed" fallback="14-Day Sprint Velocity" /></span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckCircle2 size={16} style={{ color: "var(--blue)" }} />
-                <span>Custom Architecture & Clean Code</span>
+                <span><T k="hero.stat_quality" fallback="100% Type-Safe Architecture" /></span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckCircle2 size={16} style={{ color: "#FFB547" }} />
-                <span>Dedicated Client Workspace & Direct Tracking</span>
+                <span><T k="hero.stat_uptime" fallback="99.9% Uptime Guarantee" /></span>
               </div>
             </div>
           </div>
@@ -232,12 +234,13 @@ export default async function Home() {
                 borderRadius: 24,
                 padding: 18,
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 290px), 1fr))",
                 gap: 16,
               }}
             >
               {/* Mascot Spotlight */}
               <div
+                className="hero-mascot-spotlight"
                 style={{
                   minHeight: 290,
                   borderRadius: 18,
@@ -254,7 +257,7 @@ export default async function Home() {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div className="eyebrow" style={{ color: "#FFB547", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Sparkles size={13} /> Meet Nova · Studio Mascot
+                    <Sparkles size={13} /> <T k="hero.mascot_meet" fallback="Meet Nova · Studio Mascot" />
                   </div>
                   <div
                     style={{
@@ -267,21 +270,20 @@ export default async function Home() {
                       fontFamily: "'DM Mono',monospace",
                     }}
                   >
-                    ships @ light speed
+                    <T k="hero.mascot_speed" fallback="ships @ light speed" />
                   </div>
                 </div>
 
-                <div style={{ position: "absolute", right: 12, bottom: 4, opacity: 0.95 }}>
+                <div className="hero-mascot-visual" style={{ position: "absolute", right: 12, bottom: 4, opacity: 0.95 }}>
                   <AnimatedNovaMascot size={220} />
                 </div>
 
                 <div style={{ maxWidth: 300, position: "relative", zIndex: 2 }}>
                   <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-.05em", lineHeight: 1.15 }}>
-                    Soft to look at.<br />
-                    <span style={{ color: "#FFB547" }}>Serious about code.</span>
+                    <T k="hero.mascot_title" fallback="Soft to look at. Serious about code." />
                   </div>
                   <p style={{ fontSize: 13, color: "#a6adbd", lineHeight: 1.6, margin: "10px 0 0" }}>
-                    Bespoke web development, modern full-stack architecture, and zero-compromise craft. Click Nova anytime to say hi!
+                    <T k="hero.mascot_desc" fallback="Bespoke web development, modern full-stack architecture, and zero-compromise craft. Click Nova anytime to say hi!" />
                   </p>
                 </div>
               </div>
@@ -300,14 +302,13 @@ export default async function Home() {
                   }}
                 >
                   <div className="eyebrow" style={{ color: "var(--blue)" }}>
-                    Web Development Studio
+                    <T k="hero.bento_studio" fallback="Web Development Studio" />
                   </div>
                   <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.05em", marginTop: 12, color: "var(--ink)" }}>
-                    Less noise.<br />
-                    More meaning.
+                    <T k="hero.bento_noise" fallback="Less noise. More meaning." />
                   </div>
                   <p style={{ fontSize: 13, color: "var(--muted)", margin: "8px 0 0", maxWidth: 280, lineHeight: 1.6 }}>
-                    Every line of code and interface element earns its place. No unnecessary dependencies or bloated themes.
+                    <T k="hero.bento_noise_desc" fallback="Every line of code and interface element earns its place. No unnecessary dependencies or bloated themes." />
                   </p>
                   <div style={{ position: "absolute", right: 20, top: 24 }}>
                     <NovaMark size={46} starColor="#6C4CFF" dotColor="#FFB547" />
@@ -326,17 +327,17 @@ export default async function Home() {
                   }}
                 >
                   <div className="eyebrow" style={{ color: "#059669" }}>
-                    From First Scoping to Launch
+                    <T k="hero.bento_scope" fallback="From First Scoping to Launch" />
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-.04em", marginTop: 10, color: "var(--ink)" }}>
-                    Made to move your business forward.
+                    <T k="hero.bento_scope_title" fallback="Made to move your business forward." />
                   </div>
                   <div style={{ display: "flex", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
                     <Link href="/process" className="button button-outline" style={{ padding: "8px 14px", fontSize: 12 }}>
-                      Our 4-step process <ArrowRight size={13} />
+                      <T k="nav.process" fallback="Our 4-step process" /> <ArrowRight size={13} />
                     </Link>
                     <Link href="/services" className="button button-outline" style={{ padding: "8px 14px", fontSize: 12 }}>
-                      All services <MoveUpRight size={13} />
+                      <T k="services.all_capabilities" fallback="All services" /> <MoveUpRight size={13} />
                     </Link>
                   </div>
                 </div>
@@ -361,7 +362,7 @@ export default async function Home() {
               }}
             >
               <div>
-                <div className="eyebrow">Studio Showcase & Builds</div>
+                <div className="eyebrow"><T k="hero.showcase_eyebrow" fallback="Studio Showcase & Builds" /></div>
                 <h2
                   style={{
                     fontSize: "clamp(34px, 4.8vw, 54px)",
@@ -372,19 +373,19 @@ export default async function Home() {
                     color: "var(--ink)",
                   }}
                 >
-                  Selected Work & Design Mockups
+                  <T k="hero.showcase_title" fallback="Selected Work & Design Mockups" />
                 </h2>
                 <p style={{ color: "var(--muted)", fontSize: 14, margin: "6px 0 0" }}>
-                  A glimpse into our responsive web applications, high-converting interfaces, and verified prototypes.
+                  <T k="hero.showcase_desc" fallback="A glimpse into our responsive web applications, high-converting interfaces, and verified prototypes." />
                 </p>
               </div>
 
               <Link href="/portfolio" className="button button-outline" style={{ padding: "10px 18px", fontSize: 13 }}>
-                View Full Showcase ({featuredGallery.length}+) <ArrowUpRight size={14} />
+                <T k="hero.showcase_view_all" fallback="View Full Showcase" /> ({featuredGallery.length}+) <ArrowUpRight size={14} />
               </Link>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 290px), 1fr))", gap: 20 }}>
               {featuredGallery.map((item) => (
                 <div
                   key={item.id}
@@ -507,7 +508,7 @@ export default async function Home() {
             }}
           >
             <div>
-              <div className="eyebrow">What we bring to the table</div>
+              <div className="eyebrow"><T k="services.eyebrow" fallback="What we bring to the table" /></div>
               <h2
                 style={{
                   fontSize: "clamp(36px,5vw,58px)",
@@ -518,23 +519,22 @@ export default async function Home() {
                   color: "var(--ink)",
                 }}
               >
-                Good work, with<br />
-                a reason behind it.
+                <T k="services.title" fallback="Good work, with a reason behind it." />
               </h2>
             </div>
             <Link href="/services" className="button button-outline" style={{ padding: "10px 18px", fontSize: 13 }}>
-              All 6 capabilities <ArrowUpRight size={14} />
+              <T k="services.all_6" fallback="All 6 capabilities" /> <ArrowUpRight size={14} />
             </Link>
           </div>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
               gap: 20,
             }}
           >
-            {services.map((s) => (
+            {services.map((s, idx) => (
               <Link
                 key={s.n}
                 href={s.href}
@@ -550,17 +550,17 @@ export default async function Home() {
               >
                 <div>
                   <div className="eyebrow" style={{ color: "var(--blue)", fontWeight: 700 }}>
-                    {s.n} / Capability
+                    {s.n} / <T k="services.capability" fallback="Capability" />
                   </div>
                   <h3 style={{ fontSize: 22, letterSpacing: "-.05em", margin: "24px 0 10px", color: "var(--ink)", fontWeight: 700 }}>
-                    {s.title}
+                    <T k={`services.s${idx + 1}_title`} fallback={s.title} />
                   </h3>
                   <p style={{ fontSize: 14, lineHeight: 1.75, color: "var(--muted)", margin: 0 }}>
-                    {s.text}
+                    <T k={`services.s${idx + 1}_text`} fallback={s.text} />
                   </p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--blue)", fontSize: 13, fontWeight: 600, marginTop: 24 }}>
-                  <span>Learn more</span>
+                  <span><T k="services.learn_more" fallback="Learn more" /></span>
                   <MoveUpRight size={14} />
                 </div>
               </Link>
@@ -575,7 +575,7 @@ export default async function Home() {
           <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 44px" }}>
             <div className="eyebrow" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <Code2 size={14} style={{ color: "var(--blue)" }} />
-              Architecture & Standards
+              <T k="hero.standards_eyebrow" fallback="Architecture & Standards" />
             </div>
             <h2
               style={{
@@ -586,17 +586,17 @@ export default async function Home() {
                 color: "var(--ink)",
               }}
             >
-              Built to withstand real traffic and hard days.
+              <T k="hero.standards_title" fallback="Built to withstand real traffic and hard days." />
             </h2>
             <p style={{ color: "var(--muted)", fontSize: 15, margin: 0 }}>
-              We do not use bloated page builders or black-box templates. Every project is authored with clean, testable, and maintainable code.
+              <T k="hero.standards_desc" fallback="We do not use bloated page builders or black-box templates. Every project is authored with clean, testable, and maintainable code." />
             </p>
           </div>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
               gap: 18,
             }}
           >
@@ -617,10 +617,10 @@ export default async function Home() {
                 <Zap size={20} />
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px", color: "var(--ink)" }}>
-                Core Web Vitals & Speed
+                <T k="hero.bento1_title" fallback="Core Web Vitals & Speed" />
               </h3>
               <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
-                Optimized font loading, priority LCP images, sub-50ms TTFB edge caching, and zero layout shift across devices.
+                <T k="hero.bento1_desc" fallback="Optimized font loading, priority LCP images, sub-50ms TTFB edge caching, and zero layout shift across devices." />
               </p>
             </div>
 
@@ -641,10 +641,10 @@ export default async function Home() {
                 <ShieldCheck size={20} />
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px", color: "var(--ink)" }}>
-                Multi-Role Security & 2FA
+                <T k="hero.bento2_title" fallback="Multi-Role Security & 2FA" />
               </h3>
               <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
-                Time-based One-Time Passwords (TOTP), signed cookie sessions, rate-limited inquiry routes, and isolated role boundaries.
+                <T k="hero.bento2_desc" fallback="Time-based One-Time Passwords (TOTP), signed cookie sessions, rate-limited inquiry routes, and isolated role boundaries." />
               </p>
             </div>
 
@@ -665,10 +665,10 @@ export default async function Home() {
                 <Layers size={20} />
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px", color: "var(--ink)" }}>
-                Modern Type-Safe Stack
+                <T k="hero.bento3_title" fallback="Modern Type-Safe Stack" />
               </h3>
               <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
-                Next.js 15 App Router, React 19 Server Components, Prisma ORM, and comprehensive Vitest unit test coverage.
+                <T k="hero.bento3_desc" fallback="Next.js 15 App Router, React 19 Server Components, Prisma ORM, and comprehensive Vitest unit test coverage." />
               </p>
             </div>
 
@@ -689,10 +689,10 @@ export default async function Home() {
                 <FolderGit2 size={20} />
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px", color: "var(--ink)" }}>
-                Dedicated Client Workspace
+                <T k="hero.bento4_title" fallback="Dedicated Client Workspace" />
               </h3>
               <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
-                Clients receive their own private portal with real-time sprint milestones, direct communications, and invoice tracking.
+                <T k="hero.bento4_desc" fallback="Clients receive their own private portal with real-time sprint milestones, direct communications, and invoice tracking." />
               </p>
             </div>
           </div>
@@ -712,8 +712,8 @@ export default async function Home() {
         >
           <div className="shell">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
-              <span className="eyebrow">Technology & Production Tooling</span>
-              <span style={{ fontSize: 12, color: "var(--muted)" }}>No proprietary lock-in · Full codebase ownership</span>
+              <span className="eyebrow"><T k="hero.tech_eyebrow" fallback="Technology & Production Tooling" /></span>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}><T k="hero.tech_ownership" fallback="No proprietary lock-in · Full codebase ownership" /></span>
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -768,7 +768,7 @@ export default async function Home() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <NovaMascotAvatar size={24} />
                 <span className="eyebrow" style={{ color: "var(--blue)" }}>
-                  A thoughtful place to begin
+                  <T k="contact.eyebrow" fallback="A thoughtful place to begin" />
                 </span>
               </div>
               <h2
@@ -781,8 +781,7 @@ export default async function Home() {
                   color: "var(--ink)",
                 }}
               >
-                Have a big idea?<br />
-                <span style={{ color: "var(--muted)" }}>Let&apos;s make it real.</span>
+                <T k="contact.title" fallback="Have a big idea? Let's make it real." />
               </h2>
               <div style={{ display: "flex", gap: 20, color: "var(--muted)", fontSize: 13, flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -795,10 +794,10 @@ export default async function Home() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <Link className="button" href="/contact" style={{ padding: "16px 28px", fontSize: 15 }}>
-                Tell us about your project <ArrowUpRight size={17} />
+                <T k="hero.start_project" fallback="Tell us about your project" /> <ArrowUpRight size={17} />
               </Link>
               <Link className="button button-outline" href="/portfolio" style={{ padding: "12px 20px", fontSize: 13, justifyContent: "center" }}>
-                Browse work & GitHub activity
+                <T k="hero.explore_work" fallback="Browse work & GitHub activity" />
               </Link>
             </div>
           </div>

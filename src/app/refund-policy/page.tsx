@@ -1,4 +1,10 @@
 import LegalPage from "@/components/legal-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Refund & Cancellation Policy",
+  description: "Clear, predictable terms governing digital consulting, milestones, and cancellations with All Sky Fares LLC.",
+};
 
 export default function Refund() {
   return (

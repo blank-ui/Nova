@@ -38,6 +38,8 @@ export interface InquiryRow {
   service: string;
   budget?: string | null;
   message: string;
+  referenceUrl?: string | null;
+  referenceImage?: string | null;
   status: string;
   createdAt: string;
 }
@@ -121,13 +123,13 @@ export function AdminInquiriesCRM({
     {
       key: "client",
       header: "Client & Company",
-      width: "1.4fr",
+      width: "minmax(200px, 1.4fr)",
       render: (row: InquiryRow) => (
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+        <div style={{ minWidth: 0, overflow: "hidden" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {row.name}
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {row.company || row.email}
           </div>
         </div>
@@ -136,13 +138,13 @@ export function AdminInquiriesCRM({
     {
       key: "service",
       header: "Service & Budget",
-      width: "1.2fr",
+      width: "minmax(180px, 1.2fr)",
       render: (row: InquiryRow) => (
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
+        <div style={{ minWidth: 0, overflow: "hidden" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {row.service}
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {row.budget || "Custom scope"}
           </div>
         </div>
@@ -245,7 +247,7 @@ export function AdminInquiriesCRM({
         }}
       >
         {/* Filter Pills */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="crm-filter-pills" style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           {filterTabs.map((tab) => {
             const isSelected = (!currentStatus && tab.value === "") || currentStatus === tab.value;
             return (
@@ -262,6 +264,8 @@ export function AdminInquiriesCRM({
                   background: isSelected ? "var(--ink-crm)" : "var(--surface-raised)",
                   color: isSelected ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
                   cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
                   transition: "all 0.15s ease",
                 }}
               >
@@ -272,7 +276,11 @@ export function AdminInquiriesCRM({
         </div>
 
         {/* Search Input Box */}
-        <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: 8, minWidth: 260 }}>
+        <form
+          onSubmit={handleSearchSubmit}
+          className="crm-search-form"
+          style={{ display: "flex", gap: 8, flex: "1 1 240px", minWidth: 0 }}
+        >
           <div style={{ position: "relative", flex: 1 }}>
             <Search
               size={15}
@@ -342,6 +350,7 @@ export function AdminInquiriesCRM({
               columns={columns}
               data={inquiries}
               keyExtractor={(row) => row.id}
+              minWidth={740}
               onRowClick={(row) => setSelectedInquiryId(row.id)}
               onRowDoubleClick={(row) => router.push(`/admin/inquiry/${row.id}`)}
               emptyState={
@@ -471,6 +480,59 @@ export function AdminInquiriesCRM({
                     {selectedInquiry.message}
                   </p>
                 </div>
+
+                {/* Reference Material if available */}
+                {(selectedInquiry.referenceUrl || selectedInquiry.referenceImage) && (
+                  <div
+                    style={{
+                      background: "var(--card-bg-crm, var(--surface-raised))",
+                      border: "1px solid var(--border-hairline, var(--line))",
+                      borderRadius: 12,
+                      padding: "12px",
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-blue, #6C4CFF)", textTransform: "uppercase" }}>
+                      Reference &amp; Inspiration
+                    </div>
+                    {selectedInquiry.referenceUrl && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                        <span style={{ fontSize: 11, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          🔗 {selectedInquiry.referenceUrl}
+                        </span>
+                        <a
+                          href={selectedInquiry.referenceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontSize: 11, color: "var(--accent-blue)", fontWeight: 700, flexShrink: 0, textDecoration: "underline" }}
+                        >
+                          Visit &rarr;
+                        </a>
+                      </div>
+                    )}
+                    {selectedInquiry.referenceImage && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                        <img
+                          src={selectedInquiry.referenceImage}
+                          alt="Reference mockup"
+                          style={{ width: 44, height: 44, borderRadius: 6, objectFit: "cover", border: "1px solid var(--line)" }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-primary)" }}>Uploaded Asset</div>
+                          <a
+                            href={selectedInquiry.referenceImage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ fontSize: 11, color: "var(--accent-blue)", textDecoration: "underline" }}
+                          >
+                            View image &rarr;
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Quick Link Button */}
                 <Link

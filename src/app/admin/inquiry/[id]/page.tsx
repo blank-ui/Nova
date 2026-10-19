@@ -47,10 +47,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
   // Fetch all inquiries from this client
   const allInquiries = await prisma.inquiry.findMany({
     where: {
-      OR: [
-        { email: inquiry.email },
-        ...(inquiry.name ? [{ name: { contains: inquiry.name } }] : []),
-      ],
+      email: inquiry.email,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -116,6 +113,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
     <div style={{ display: "grid", gap: 20 }}>
       {/* Current Inquiry Status & Management Card */}
       <div
+        id="lead-inquiry-details"
         style={{
           background: "var(--paper-alt, rgba(0,0,0,0.02))",
           border: "1px solid var(--line)",
@@ -171,6 +169,148 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
           </p>
         </div>
 
+        {/* Reference Material & Inspiration Assets */}
+        {(inquiry.referenceUrl || inquiry.referenceImage) && (
+          <div
+            style={{
+              marginBottom: 18,
+              padding: "16px",
+              borderRadius: 12,
+              background: "var(--card-bg-crm, var(--surface-raised))",
+              border: "1px solid var(--border-hairline, var(--line))",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "var(--accent-blue, #6C4CFF)",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                display: "block",
+                marginBottom: 10,
+              }}
+            >
+              Client Reference &amp; Visual Inspiration
+            </span>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              {inquiry.referenceUrl && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    background: "var(--surface-raised, rgba(0,0,0,0.03))",
+                    border: "1px solid var(--border-hairline-light, var(--line))",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                      Benchmark Link:
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "var(--accent-blue, #6C4CFF)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {inquiry.referenceUrl}
+                    </span>
+                  </div>
+                  <a
+                    href={inquiry.referenceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="button button-outline"
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      height: "auto",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      flexShrink: 0,
+                    }}
+                  >
+                    Open Link &rarr;
+                  </a>
+                </div>
+              )}
+
+              {inquiry.referenceImage && (
+                <div>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "var(--text-secondary)",
+                      display: "block",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Uploaded Reference Mockup / Asset:
+                  </span>
+                  <div
+                    style={{
+                      position: "relative",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      border: "1px solid var(--border-hairline, var(--line))",
+                      maxWidth: 420,
+                      background: "var(--surface-raised)",
+                    }}
+                  >
+                    <img
+                      src={inquiry.referenceImage}
+                      alt="Client Reference Mockup"
+                      style={{
+                        width: "100%",
+                        maxHeight: 280,
+                        objectFit: "contain",
+                        display: "block",
+                        background: "rgba(0,0,0,0.02)",
+                      }}
+                    />
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        background: "var(--card-bg-crm, var(--paper))",
+                        borderTop: "1px solid var(--border-hairline, var(--line))",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: 11, color: "var(--muted)" }}>Client Provided Asset</span>
+                      <a
+                        href={inquiry.referenceImage}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: 11,
+                          color: "var(--accent-blue, #6C4CFF)",
+                          fontWeight: 600,
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Open Full Image &rarr;
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Status Update Form */}
         <div>
           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted-crm, var(--muted))", textTransform: "uppercase", display: "block", marginBottom: 8 }}>
@@ -181,9 +321,26 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
       </div>
 
       {/* Audit History */}
-      {auditLogs.length > 0 && (
-        <div style={{ background: "var(--surface-raised, var(--paper-alt))", border: "1px solid var(--border-hairline-light, var(--line))", borderRadius: 16, padding: 18 }}>
-          <h4 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>Audit History</h4>
+      <div
+        id="inquiry-audit-history"
+        style={{
+          background: "var(--surface-raised, var(--paper-alt))",
+          border: "1px solid var(--border-hairline-light, var(--line))",
+          borderRadius: 16,
+          padding: 18,
+          transition: "box-shadow 0.3s ease",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
+            Inquiry Audit &amp; Activity History
+          </h4>
+          <span style={{ fontSize: 11, color: "var(--text-muted-crm, var(--muted))" }}>
+            {auditLogs.length} logged {auditLogs.length === 1 ? "event" : "events"}
+          </span>
+        </div>
+
+        {auditLogs.length > 0 ? (
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {auditLogs.map((log) => {
               const meta = log.metadata as Record<string, unknown> | null;
@@ -200,6 +357,8 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 6,
                   }}
                 >
                   <div>
@@ -215,8 +374,12 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
               );
             })}
           </ul>
-        </div>
-      )}
+        ) : (
+          <div style={{ padding: "12px 14px", borderRadius: 8, background: "var(--card-bg-crm, var(--paper))", border: "1px dashed var(--border-hairline)", fontSize: 12, color: "var(--text-muted-crm)" }}>
+            Audit trail initialized &middot; Inquiry created on {new Date(inquiry.createdAt).toLocaleString()}. Any subsequent status changes or modifications will be recorded here.
+          </div>
+        )}
+      </div>
     </div>
   );
 

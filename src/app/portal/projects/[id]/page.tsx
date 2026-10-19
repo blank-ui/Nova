@@ -26,7 +26,7 @@ export default async function ProjectDetailsPage({ params }: ProjectDetailsPageP
   const pendingTasks = project.tasks.filter((t) => t.completedAt === null);
 
   return (
-    <main className="shell" style={{ padding: "50px 0 80px" }}>
+    <div className="animate-fade-in-up" style={{ width: "100%", paddingBottom: 40 }}>
       <div style={{ marginBottom: 24 }}>
         <Link
           href="/portal/projects"
@@ -73,7 +73,7 @@ export default async function ProjectDetailsPage({ params }: ProjectDetailsPageP
       )}
 
       {/* Progress Metric Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 36 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16, marginBottom: 36 }}>
         <div className="card" style={{ padding: 22 }}>
           <div style={{ color: "var(--muted)", fontSize: 13, marginBottom: 6 }}>Milestones Completed</div>
           <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.04em" }}>
@@ -122,9 +122,9 @@ export default async function ProjectDetailsPage({ params }: ProjectDetailsPageP
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 24 }}>
         {/* Milestones Preview Card */}
-        <section className="card" style={{ padding: 28 }}>
+        <section className="card" style={{ padding: "clamp(18px, 4vw, 28px)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div>
               <div className="eyebrow">Roadmap</div>
@@ -241,6 +241,6 @@ export default async function ProjectDetailsPage({ params }: ProjectDetailsPageP
           )}
         </section>
       </div>
-    </main>
+    </div>
   );
 }

@@ -15,6 +15,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
   return (
     <div
+      className="admin-page-wrapper"
       style={{
         minHeight: "100vh",
         background: "var(--page-bg)",
@@ -83,12 +84,12 @@ export function AdminShell({ user, children }: AdminShellProps) {
                 &copy; {currentYear} All Sky Fares LLC &middot; Nova Studio Platform &middot; Production Enterprise Edition
               </div>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-                <Link href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms of Service</Link>
-                <Link href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy Policy</Link>
-                <Link href="/cookies" style={{ color: "inherit", textDecoration: "none" }}>Cookie Preferences</Link>
-                <Link href="/support-policy" style={{ color: "inherit", textDecoration: "none" }}>Support SLA</Link>
-                <Link href="/refund-policy" style={{ color: "inherit", textDecoration: "none" }}>Refund Policy</Link>
-                <Link href="/accessibility" style={{ color: "inherit", textDecoration: "none" }}>Accessibility</Link>
+                <Link href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>Terms of Service</Link>
+                <Link href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>Privacy Policy</Link>
+                <Link href="/cookies" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>Cookie Preferences</Link>
+                <Link href="/support-policy" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>Support SLA</Link>
+                <Link href="/refund-policy" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>Refund Policy</Link>
+                <Link href="/accessibility" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>Accessibility</Link>
               </div>
             </footer>
           </main>
@@ -105,20 +106,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
             flex-direction: column !important;
             gap: 16px !important;
           }
-          .left-rail-container {
-            width: 100% !important;
-            flex-direction: row !important;
-            justifyContent: flex-start !important;
-            border-radius: var(--radius-pill) !important;
-            overflow-x: auto !important;
-            padding: 8px 12px !important;
-            gap: 8px !important;
-            scrollbar-width: none !important;
-            -ms-overflow-style: none !important;
-            -webkit-overflow-scrolling: touch !important;
-          }
-          .left-rail-container::-webkit-scrollbar {
-            display: none !important;
+          .topbar-header {
+            flex-wrap: wrap !important;
           }
           .topbar-nav-pill-track {
             order: 3 !important;
@@ -126,8 +115,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
             display: flex !important;
             justify-content: flex-start !important;
             overflow-x: auto !important;
-            padding-bottom: 6px !important;
-            margin-top: 6px !important;
+            padding-bottom: 4px !important;
+            margin-top: 4px !important;
             scrollbar-width: none !important;
             -ms-overflow-style: none !important;
             -webkit-overflow-scrolling: touch !important;
@@ -137,9 +126,25 @@ export function AdminShell({ user, children }: AdminShellProps) {
           }
         }
         @media (max-width: 600px) {
+          .admin-page-wrapper {
+            padding: 6px 6px 84px !important;
+          }
           .admin-app-shell {
             padding: 12px 10px 18px !important;
             border-radius: 16px !important;
+          }
+          .topbar-header {
+            padding-bottom: 12px !important;
+            gap: 10px !important;
+          }
+          .topbar-actions {
+            gap: 6px !important;
+          }
+          .topbar-actions > button,
+          .topbar-actions > a > div,
+          .topbar-actions .avatar-wrapper {
+            width: 38px !important;
+            height: 38px !important;
           }
         }
       `}</style>

@@ -67,6 +67,8 @@ export default async function InquiryList({
     service: inq.service,
     budget: inq.budget,
     message: inq.message,
+    referenceUrl: inq.referenceUrl,
+    referenceImage: inq.referenceImage,
     status: inq.status,
     createdAt: inq.createdAt.toISOString(),
   }));

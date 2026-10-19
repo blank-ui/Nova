@@ -12,6 +12,8 @@ export async function sendDiscordInquiryNotification(inquiry: {
   service: string;
   budget?: string | null;
   message: string;
+  referenceUrl?: string | null;
+  referenceImage?: string | null;
 }): Promise<boolean> {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl) return false;
@@ -34,6 +36,8 @@ export async function sendDiscordInquiryNotification(inquiry: {
             ...(inquiry.phone ? [{ name: "Phone", value: inquiry.phone, inline: true }] : []),
             ...(inquiry.company ? [{ name: "Company", value: inquiry.company, inline: true }] : []),
             ...(inquiry.id ? [{ name: "Reference", value: `\`${inquiry.id}\``, inline: true }] : []),
+            ...(inquiry.referenceUrl ? [{ name: "Reference URL", value: inquiry.referenceUrl, inline: false }] : []),
+            ...(inquiry.referenceImage ? [{ name: "Reference File", value: inquiry.referenceImage, inline: false }] : []),
           ],
           footer: {
             text: "Nova Studio Operations • All Sky Fares LLC",

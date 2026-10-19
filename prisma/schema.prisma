@@ -145,6 +145,8 @@ model Inquiry {
   service   String
   budget    String?
   message   String        @db.Text
+  referenceUrl   String?  @db.Text
+  referenceImage String?  @db.Text
   status    InquiryStatus @default(NEW)
   createdAt DateTime      @default(now())
   @@index([status, createdAt])

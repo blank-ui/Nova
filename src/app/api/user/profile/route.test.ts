@@ -16,6 +16,11 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    authVerification: {
+      findFirst: vi.fn(),
+      deleteMany: vi.fn(),
+      create: vi.fn(),
+    },
   },
 }));
 
@@ -59,9 +64,14 @@ describe("User Profile API (/api/user/profile)", () => {
   });
 
   describe("PATCH /api/user/profile", () => {
-    it("updates name, phone, and dateOfBirth", async () => {
+    it("updates name, phone, and dateOfBirth without OTP when user has no existing phone", async () => {
       vi.mocked(getCurrentSession).mockResolvedValue({
         user: { id: "user-1", email: "user@nova.test" },
+      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        email: "user@nova.test",
+        phone: null, // First time setting phone
       } as any);
       vi.mocked(prisma.user.update).mockResolvedValue({
         id: "user-1",
@@ -90,9 +100,103 @@ describe("User Profile API (/api/user/profile)", () => {
       expect(data.user.phone).toBe("+1 555 123 4567");
     });
 
+    it("requires OTP when updating an already saved phone number", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({
+        user: { id: "user-1", email: "user@nova.test" },
+      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        email: "user@nova.test",
+        phone: "+1 555 000 1111", // Already saved
+      } as any);
+
+      const req = new Request("http://localhost:3000/api/user/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          phone: "+1 555 999 8888",
+        }),
+      });
+
+      const res = await PATCH(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.otpRequired).toBe(true);
+      expect(data.error).toMatch(/verification code/i);
+    });
+
+    it("rejects phone update with incorrect or expired OTP", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({
+        user: { id: "user-1", email: "user@nova.test" },
+      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        email: "user@nova.test",
+        phone: "+1 555 000 1111",
+      } as any);
+      vi.mocked(prisma.authVerification.findFirst).mockResolvedValue(null);
+
+      const req = new Request("http://localhost:3000/api/user/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          phone: "+1 555 999 8888",
+          otp: "123456",
+        }),
+      });
+
+      const res = await PATCH(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toMatch(/expired|invalid/i);
+    });
+
+    it("accepts phone update with valid OTP and consumes the code", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({
+        user: { id: "user-1", email: "user@nova.test" },
+      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        email: "user@nova.test",
+        phone: "+1 555 000 1111",
+      } as any);
+      vi.mocked(prisma.authVerification.findFirst).mockResolvedValue({
+        id: "v-1",
+        identifier: "phone-otp:user-1",
+        value: "654321:+1 555 999 8888",
+        expiresAt: new Date(Date.now() + 60000),
+      } as any);
+      vi.mocked(prisma.user.update).mockResolvedValue({
+        id: "user-1",
+        phone: "+1 555 999 8888",
+        email: "user@nova.test",
+      } as any);
+
+      const req = new Request("http://localhost:3000/api/user/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          phone: "+1 555 999 8888",
+          otp: "654321",
+        }),
+      });
+
+      const res = await PATCH(req);
+      expect(res.status).toBe(200);
+      expect(prisma.authVerification.deleteMany).toHaveBeenCalledWith({
+        where: { identifier: "phone-otp:user-1" },
+      });
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.user.phone).toBe("+1 555 999 8888");
+    });
+
     it("rejects future date of birth", async () => {
       vi.mocked(getCurrentSession).mockResolvedValue({
         user: { id: "user-1", email: "user@nova.test" },
+      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        email: "user@nova.test",
+        phone: null,
+        role: "CLIENT",
       } as any);
 
       const req = new Request("http://localhost:3000/api/user/profile", {
@@ -107,5 +211,33 @@ describe("User Profile API (/api/user/profile)", () => {
       const data = await res.json();
       expect(data.error).toMatch(/future/i);
     });
+
+    it("rejects date of birth for clients under 13 years old", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({
+        user: { id: "user-1", email: "user@nova.test" },
+      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        email: "user@nova.test",
+        phone: null,
+        role: "CLIENT",
+      } as any);
+
+      // 5 years ago
+      const recentDob = new Date(Date.now() - 5 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+      const req = new Request("http://localhost:3000/api/user/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          dateOfBirth: recentDob,
+        }),
+      });
+
+      const res = await PATCH(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toMatch(/13 years/i);
+    });
   });
 });
+

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, FolderKanban } from "lucide-react";
+import { Shield, FolderKanban, Calendar } from "lucide-react";
 import { NovaLogo, NovaMascotAvatar } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";
@@ -12,6 +12,7 @@ export function PortalNav({ userName, userRole }: { userName: string; userRole: 
 
   const isOverview = pathname === "/portal";
   const isProjects = pathname?.startsWith("/portal/projects");
+  const isAppointments = pathname?.startsWith("/portal/appointments");
   const isSecurity = pathname === "/portal/security";
 
   return (
@@ -36,7 +37,7 @@ export function PortalNav({ userName, userRole }: { userName: string; userRole: 
           gap: 16,
         }}
       >
-        <div className="no-scrollbar" style={{ display: "flex", alignItems: "center", gap: 24, overflowX: "auto" }}>
+        <div className="no-scrollbar" style={{ display: "flex", alignItems: "center", gap: 24, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <Link
             href="/"
             style={{
@@ -91,6 +92,13 @@ export function PortalNav({ userName, userRole }: { userName: string; userRole: 
               style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
             >
               <FolderKanban size={15} /> Projects
+            </Link>
+            <Link
+              className={`nav-link ${isAppointments ? "nav-link-active" : ""}`}
+              href="/portal/appointments"
+              style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
+            >
+              <Calendar size={15} /> Appointments
             </Link>
             <Link
               className={`nav-link ${isSecurity ? "nav-link-active" : ""}`}

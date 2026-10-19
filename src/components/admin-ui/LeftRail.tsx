@@ -26,13 +26,7 @@ export function LeftRail() {
   const isPortal = pathname?.startsWith("/portal");
 
   const [searchOpen, setSearchOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Create form states
-  const [projectName, setProjectName] = useState("");
-  const [projectDesc, setProjectDesc] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const adminNavItems = [
     {
@@ -43,10 +37,35 @@ export function LeftRail() {
       icon: <Search size={18} strokeWidth={1.8} />,
     },
     {
+      id: "overview",
+      label: "Admin Overview",
+      href: "/admin",
+      icon: <Home size={18} strokeWidth={1.8} />,
+    },
+    {
       id: "inquiry",
       label: "Customer Inquiries (CRM)",
       href: "/admin/inquiry",
       icon: <MessageSquare size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "projects",
+      label: "Client Projects & Workspaces",
+      href: "/admin/projects",
+      icon: <Folder size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "quick-create",
+      label: "Provision Workspace Project (+)",
+      isAction: true,
+      onClick: () => {
+        if (pathname?.startsWith("/admin/projects") || pathname === "/admin") {
+          window.dispatchEvent(new CustomEvent("nova:open-create-project"));
+        } else {
+          router.push("/admin/projects?create=project");
+        }
+      },
+      icon: <Plus size={18} strokeWidth={1.8} />,
     },
     {
       id: "appointments",
@@ -61,23 +80,10 @@ export function LeftRail() {
       icon: <Users size={18} strokeWidth={1.8} />,
     },
     {
-      id: "quick-create",
-      label: "Quick Provision (+)",
-      isAction: true,
-      onClick: () => setCreateOpen(true),
-      icon: <Plus size={18} strokeWidth={1.8} />,
-    },
-    {
       id: "showcase",
       label: "GitHub & Gallery Showcase",
       href: "/admin/showcase",
       icon: <ImageIcon size={18} strokeWidth={1.8} />,
-    },
-    {
-      id: "projects",
-      label: "Client Projects & Workspaces",
-      href: "/admin/projects",
-      icon: <Folder size={18} strokeWidth={1.8} />,
     },
     {
       id: "security",
@@ -133,7 +139,6 @@ export function LeftRail() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setSearchOpen(false);
-        setCreateOpen(false);
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -152,44 +157,6 @@ export function LeftRail() {
       router.push(`/portal/projects?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
       router.push(`/admin/inquiry?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  }
-
-  async function handleQuickProjectCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!projectName.trim()) {
-      toast.error("Please enter a project title.", "Required");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const res = await fetch("/api/admin/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: projectName.trim(),
-          description: projectDesc.trim() || null,
-          clientId: "admin",
-          status: "IN_PROGRESS",
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to create project");
-      }
-
-      toast.success(`Project "${projectName}" provisioned successfully!`, "Created");
-      setProjectName("");
-      setProjectDesc("");
-      setCreateOpen(false);
-      router.push(`/admin/projects`);
-      router.refresh();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Error creating project", "Failed");
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -378,161 +345,6 @@ export function LeftRail() {
                 </>
               )}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Create Project Slide-Over Drawer */}
-      {createOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10, 12, 18, 0.45)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "stretch",
-            zIndex: 1000,
-          }}
-          onClick={() => setCreateOpen(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="drawer-slide-in drawer-responsive"
-            style={{
-              background: "var(--surface-raised)",
-              width: "min(480px, 100%)",
-              height: "100%",
-              maxHeight: "100vh",
-              padding: "28px 24px",
-              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
-              borderLeft: "1px solid var(--border-hairline)",
-              display: "flex",
-              flexDirection: "column",
-              overflowY: "auto",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent-blue)", color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                  <Plus size={18} />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
-                    Quick Provision Project
-                  </h3>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
-                    Instantly create an active workspace project
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCreateOpen(false)}
-                aria-label="Close"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--card-bg-crm)",
-                  color: "var(--text-primary)",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleQuickProjectCreate} style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Project Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Next.js SaaS Platform Redesign"
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-primary)" }}>
-                  Scope / Summary (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Brief deliverables, tech stack, or milestones..."
-                  value={projectDesc}
-                  onChange={(e) => setProjectDesc(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                    resize: "vertical",
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 16 }}>
-                <button
-                  type="button"
-                  onClick={() => setCreateOpen(false)}
-                  style={{
-                    flex: 1,
-                    padding: "12px",
-                    borderRadius: 99,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--card-bg-crm)",
-                    color: "var(--text-primary)",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{
-                    flex: 1.3,
-                    padding: "12px",
-                    borderRadius: 99,
-                    border: "none",
-                    background: "var(--ink-crm)",
-                    color: "var(--ink-crm-text, #FFFFFF)",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: isSubmitting ? "not-allowed" : "pointer",
-                    opacity: isSubmitting ? 0.7 : 1,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {isSubmitting ? "Provisioning..." : "Provision Project"}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

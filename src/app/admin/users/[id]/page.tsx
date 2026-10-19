@@ -29,13 +29,10 @@ export default async function AdminUserProfilePage({ params }: AdminUserProfileP
     notFound();
   }
 
-  // Query inquiries associated with this client's email or name
+  // Query inquiries associated with this client's email
   const inquiries = await prisma.inquiry.findMany({
     where: {
-      OR: [
-        { email: user.email },
-        ...(user.name ? [{ name: { contains: user.name } }] : []),
-      ],
+      email: user.email,
     },
     orderBy: { createdAt: "desc" },
   });

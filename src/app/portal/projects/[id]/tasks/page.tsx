@@ -23,7 +23,7 @@ export default async function ProjectTasksPage({ params }: TasksPageProps) {
   const completedTasks = project.tasks.filter((t) => t.completedAt !== null);
 
   return (
-    <main className="shell" style={{ padding: "50px 0 80px" }}>
+    <div className="animate-fade-in-up" style={{ width: "100%", paddingBottom: 40 }}>
       <div style={{ marginBottom: 24 }}>
         <Link
           href={`/portal/projects/${project.id}`}
@@ -75,10 +75,11 @@ export default async function ProjectTasksPage({ params }: TasksPageProps) {
                     key={t.id}
                     className="card"
                     style={{
-                      padding: "16px 20px",
+                      padding: "clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px)",
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
+                      flexWrap: "wrap",
                       gap: 12,
                     }}
                   >
@@ -112,7 +113,7 @@ export default async function ProjectTasksPage({ params }: TasksPageProps) {
           {completedTasks.length > 0 && (
             <section>
               <h2 style={{ fontSize: 20, letterSpacing: "-0.03em", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                <CheckCircle2 size={18} color="#2b6a49" /> Completed ({completedTasks.length})
+                <CheckCircle2 size={18} color="var(--brand-teal, #10b981)" /> Completed ({completedTasks.length})
               </h2>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -121,13 +122,14 @@ export default async function ProjectTasksPage({ params }: TasksPageProps) {
                     key={t.id}
                     className="card"
                     style={{
-                      padding: "16px 20px",
+                      padding: "clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px)",
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
+                      flexWrap: "wrap",
                       gap: 12,
                       opacity: 0.85,
-                      backgroundColor: "rgba(255, 255, 255, 0.7)",
+                      backgroundColor: "var(--card-bg)",
                     }}
                   >
                     <div>
@@ -144,8 +146,8 @@ export default async function ProjectTasksPage({ params }: TasksPageProps) {
                         borderRadius: 20,
                         fontSize: 11,
                         fontWeight: 700,
-                        backgroundColor: "#e6f9ed",
-                        color: "#1e4620",
+                        backgroundColor: "rgba(16, 185, 129, 0.12)",
+                        color: "#10b981",
                       }}
                     >
                       Done
@@ -157,6 +159,6 @@ export default async function ProjectTasksPage({ params }: TasksPageProps) {
           )}
         </div>
       )}
-    </main>
+    </div>
   );
 }

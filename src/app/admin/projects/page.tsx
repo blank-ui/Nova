@@ -13,7 +13,7 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
   const session = await requireAdmin();
   const resolvedParams = searchParams ? await searchParams : {};
 
-  // Fetch all client users
+  // Fetch all registered users with their projects
   const clients = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -27,7 +27,14 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
     },
   });
 
-  const selectedClientId = resolvedParams.clientId || clients[0]?.id || session.user.id;
+  // Separate client users from staff users
+  const clientUsers = clients.filter((c) => c.role === "CLIENT");
+  const staffUsers = clients.filter((c) => c.role !== "CLIENT");
+
+  // If a specific clientId was requested, use it; otherwise prefer first real client, falling back to session admin
+  const selectedClientId =
+    resolvedParams.clientId || (clientUsers.length > 0 ? clientUsers[0].id : session.user.id);
+
   let targetUser: (typeof clients)[number] | null = clients.find((c) => c.id === selectedClientId) ?? null;
 
   if (!targetUser) {
@@ -53,13 +60,12 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
     );
   }
 
-  // Fetch inquiries for this target client
+  const isAdminWorkspace = targetUser.role === "ADMIN";
+
+  // Fetch inquiries for this target account
   const inquiries = await prisma.inquiry.findMany({
     where: {
-      OR: [
-        { email: targetUser.email },
-        ...(targetUser.name ? [{ name: { contains: targetUser.name } }] : []),
-      ],
+      email: targetUser.email,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -91,10 +97,10 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
 
   return (
     <div className="animate-fade-in-up" style={{ width: "100%" }}>
-      {/* Page Header */}
+      {/* Page Header - distinctly tailored for Admin Workspace vs Client Workspaces */}
       <PageHeader
-        titleLine1="Client Projects &"
-        titleLine2="Workspaces"
+        titleLine1={isAdminWorkspace ? "Workspace &" : "Client Projects &"}
+        titleLine2={isAdminWorkspace ? "Projects" : "Workspaces"}
         backHref="/admin"
         stats={[
           {
@@ -102,13 +108,13 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
             value: targetUser.projects.length,
             badgeLabel: "Projects",
             badgeVariant: "info",
-            caption: "Active client deliverables",
+            caption: isAdminWorkspace ? "Internal studio deliverables" : "Active client deliverables",
           },
           {
             icon: <User size={18} strokeWidth={1.8} />,
             value: targetUser.name,
-            badgeLabel: "Client",
-            badgeVariant: "brand",
+            badgeLabel: targetUser.role === "ADMIN" ? "Admin" : targetUser.role === "DEVELOPER" ? "Developer" : targetUser.role === "FINANCE" ? "Finance" : "Client",
+            badgeVariant: targetUser.role === "ADMIN" ? "info" : "brand",
             caption: targetUser.email,
           },
           {
@@ -116,31 +122,60 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
             value: inquiries.length,
             badgeLabel: "Inquiries",
             badgeVariant: "warning",
-            caption: "Customer submissions",
+            caption: isAdminWorkspace ? "Studio submissions logged" : "Customer submissions",
           },
         ]}
       />
 
-      {/* Client Quick Switcher Bar for Admins */}
-      {clients.length > 1 && (
-        <div style={{ marginBottom: 20 }}>
-          <div
+      {/* Clear Workspace Switcher: Admin Workspace vs Clients */}
+      <div style={{ marginBottom: 20 }}>
+        <div
+          style={{
+            padding: "10px 16px",
+            background: "var(--surface-raised)",
+            border: "1px solid var(--border-hairline)",
+            borderRadius: 14,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            fontSize: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontWeight: 700, color: "var(--text-muted-crm)", textTransform: "uppercase", fontSize: 10, whiteSpace: "nowrap" }}>
+            Workspace:
+          </span>
+
+          {/* Admin Workspace Tab */}
+          <Link
+            href={`/admin/projects?clientId=${session.user.id}`}
             style={{
-              padding: "10px 16px",
-              background: "var(--surface-raised)",
-              border: "1px solid var(--border-hairline)",
+              padding: "5px 14px",
               borderRadius: "var(--radius-pill)",
-              display: "flex",
+              background: targetUser.id === session.user.id ? "var(--ink-crm)" : "transparent",
+              color: targetUser.id === session.user.id ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
+              fontWeight: targetUser.id === session.user.id ? 700 : 500,
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+              border: targetUser.id === session.user.id ? "none" : "1px solid var(--border-hairline)",
+              display: "inline-flex",
               alignItems: "center",
-              gap: 8,
-              overflowX: "auto",
-              fontSize: 12,
+              gap: 5,
+              transition: "all 0.15s ease",
             }}
           >
-            <span style={{ fontWeight: 700, color: "var(--text-muted-crm)", textTransform: "uppercase", fontSize: 10, whiteSpace: "nowrap" }}>
-              Switch Client:
-            </span>
-            {clients.map((c) => {
+            <span>👑</span>
+            <span>Admin Workspace ({session.user.name})</span>
+          </Link>
+
+          <span style={{ color: "var(--border-hairline)", margin: "0 2px" }}>|</span>
+
+          {/* Client Workspaces List */}
+          {clientUsers.length > 0 ? (
+            clientUsers.map((c) => {
               const isActive = c.id === targetUser?.id;
               return (
                 <Link
@@ -155,23 +190,35 @@ export default async function AdminProjectsPage({ searchParams }: AdminProjectsP
                     textDecoration: "none",
                     whiteSpace: "nowrap",
                     border: isActive ? "none" : "1px solid var(--border-hairline)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
                     transition: "all 0.15s ease",
                   }}
                 >
-                  {c.name} ({c.projects.length} proj)
+                  <span>👤</span>
+                  <span>{c.name} ({c.projects.length} proj)</span>
                 </Link>
               );
-            })}
-          </div>
+            })
+          ) : (
+            <span style={{ color: "var(--text-muted-crm)", fontSize: 11, fontStyle: "italic" }}>
+              No registered client accounts yet &middot; Leads managed in{" "}
+              <Link href="/admin/inquiry" style={{ color: "var(--accent-blue, #6C4CFF)", textDecoration: "underline" }}>
+                Inquiries
+              </Link>
+            </span>
+          )}
         </div>
-      )}
+      </div>
 
       <ClientProfileCRM
         user={serializedUser}
         inquiries={serializedInquiries}
         currentAdminId={session.user.id}
         backUrl="/admin"
-        pageTitle="Customer Information"
+        pageTitle={isAdminWorkspace ? "Admin Workspace Account" : "Customer Information"}
+        showHeader={false}
       />
     </div>
   );

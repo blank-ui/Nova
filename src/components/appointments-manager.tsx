@@ -17,6 +17,8 @@ import {
   User,
   Users,
   Search,
+  ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import {
   PageHeader,
@@ -28,6 +30,7 @@ import {
   ConfirmModal,
 } from "@/components/admin-ui";
 import { useToast } from "@/components/toast";
+import { getIndianHoliday } from "@/lib/indian-holidays";
 
 export interface AppointmentItem {
   id: string;
@@ -98,6 +101,14 @@ export function AppointmentsManager({
   const currentTimeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const isTodaySelected = dateStr === todayStr;
   const timeMin = isTodaySelected ? currentTimeStr : undefined;
+
+  const selectedDateHoliday = dateStr ? (() => {
+    const parts = dateStr.split("-").map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      return getIndianHoliday(parts[0], parts[1] - 1, parts[2]);
+    }
+    return null;
+  })() : null;
 
   // Reschedule / Link modal
   const [editingItem, setEditingItem] = useState<AppointmentItem | null>(null);
@@ -274,6 +285,460 @@ export function AppointmentsManager({
     }
   }
 
+  if (modalOpen) {
+    return (
+      <div className="animate-fade-in-up" style={{ width: "100%", maxWidth: 840, margin: "0 auto", paddingBottom: 40 }}>
+        {/* Navigation Bar */}
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={() => setModalOpen(false)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary)",
+              background: "var(--card-bg-crm)",
+              border: "1px solid var(--border-hairline)",
+              borderRadius: "var(--radius-pill)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Appointments
+          </button>
+        </div>
+
+        <SectionCard
+          title={isStaff ? "Set Client Appointment" : "Request Studio Appointment"}
+          headerRight={
+            <Badge variant="info">
+              {isStaff ? "Direct Booking" : "Consultation Request"}
+            </Badge>
+          }
+        >
+          <p style={{ margin: "-8px 0 20px", fontSize: 13, color: "var(--text-muted-crm)" }}>
+            {isStaff
+              ? "Directly provision and schedule an initiative session for a client workspace."
+              : "Choose a convenient date & topic for project discussion with our team."}
+          </p>
+          <form onSubmit={handleCreateAppointment} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Meeting Title / Purpose <span style={{ color: "var(--accent-blue)" }}>*</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Design Architecture Review & Sprint Scoping"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {isStaff && clientsList.length > 0 && (
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Client Workspace <span style={{ color: "var(--accent-blue)" }}>*</span>
+                </label>
+                <select
+                  value={selectedClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                    cursor: "pointer",
+                  }}
+                >
+                  {clientsList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* 2-Column Date & Time Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Date <span style={{ color: "var(--accent-blue)" }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  min={todayStr}
+                  value={dateStr}
+                  onChange={(e) => setDateStr(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                {selectedDateHoliday && (
+                  <div style={{ marginTop: 6, fontSize: 11, color: "#d97706", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                    <span>🇮🇳</span>
+                    <span>{selectedDateHoliday.name} ({selectedDateHoliday.type} Holiday)</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Time <span style={{ color: "var(--accent-blue)" }}>*</span>
+                </label>
+                <input
+                  type="time"
+                  required
+                  min={timeMin}
+                  value={timeStr}
+                  onChange={(e) => setTimeStr(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Interactive Duration Segmented Pills */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Session Duration
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 8 }}>
+                {[
+                  { label: "15 min", value: "15" },
+                  { label: "30 min", value: "30" },
+                  { label: "45 min", value: "45" },
+                  { label: "60 min", value: "60" },
+                ].map((pill) => {
+                  const active = duration === pill.value;
+                  return (
+                    <button
+                      key={pill.value}
+                      type="button"
+                      onClick={() => setDuration(pill.value)}
+                      style={{
+                        padding: "10px 0",
+                        borderRadius: 10,
+                        border: active
+                          ? "1px solid var(--accent-blue)"
+                          : "1px solid var(--border-hairline)",
+                        background: active
+                          ? "var(--accent-blue)"
+                          : "var(--surface-raised)",
+                        color: active ? "#ffffff" : "var(--text-secondary)",
+                        fontSize: 12,
+                        fontWeight: active ? 700 : 500,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                        textAlign: "center",
+                      }}
+                    >
+                      {pill.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {isStaff && (
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Meeting Link (Google Meet / Zoom)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://meet.google.com/..."
+                  value={meetingLink}
+                  onChange={(e) => setMeetingLink(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            )}
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Description / Agenda <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Key deliverables, topics or questions to cover..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: 70,
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  resize: "vertical",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 12,
+                alignItems: "center",
+                paddingTop: 16,
+                borderTop: "1px solid var(--border-hairline-light)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={actionBusy}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "none",
+                  background: "var(--ink-crm)",
+                  color: "var(--ink-crm-text, #FFFFFF)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: actionBusy ? "not-allowed" : "pointer",
+                  opacity: actionBusy ? 0.7 : 1,
+                  transition: "all 0.15s ease",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {actionBusy ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" /> Submitting...
+                  </>
+                ) : isStaff ? (
+                  "Schedule Appointment"
+                ) : (
+                  "Submit Request"
+                )}
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+      </div>
+    );
+  }
+
+  if (editingItem) {
+    return (
+      <div className="animate-fade-in-up" style={{ width: "100%", maxWidth: 840, margin: "0 auto", paddingBottom: 40 }}>
+        {/* Navigation Bar */}
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={() => setEditingItem(null)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary)",
+              background: "var(--card-bg-crm)",
+              border: "1px solid var(--border-hairline)",
+              borderRadius: "var(--radius-pill)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Appointments
+          </button>
+        </div>
+
+        <SectionCard
+          title="Reschedule / Update Appointment"
+          headerRight={
+            <Badge variant="neutral">
+              {editingItem.status}
+            </Badge>
+          }
+        >
+          <p style={{ margin: "-8px 0 20px", fontSize: 13, color: "var(--text-muted-crm)" }}>
+            {`Adjust meeting time or conference link for "${editingItem.title}".`}
+          </p>
+          <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Date &amp; Time
+              </label>
+              <input
+                type="datetime-local"
+                min={getLocalDatetimeString()}
+                value={editDateStr}
+                onChange={(e) => setEditDateStr(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Meeting Link
+              </label>
+              <input
+                type="url"
+                placeholder="https://meet.google.com/..."
+                value={editMeetingLink}
+                onChange={(e) => setEditMeetingLink(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 12,
+                alignItems: "center",
+                paddingTop: 16,
+                borderTop: "1px solid var(--border-hairline-light)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setEditingItem(null)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={actionBusy}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "none",
+                  background: "var(--ink-crm)",
+                  color: "var(--ink-crm-text, #FFFFFF)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: actionBusy ? "not-allowed" : "pointer",
+                  opacity: actionBusy ? 0.7 : 1,
+                  transition: "all 0.15s ease",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {actionBusy ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" /> Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in-up" style={{ width: "100%" }}>
       {/* Page Header */}
@@ -316,7 +781,7 @@ export function AppointmentsManager({
           marginBottom: 20,
         }}
       >
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="crm-filter-pills" style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           {[
             { label: "All Sessions", value: "ALL" },
             { label: "Scheduled", value: "SCHEDULED" },
@@ -450,6 +915,7 @@ export function AppointmentsManager({
               return (
                 <div
                   key={app.id}
+                  className="appointment-item"
                   style={{
                     padding: "16px 20px",
                     background: "var(--surface-raised)",
@@ -463,7 +929,7 @@ export function AppointmentsManager({
                   }}
                 >
                   {/* Left: Calendar badge + User & Title */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 260, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: "min(100%, 240px)", flex: 1 }}>
                     <div
                       style={{
                         display: "flex",
@@ -525,7 +991,7 @@ export function AppointmentsManager({
                   </div>
 
                   {/* Center: Date, Time & Meeting Link */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                  <div className="appointment-item-center" style={{ display: "flex", alignItems: "center", gap: 20 }}>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                         {formattedDate}
@@ -565,7 +1031,7 @@ export function AppointmentsManager({
                   </div>
 
                   {/* Right: Actions */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div className="appointment-item-actions" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     {isStaff && (
                       <>
                         {app.status === "REQUESTED" && (
@@ -682,597 +1148,8 @@ export function AppointmentsManager({
         )}
       </SectionCard>
 
-      {/* Set / Request Appointment Centered Modal Dialog */}
-      {modalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10, 12, 18, 0.65)",
-            backdropFilter: "blur(6px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
-          onClick={() => setModalOpen(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="animate-fade-in-up"
-            style={{
-              background: "var(--card-bg-crm)",
-              width: "100%",
-              maxWidth: 520,
-              maxHeight: "min(90vh, 720px)",
-              borderRadius: "var(--radius-card)",
-              border: "1px solid var(--border-hairline-light)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                flexShrink: 0,
-                padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline-light)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "var(--card-bg-crm)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: "rgba(14, 165, 233, 0.12)",
-                    border: "1px solid rgba(14, 165, 233, 0.25)",
-                    color: "var(--accent-blue)",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Calendar size={18} />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-                    {isStaff ? "Set Client Appointment" : "Request Studio Appointment"}
-                  </h3>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
-                    {isStaff
-                      ? "Directly provision and schedule an initiative session"
-                      : "Choose a convenient date & topic for project discussion"}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                aria-label="Close"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                  transition: "color 0.15s ease, background 0.15s ease",
-                }}
-              >
-                <X size={15} />
-              </button>
-            </div>
 
-            {/* Form Wrapping Scrollable Body & Pinned Footer */}
-            <form
-              onSubmit={handleCreateAppointment}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: "1 1 auto",
-                minHeight: 0,
-                overflow: "hidden",
-              }}
-            >
-              {/* Scrollable Form Body */}
-              <div
-                className="drawer-content"
-                style={{
-                  flex: "1 1 auto",
-                  overflowY: "auto",
-                  padding: "20px 24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                }}
-              >
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Meeting Title / Purpose <span style={{ color: "var(--accent-blue)" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Design Architecture Review & Sprint Scoping"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
 
-                {isStaff && clientsList.length > 0 && (
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Client Workspace <span style={{ color: "var(--accent-blue)" }}>*</span>
-                    </label>
-                    <select
-                      value={selectedClientId}
-                      onChange={(e) => setSelectedClientId(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {clientsList.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.email})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* 2-Column Date & Time Grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Date <span style={{ color: "var(--accent-blue)" }}>*</span>
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      min={todayStr}
-                      value={dateStr}
-                      onChange={(e) => setDateStr(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Time <span style={{ color: "var(--accent-blue)" }}>*</span>
-                    </label>
-                    <input
-                      type="time"
-                      required
-                      min={timeMin}
-                      value={timeStr}
-                      onChange={(e) => setTimeStr(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Interactive Duration Segmented Pills */}
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Session Duration
-                  </label>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                    {[
-                      { label: "15 min", value: "15" },
-                      { label: "30 min", value: "30" },
-                      { label: "45 min", value: "45" },
-                      { label: "60 min", value: "60" },
-                    ].map((pill) => {
-                      const active = duration === pill.value;
-                      return (
-                        <button
-                          key={pill.value}
-                          type="button"
-                          onClick={() => setDuration(pill.value)}
-                          style={{
-                            padding: "9px 0",
-                            borderRadius: 10,
-                            border: active
-                              ? "1px solid var(--accent-blue)"
-                              : "1px solid var(--border-hairline)",
-                            background: active
-                              ? "var(--accent-blue)"
-                              : "var(--surface-raised)",
-                            color: active ? "#ffffff" : "var(--text-secondary)",
-                            fontSize: 12,
-                            fontWeight: active ? 700 : 500,
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                            textAlign: "center",
-                          }}
-                        >
-                          {pill.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {isStaff && (
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Meeting Link (Google Meet / Zoom)
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="https://meet.google.com/..."
-                      value={meetingLink}
-                      onChange={(e) => setMeetingLink(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Description / Agenda <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Key deliverables, topics or questions to cover..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    style={{
-                      width: "100%",
-                      minHeight: 56,
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      resize: "vertical",
-                      outline: "none",
-                      boxSizing: "border-box",
-                      fontFamily: "inherit",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Pinned Sticky Footer - Always Visible */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  padding: "16px 24px",
-                  borderTop: "1px solid var(--border-hairline-light)",
-                  background: "var(--card-bg-crm)",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 12,
-                  alignItems: "center",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionBusy}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "none",
-                    background: "var(--ink-crm)",
-                    color: "var(--ink-crm-text, #FFFFFF)",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: actionBusy ? "not-allowed" : "pointer",
-                    opacity: actionBusy ? 0.7 : 1,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {actionBusy
-                    ? "Submitting..."
-                    : isStaff
-                    ? "Schedule Appointment"
-                    : "Submit Request"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit / Reschedule Centered Modal Dialog */}
-      {editingItem && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10, 12, 18, 0.65)",
-            backdropFilter: "blur(6px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
-          onClick={() => setEditingItem(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="animate-fade-in-up"
-            style={{
-              background: "var(--card-bg-crm)",
-              width: "100%",
-              maxWidth: 480,
-              maxHeight: "min(90vh, 600px)",
-              borderRadius: "var(--radius-card)",
-              border: "1px solid var(--border-hairline-light)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                flexShrink: 0,
-                padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline-light)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "var(--card-bg-crm)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: "rgba(14, 165, 233, 0.12)",
-                    border: "1px solid rgba(14, 165, 233, 0.25)",
-                    color: "var(--accent-blue)",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Edit2 size={17} />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-                    Update Appointment
-                  </h3>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
-                    Reschedule session or update conference link
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingItem(null)}
-                aria-label="Close"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                  transition: "color 0.15s ease, background 0.15s ease",
-                }}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            {/* Form Wrapping Scrollable Body & Pinned Footer */}
-            <form
-              onSubmit={handleSaveEdit}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: "1 1 auto",
-                minHeight: 0,
-                overflow: "hidden",
-              }}
-            >
-              {/* Scrollable Form Body */}
-              <div
-                className="drawer-content"
-                style={{
-                  flex: "1 1 auto",
-                  overflowY: "auto",
-                  padding: "20px 24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                }}
-              >
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Date &amp; Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    min={getLocalDatetimeString()}
-                    value={editDateStr}
-                    onChange={(e) => setEditDateStr(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Meeting Link
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://meet.google.com/..."
-                    value={editMeetingLink}
-                    onChange={(e) => setEditMeetingLink(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Pinned Sticky Footer - Always Visible */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  padding: "16px 24px",
-                  borderTop: "1px solid var(--border-hairline-light)",
-                  background: "var(--card-bg-crm)",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 12,
-                  alignItems: "center",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionBusy}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "none",
-                    background: "var(--ink-crm)",
-                    color: "var(--ink-crm-text, #FFFFFF)",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: actionBusy ? "not-allowed" : "pointer",
-                    opacity: actionBusy ? 0.7 : 1,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {actionBusy ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Confirmation Modal for Deletion */}
       <ConfirmModal

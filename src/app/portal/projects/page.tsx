@@ -1,6 +1,6 @@
 import { requireClient } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { ClientProfileCRM } from "@/components/client-profile-crm";
+import { ClientPortalTracker } from "@/components/client-portal-tracker";
 
 export default async function PortalProjectsPage({
   searchParams,
@@ -64,52 +64,50 @@ export default async function PortalProjectsPage({
     );
   }
 
-  // Fetch all inquiries associated with this client's email or name
+  // Fetch all inquiries associated with this client's email
   const inquiries = await prisma.inquiry.findMany({
-    where: {
-      OR: [
-        { email: clientUser.email },
-        ...(clientUser.name ? [{ name: { contains: clientUser.name } }] : []),
-        ...(isUserAdmin ? [{}] : []),
-      ],
-    },
+    where: isUserAdmin && !resolvedParams.clientId
+      ? {}
+      : { email: clientUser.email },
     orderBy: { createdAt: "desc" },
-    take: 8,
   });
 
-  const serializedUser = {
-    ...clientUser,
-    createdAt: clientUser.createdAt.toISOString(),
-    projects: clientUser.projects.map((p) => ({
-      ...p,
-      createdAt: p.createdAt.toISOString(),
-      updatedAt: p.updatedAt.toISOString(),
-      milestones: p.milestones.map((m) => ({
-        ...m,
-        dueAt: m.dueAt ? m.dueAt.toISOString() : null,
-        completedAt: m.completedAt ? m.completedAt.toISOString() : null,
-      })),
-      tasks: p.tasks.map((t) => ({
-        ...t,
-        dueAt: t.dueAt ? t.dueAt.toISOString() : null,
-        completedAt: t.completedAt ? t.completedAt.toISOString() : null,
-      })),
+  const serializedProjects = clientUser.projects.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+    milestones: p.milestones.map((m) => ({
+      ...m,
+      dueAt: m.dueAt ? m.dueAt.toISOString() : null,
+      completedAt: m.completedAt ? m.completedAt.toISOString() : null,
     })),
-  };
+    tasks: p.tasks.map((t) => ({
+      ...t,
+      dueAt: t.dueAt ? t.dueAt.toISOString() : null,
+      completedAt: t.completedAt ? t.completedAt.toISOString() : null,
+    })),
+  }));
 
   const serializedInquiries = inquiries.map((inq) => ({
-    ...inq,
+    id: inq.id,
+    service: inq.service,
+    budget: inq.budget,
+    company: inq.company,
+    message: inq.message,
+    status: inq.status,
+    referenceUrl: inq.referenceUrl,
+    referenceImage: inq.referenceImage,
     createdAt: inq.createdAt.toISOString(),
   }));
 
   return (
-    <div className="animate-fade-in-up" style={{ width: "100%" }}>
-      <ClientProfileCRM
-        user={serializedUser}
+    <div className="animate-fade-in-up" style={{ width: "100%", padding: "20px 0" }}>
+      <ClientPortalTracker
+        userName={clientUser.name}
+        userEmail={clientUser.email}
+        projects={serializedProjects}
         inquiries={serializedInquiries}
-        currentAdminId={session.user.id}
-        backUrl="/portal"
-        pageTitle="Customer Information"
+        isAdminPreview={isUserAdmin}
       />
     </div>
   );

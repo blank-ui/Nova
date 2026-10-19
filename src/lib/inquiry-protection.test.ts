@@ -102,6 +102,8 @@ describe("Public Inquiry Endpoint Protections (Unit Tests)", () => {
       message: "We need a Next.js application built with strict security controls.",
       status: "NEW",
       dateOfBirth: null,
+      referenceUrl: null,
+      referenceImage: null,
       createdAt: new Date(),
     });
 
@@ -124,5 +126,56 @@ describe("Public Inquiry Endpoint Protections (Unit Tests)", () => {
     const json = await response.json();
     expect(json.received).toBe(true);
     expect(prisma.inquiry.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts inquiries with referenceUrl and referenceImage", async () => {
+    vi.spyOn(rateLimit, "consumeRateLimit").mockResolvedValueOnce({
+      allowed: true,
+      retryAfterSeconds: null,
+      remaining: 3,
+    });
+
+    vi.mocked(prisma.inquiry.create).mockResolvedValueOnce({
+      id: "cinquiryReferenceTest123456",
+      name: "Reference Lead",
+      email: "ref@nova.test",
+      phone: "+91 98765 43210",
+      company: "Design Studio",
+      service: "Website Redesign",
+      budget: "₹3–8 lakh",
+      message: "Here is our benchmark site and mockup screenshot.",
+      referenceUrl: "https://dribbble.com/shots/123456",
+      referenceImage: "/uploads/inquiries/mockup-123.png",
+      status: "NEW",
+      dateOfBirth: null,
+      createdAt: new Date(),
+    });
+
+    const request = new Request("http://localhost:3000/api/inquiries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Reference Lead",
+        email: "ref@nova.test",
+        phone: "+91 98765 43210",
+        service: "Website Redesign",
+        message: "Here is our benchmark site and mockup screenshot.",
+        referenceUrl: "https://dribbble.com/shots/123456",
+        referenceImage: "/uploads/inquiries/mockup-123.png",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(201);
+    const json = await response.json();
+    expect(json.received).toBe(true);
+    expect(prisma.inquiry.create).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          referenceUrl: "https://dribbble.com/shots/123456",
+          referenceImage: "/uploads/inquiries/mockup-123.png",
+        }),
+      })
+    );
   });
 });

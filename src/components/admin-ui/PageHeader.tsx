@@ -69,6 +69,7 @@ export function PageHeader({
         <div>
           {titleLine1 && (
             <div
+              className="page-header-pretitle"
               style={{
                 fontSize: 32,
                 fontWeight: 700,
@@ -98,6 +99,7 @@ export function PageHeader({
       {/* Right: Strip of Headline Stats */}
       {stats.length > 0 && (
         <div
+          className="page-header-stats"
           style={{
             display: "flex",
             alignItems: "center",
@@ -108,6 +110,7 @@ export function PageHeader({
           {stats.map((st, idx) => (
             <div
               key={idx}
+              className="page-header-stat-item"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -132,9 +135,10 @@ export function PageHeader({
               </div>
 
               {/* Number + Badge + Caption */}
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span
+                    className="page-header-stat-value"
                     style={{
                       fontSize: 22,
                       fontWeight: 800,
@@ -150,6 +154,7 @@ export function PageHeader({
                   </Badge>
                 </div>
                 <div
+                  className="page-header-stat-caption"
                   style={{
                     fontSize: 11,
                     fontWeight: 600,

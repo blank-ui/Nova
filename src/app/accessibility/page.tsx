@@ -1,4 +1,10 @@
 import LegalPage from "@/components/legal-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Accessibility Statement",
+  description: "Commitment to accessible, inclusive web experiences by All Sky Fares LLC.",
+};
 
 export default function Accessibility() {
   return (

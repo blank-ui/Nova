@@ -29,8 +29,6 @@ export function StatTile({
   className = "",
   style,
 }: StatTileProps) {
-  const isDarkTile = variant === "blue" || variant === "teal" || variant === "black";
-
   const variantStyles: Record<
     StatTileVariant,
     { bg: string; text: string; subText: string; pillBg: string; pillColor: string; circleBorder: string; circleBg: string }
@@ -93,6 +91,8 @@ export function StatTile({
         borderRadius: "var(--radius-tile)",
         padding: "20px 22px",
         minHeight: 154,
+        height: "100%",
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -121,10 +121,12 @@ export function StatTile({
             {category}
           </span>
           <div
+            className="stat-tile-title"
             style={{
               fontSize: 15,
               fontWeight: 700,
               lineHeight: 1.25,
+              minHeight: 38,
               color: current.text,
             }}
           >
@@ -157,6 +159,7 @@ export function StatTile({
 
       {/* Bottom Row: Big number + Caption */}
       <div
+        className="stat-tile-footer"
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -165,6 +168,7 @@ export function StatTile({
         }}
       >
         <span
+          className="stat-tile-value"
           style={{
             fontSize: 38,
             fontWeight: 800,
@@ -176,6 +180,7 @@ export function StatTile({
           {value}
         </span>
         <span
+          className="stat-tile-caption"
           style={{
             fontSize: 12,
             fontWeight: 600,
@@ -191,7 +196,7 @@ export function StatTile({
 
   if (href) {
     return (
-      <Link href={href} style={{ textDecoration: "none", display: "block" }}>
+      <Link href={href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", height: "100%" }}>
         {content}
       </Link>
     );

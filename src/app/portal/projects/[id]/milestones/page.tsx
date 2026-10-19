@@ -27,7 +27,7 @@ export default async function ProjectMilestonesPage({ params }: MilestonesPagePr
   });
 
   return (
-    <main className="shell" style={{ padding: "50px 0 80px" }}>
+    <div className="animate-fade-in-up" style={{ width: "100%", paddingBottom: 40 }}>
       <div style={{ marginBottom: 24 }}>
         <Link
           href={`/portal/projects/${project.id}`}
@@ -70,8 +70,8 @@ export default async function ProjectMilestonesPage({ params }: MilestonesPagePr
                 key={milestone.id}
                 className="card"
                 style={{
-                  padding: 24,
-                  borderLeft: isCompleted ? "4px solid #2b6a49" : "4px solid var(--blue)",
+                  padding: "clamp(16px, 4vw, 24px)",
+                  borderLeft: isCompleted ? "4px solid #10b981" : "4px solid var(--blue)",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 8 }}>
@@ -95,8 +95,8 @@ export default async function ProjectMilestonesPage({ params }: MilestonesPagePr
                           borderRadius: 20,
                           fontSize: 12,
                           fontWeight: 700,
-                          backgroundColor: "#e6f9ed",
-                          color: "#1e4620",
+                          backgroundColor: "rgba(16, 185, 129, 0.12)",
+                          color: "#10b981",
                         }}
                       >
                         <CheckCircle2 size={14} /> Completed {new Date(milestone.completedAt!).toLocaleDateString()}
@@ -127,7 +127,7 @@ export default async function ProjectMilestonesPage({ params }: MilestonesPagePr
                   </p>
                 )}
 
-                <div style={{ fontSize: 12, color: "var(--muted)", display: "flex", gap: 20, borderTop: "1px solid var(--line)", paddingTop: 12 }}>
+                <div style={{ fontSize: 12, color: "var(--muted)", display: "flex", flexWrap: "wrap", gap: 20, borderTop: "1px solid var(--line)", paddingTop: 12 }}>
                   <span>Target Date: {milestone.dueAt ? new Date(milestone.dueAt).toLocaleDateString() : "To be scheduled"}</span>
                 </div>
               </article>
@@ -135,6 +135,6 @@ export default async function ProjectMilestonesPage({ params }: MilestonesPagePr
           })}
         </div>
       )}
-    </main>
+    </div>
   );
 }

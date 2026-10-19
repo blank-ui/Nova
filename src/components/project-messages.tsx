@@ -172,7 +172,7 @@ export function ProjectMessages({
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: 24,
+          padding: "clamp(12px, 3vw, 24px)",
           display: "flex",
           flexDirection: "column",
           gap: 16,
@@ -300,15 +300,16 @@ export function ProjectMessages({
                 {/* Safe plain-text message bubble */}
                 <div
                   style={{
-                    maxWidth: "80%",
-                    padding: "12px 16px",
+                    maxWidth: "min(88%, 560px)",
+                    padding: "10px 14px",
                     borderRadius: 14,
                     fontSize: 14,
                     lineHeight: 1.6,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
-                    backgroundColor: isMine ? "var(--ink, #111827)" : "var(--paper, #f3f4f6)",
-                    color: isMine ? "#ffffff" : "var(--ink, #111827)",
+                    backgroundColor: isMine ? "var(--blue, #6C4CFF)" : "var(--surface-raised, var(--paper))",
+                    border: isMine ? "none" : "1px solid var(--border-hairline, var(--line))",
+                    color: isMine ? "#ffffff" : "var(--text-primary, var(--ink))",
                     borderTopRightRadius: isMine ? 2 : 14,
                     borderTopLeftRadius: !isMine ? 2 : 14,
                   }}

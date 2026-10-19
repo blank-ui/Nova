@@ -86,7 +86,7 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
             placeholder="6-12 chars with Aa#"
           />
           {error && <p role="alert" style={{ color: "#b42318", fontSize: 12, margin: 0 }}>{error}</p>}
-          <button className="button" disabled={busy} style={{ width: "100%", justifyContent: "center" }}>
+          <button type="submit" className="button" disabled={busy} style={{ width: "100%", justifyContent: "center" }}>
             {busy ? (isSetup ? "Activating account…" : "Updating…") : (isSetup ? "Set Password & Activate" : "Update password")}
             <ArrowUpRight size={15} />
           </button>

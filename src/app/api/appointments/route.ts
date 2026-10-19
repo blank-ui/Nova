@@ -190,11 +190,17 @@ export async function PATCH(request: Request) {
     if (!isStaff) {
       // Client can only cancel their own appointment
       if (existing.requestedById !== session.user.id) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ error: "Forbidden: You may only manage your own appointments." }, { status: 403 });
       }
-      if (status && status !== "CANCELLED") {
+      if (status !== "CANCELLED") {
         return NextResponse.json(
           { error: "Clients may only request cancellation of appointments." },
+          { status: 403 }
+        );
+      }
+      if (date !== undefined || duration !== undefined || meetingLink !== undefined || assignedStaffId !== undefined) {
+        return NextResponse.json(
+          { error: "Forbidden: Clients cannot modify appointment schedule, duration, or staff assignment." },
           { status: 403 }
         );
       }

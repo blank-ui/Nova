@@ -6,18 +6,27 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { NovaLogo } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-const NAV_LINKS = [
-  { href: "/services", label: "Services" },
-  { href: "/portfolio", label: "Selected work" },
-  { href: "/about", label: "Studio" },
-  { href: "/process", label: "Process" },
-  { href: "/faq", label: "FAQ" },
-];
+import { useLanguage } from "@/components/language-provider";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { authClient } from "@/lib/auth-client";
 
 export function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useLanguage();
+  const { data: session } = authClient.useSession();
+
+  const userRole = (session?.user as { role?: string } | undefined)?.role;
+  const workspaceHref = userRole === "ADMIN" ? "/admin" : "/portal";
+  const workspaceLabel = userRole === "ADMIN" ? "Admin Workspace" : "Client Portal";
+
+  const navLinks = [
+    { href: "/services", label: t("nav.services", "Services") },
+    { href: "/portfolio", label: t("nav.portfolio", "Selected work") },
+    { href: "/about", label: t("nav.about", "Studio") },
+    { href: "/process", label: t("nav.process", "Process") },
+    { href: "/faq", label: t("nav.faq", "FAQ") },
+  ];
 
   return (
     <header
@@ -53,7 +62,7 @@ export function Navigation() {
           style={{ display: "flex", alignItems: "center", gap: 28 }}
           className="desktop-nav"
         >
-          {NAV_LINKS.map((link) => {
+          {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
@@ -73,19 +82,31 @@ export function Navigation() {
 
         {/* Navigation actions */}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <LanguageSwitcher compact className="nav-lang-switcher" />
           <ThemeToggle />
-          <Link
-            className={`nav-link desktop-nav ${pathname === "/login" ? "nav-link-active" : ""}`}
-            href="/login"
-          >
-            Sign in
-          </Link>
+          {session?.user ? (
+            <Link
+              className="button button-outline desktop-nav"
+              href={workspaceHref}
+              style={{ padding: "8px 14px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5, borderRadius: 99 }}
+            >
+              <span>{workspaceLabel}</span>
+              <ArrowUpRight size={13} />
+            </Link>
+          ) : (
+            <Link
+              className={`nav-link desktop-nav ${pathname === "/login" ? "nav-link-active" : ""}`}
+              href="/login"
+            >
+              {t("nav.sign_in", "Sign in")}
+            </Link>
+          )}
           <Link
             className="button talk-button"
             href="/contact"
             style={{ padding: "10px 16px", fontSize: 13 }}
           >
-            <span>Let&apos;s talk</span>
+            <span>{t("nav.contact", "Let's talk")}</span>
             <ArrowUpRight size={14} />
           </Link>
 
@@ -100,7 +121,11 @@ export function Navigation() {
               background: "transparent",
               border: "1px solid var(--line)",
               borderRadius: 10,
-              padding: "7px 9px",
+              width: 44,
+              height: 44,
+              minWidth: 44,
+              minHeight: 44,
+              padding: 0,
               cursor: "pointer",
               color: "var(--ink)",
               display: "none",
@@ -132,7 +157,7 @@ export function Navigation() {
             zIndex: 39,
           }}
         >
-          {NAV_LINKS.map((link) => {
+          {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
@@ -155,19 +180,45 @@ export function Navigation() {
               </Link>
             );
           })}
-          <Link
-            href="/login"
-            onClick={() => setMobileOpen(false)}
-            style={{
-              fontSize: 16,
-              fontWeight: pathname === "/login" ? 700 : 500,
-              color: pathname === "/login" ? "var(--blue)" : "var(--ink)",
-              padding: "10px 0",
-              borderBottom: "1px solid var(--line)",
-            }}
-          >
-            Sign in
-          </Link>
+          {session?.user ? (
+            <Link
+              href={workspaceHref}
+              onClick={() => setMobileOpen(false)}
+              style={{
+                fontSize: 16,
+                fontWeight: 700,
+                color: "var(--accent-blue, #6C4CFF)",
+                padding: "10px 0",
+                borderBottom: "1px solid var(--line)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <span>{workspaceLabel}</span>
+              <ArrowUpRight size={16} />
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              style={{
+                fontSize: 16,
+                fontWeight: pathname === "/login" ? 700 : 500,
+                color: pathname === "/login" ? "var(--blue)" : "var(--ink)",
+                padding: "10px 0",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              {t("nav.sign_in", "Sign in")}
+            </Link>
+          )}
+          
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
+            <span style={{ fontSize: 14, color: "var(--muted)" }}>Language / भाषा</span>
+            <LanguageSwitcher />
+          </div>
+
           <div style={{ paddingTop: 8 }}>
             <Link
               href="/contact"
@@ -175,7 +226,7 @@ export function Navigation() {
               className="button"
               style={{ width: "100%", padding: "12px 18px", fontSize: 14, borderRadius: 12 }}
             >
-              Start a project <ArrowUpRight size={15} />
+              {t("hero.start_project", "Start a project")} <ArrowUpRight size={15} />
             </Link>
           </div>
         </div>
@@ -185,6 +236,9 @@ export function Navigation() {
         @media(max-width:820px){
           .desktop-nav { display: none !important; }
           .mobile-toggle { display: inline-flex !important; }
+        }
+        @media(max-width:640px){
+          .nav-lang-switcher { display: none !important; }
         }
         @media(max-width:480px){
           .talk-button { display: none !important; }

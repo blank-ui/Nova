@@ -1,38 +1,43 @@
+"use client";
+
 import { PublicPage, FeatureGrid, CTA, Checklist } from "@/components/public-page";
 import { ShieldCheck, HeartHandshake, Code2 } from "lucide-react";
 import { NovaMark } from "@/components/brand";
+import { useLanguage } from "@/components/language-provider";
 
 export default function About() {
+  const { t } = useLanguage();
+
   return (
     <PublicPage
-      eyebrow="The Studio · Small by intention"
-      title="Good work starts with listening."
-      subtitle="Nova is an independent digital studio partnering with teams worldwide to make useful, well-crafted digital products and websites. We keep the process close, collaborative, and grounded in real business problems."
+      eyebrow={t("about.eyebrow", "The Studio · Small by intention")}
+      title={t("about.title", "Good work starts with listening.")}
+      subtitle={t("about.subtitle", "Nova is an independent digital studio partnering with teams worldwide to make useful, well-crafted digital products and websites. We keep the process close, collaborative, and grounded in real business problems.")}
     >
       <div style={{ display: "grid", gap: 48 }}>
         {/* Core Philosophy Banner */}
         <div
           className="card card-hover-glow"
           style={{
-            padding: "36px 40px",
+            padding: "clamp(24px, 4vw, 36px) clamp(20px, 4vw, 40px)",
             borderRadius: 20,
             background: "var(--lav)",
             border: "1px solid var(--line)",
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
             gap: 24,
             alignItems: "center",
           }}
         >
           <div>
             <div className="eyebrow" style={{ color: "var(--blue)" }}>
-              Operating Entity & Structure
+              {t("about.entity_eyebrow", "Operating Entity & Structure")}
             </div>
             <h2 style={{ fontSize: 24, letterSpacing: "-.04em", margin: "10px 0 12px", color: "var(--ink)", fontWeight: 700 }}>
-              Operated on behalf of All Sky Fares LLC
+              {t("about.entity_title", "Operated on behalf of All Sky Fares LLC")}
             </h2>
             <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
-              Nova operates as the bespoke digital innovation, web development, and design services wing of <strong>All Sky Fares LLC</strong>. We partner directly with clients across North America, Europe, India, and Asia, combining corporate contractual reliability with the agility of an independent design lab.
+              {t("about.entity_desc", "Nova operates as the bespoke digital innovation, web development, and design services wing of All Sky Fares LLC. We partner directly with clients across North America, Europe, India, and Asia, combining corporate contractual reliability with the agility of an independent design lab.")}
             </p>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -43,27 +48,27 @@ export default function About() {
         {/* Studio Principles Grid */}
         <div>
           <div style={{ marginBottom: 24 }}>
-            <div className="eyebrow">Guiding Values</div>
+            <div className="eyebrow">{t("about.values_eyebrow", "Guiding Values")}</div>
             <h2 style={{ fontSize: 32, letterSpacing: "-.05em", margin: "8px 0 0", color: "var(--ink)", fontWeight: 700 }}>
-              How we approach every build
+              {t("about.values_title", "How we approach every build")}
             </h2>
           </div>
 
           <FeatureGrid
             items={[
               {
-                title: "Care before complexity",
-                text: "We ask the tough, foundational questions early so the architecture solves the actual bottleneck rather than adding unnecessary layers.",
+                title: t("about.val1_title", "Care before complexity"),
+                text: t("about.val1_desc", "We ask the tough, foundational questions early so the architecture solves the actual bottleneck rather than adding unnecessary layers."),
                 icon: <HeartHandshake size={20} />,
               },
               {
-                title: "Craft with purpose",
-                text: "Every micro-interaction, database schema, and CSS token earns its place. We build resilient interfaces that handle unexpected edge cases with grace.",
+                title: t("about.val2_title", "Craft with purpose"),
+                text: t("about.val2_desc", "Every micro-interaction, database schema, and CSS token earns its place. We build resilient interfaces that handle unexpected edge cases with grace."),
                 icon: <Code2 size={20} />,
               },
               {
-                title: "Partnership that lasts",
-                text: "We believe in honest trade-offs, clear written updates, and complete transparency. When your project ships, you own 100% of the code and assets.",
+                title: t("about.val3_title", "Partnership that lasts"),
+                text: t("about.val3_desc", "We believe in honest trade-offs, clear written updates, and complete transparency. When your project ships, you own 100% of the code and assets."),
                 icon: <ShieldCheck size={20} />,
               },
             ]}
@@ -80,33 +85,30 @@ export default function About() {
         >
           <div className="card" style={{ padding: 32, borderTop: "3px solid var(--blue)" }}>
             <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 12px", color: "var(--ink)" }}>
-              No Account Managers In Between
+              {t("about.direct_collab_title", "No Account Managers In Between")}
             </h3>
             <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.75, margin: 0 }}>
-              When you work with Nova, you collaborate directly with the engineers and designers shaping your platform. Communication is swift, nuanced, and devoid of corporate bureaucracy or games of telephone.
+              {t("about.direct_collab_desc", "When you work with Nova, you collaborate directly with the engineers and designers shaping your platform. Communication is swift, nuanced, and devoid of corporate bureaucracy or games of telephone.")}
             </p>
           </div>
 
           <div className="card" style={{ padding: 32, borderTop: "3px solid #10b981" }}>
             <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 12px", color: "var(--ink)" }}>
-              Standards We Commit To
+              {t("about.standards_title", "Standards We Commit To")}
             </h3>
             <Checklist
               items={[
-                "Strict TypeScript with zero unchecked type errors",
-                "Sub-100ms LCP & 100% Core Web Vitals optimization",
-                "WCAG AA compliance for accessible, inclusive UX",
-                "Full automated test coverage with Vitest & Playwright",
-                "Clean Prisma ORM schemas with zero database lock-in",
+                t("about.check1", "Strict TypeScript with zero unchecked type errors"),
+                t("about.check2", "Sub-100ms LCP & 100% Core Web Vitals optimization"),
+                t("about.check3", "WCAG AA compliance for accessible, inclusive UX"),
+                t("about.check4", "Full automated test coverage with Vitest & Playwright"),
+                t("about.check5", "Clean Prisma ORM schemas with zero database lock-in"),
               ]}
             />
           </div>
         </div>
 
-        <CTA
-          title="Looking for a thoughtful digital partner?"
-          subtitle="Let's make something remarkable together."
-        />
+        <CTA />
       </div>
     </PublicPage>
   );

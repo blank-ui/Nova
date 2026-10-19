@@ -23,6 +23,7 @@ import {
   X,
   Phone,
   Calendar,
+  ArrowLeft,
 } from "lucide-react";
 import {
   PageHeader,
@@ -346,26 +347,37 @@ export function AdminUsersManager({
     {
       key: "user",
       header: "User & Identity",
-      width: "1.8fr",
+      width: "minmax(240px, 2fr)",
       render: (u: UserItem) => {
         const isCurrentAdmin = u.id === currentAdminId;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, overflow: "hidden" }}>
             <Avatar src={u.image} name={u.name} size="sm" />
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+            <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {u.name}
                 </span>
                 {isCurrentAdmin && (
                   <Badge variant="brand">You</Badge>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "var(--text-muted-crm)",
+                  marginTop: 2,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  maxWidth: 200,
+                }}
+                title={u.email}
+              >
                 {u.email}
               </div>
               {u.discordHandle && (
-                <div style={{ fontSize: 10, color: "#5865F2", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "#5865F2", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   @{u.discordHandle}
                 </div>
               )}
@@ -522,6 +534,352 @@ export function AdminUsersManager({
     },
   ];
 
+  if (showCreateModal) {
+    return (
+      <div className="animate-fade-in-up" style={{ width: "100%", maxWidth: 840, margin: "0 auto", paddingBottom: 40 }}>
+        {/* Navigation Bar */}
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={() => {
+              setShowCreateModal(false);
+              setCreatedResult(null);
+              setCreateError("");
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary)",
+              background: "var(--card-bg-crm)",
+              border: "1px solid var(--border-hairline)",
+              borderRadius: "var(--radius-pill)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Team Directory
+          </button>
+        </div>
+
+        <SectionCard
+          title="Provision New User Account"
+          headerRight={
+            <Badge variant="info">User Provisioning</Badge>
+          }
+        >
+          <p style={{ margin: "-8px 0 20px", fontSize: 13, color: "var(--text-muted-crm)" }}>
+            Creates the user account in the system and automatically dispatches a secure onboarding email.
+          </p>
+
+          {createdResult ? (
+            <div style={{ display: "grid", gap: 16 }}>
+              <div
+                style={{
+                  padding: 18,
+                  background: "rgba(16, 185, 129, 0.12)",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  borderRadius: 16,
+                  textAlign: "center",
+                }}
+              >
+                <CheckCircle2 size={32} color="#10b981" style={{ margin: "0 auto 8px" }} />
+                <div style={{ fontWeight: 700, color: "#10b981", fontSize: 14 }}>
+                  Account Initialized Successfully!
+                </div>
+                <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "6px 0 0" }}>
+                  {createdResult.emailSent
+                    ? "A welcome initiation email was dispatched to the user with a secure link to set their password."
+                    : "Email dispatch failed. Please share the manual initiation link below:"}
+                </p>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
+                  Initiation Link
+                </label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={createdResult.setupUrl}
+                    style={{
+                      flex: 1,
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      border: "1px solid var(--border-hairline)",
+                      fontSize: 12,
+                      fontFamily: "monospace",
+                      outline: "none",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdResult.setupUrl);
+                      setCopiedLink(true);
+                      setTimeout(() => setCopiedLink(false), 2000);
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "var(--radius-pill)",
+                      border: "none",
+                      background: "var(--ink-crm)",
+                      color: "var(--ink-crm-text, #FFFFFF)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    {copiedLink ? <Check size={14} /> : <Copy size={14} />}
+                    {copiedLink ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreatedResult(null);
+                  }}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "var(--radius-pill)",
+                    border: "none",
+                    background: "var(--ink-crm)",
+                    color: "var(--ink-crm-text, #FFFFFF)",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleCreateUser} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              {createError && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    background: "rgba(239, 68, 68, 0.12)",
+                    color: "#ef4444",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    fontSize: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <AlertCircle size={15} />
+                  <span>{createError}</span>
+                </div>
+              )}
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Full Name <span style={{ color: "var(--accent-blue)" }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Alex Morgan"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Email Address <span style={{ color: "var(--accent-blue)" }}>*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="client@company.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Access Role <span style={{ color: "var(--accent-blue)" }}>*</span>
+                </label>
+                <select
+                  value={newRole}
+                  onChange={(e) =>
+                    setNewRole(e.target.value as "CLIENT" | "ADMIN" | "DEVELOPER" | "FINANCE")
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="CLIENT">Client (Standard Portal Access)</option>
+                  <option value="DEVELOPER">Developer (Workspace Access)</option>
+                  <option value="FINANCE">Finance (Invoicing &amp; Billing)</option>
+                  <option value="ADMIN">Administrator (Full Access)</option>
+                </select>
+              </div>
+
+              {/* 2-Column Phone & Date of Birth Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Phone {newRole !== "CLIENT" ? "*" : "(Optional)"}
+                  </label>
+                  <input
+                    type="tel"
+                    required={newRole !== "CLIENT"}
+                    placeholder="+91 98765 43210"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                    Date of Birth {newRole !== "CLIENT" ? "*" : "(Optional)"}
+                  </label>
+                  <input
+                    type="date"
+                    required={newRole !== "CLIENT"}
+                    value={newDob}
+                    onChange={(e) => setNewDob(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons Footer */}
+              <div
+                style={{
+                  paddingTop: 18,
+                  borderTop: "1px solid var(--border-hairline-light)",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  alignItems: "center",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "var(--radius-pill)",
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "var(--radius-pill)",
+                    border: "none",
+                    background: "var(--ink-crm)",
+                    color: "var(--ink-crm-text, #FFFFFF)",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: createLoading ? "not-allowed" : "pointer",
+                    opacity: createLoading ? 0.7 : 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {createLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Provisioning...</span>
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+        </SectionCard>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in-up">
       {/* Page Header with Headline Stats Strip */}
@@ -589,7 +947,7 @@ export function AdminUsersManager({
         }}
       >
         {/* Role Filter Pills */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="crm-filter-pills" style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           {[
             { label: "All Accounts", value: "ALL" },
             { label: "Clients", value: "CLIENT" },
@@ -613,6 +971,8 @@ export function AdminUsersManager({
                   background: isSelected ? "var(--ink-crm)" : "var(--surface-raised)",
                   color: isSelected ? "var(--ink-crm-text, #FFFFFF)" : "var(--text-secondary)",
                   cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
                   transition: "all 0.15s ease",
                 }}
               >
@@ -623,8 +983,8 @@ export function AdminUsersManager({
         </div>
 
         {/* Search & Create Button */}
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <div style={{ position: "relative", minWidth: 240 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", flex: "1 1 280px", justifyContent: "flex-end" }}>
+          <div style={{ position: "relative", flex: "1 1 200px", minWidth: 160 }}>
             <Search
               size={15}
               style={{
@@ -650,6 +1010,7 @@ export function AdminUsersManager({
                 color: "var(--text-primary)",
                 fontSize: 12,
                 outline: "none",
+                boxSizing: "border-box",
               }}
             />
           </div>
@@ -703,6 +1064,7 @@ export function AdminUsersManager({
               columns={columns}
               data={filteredUsers}
               keyExtractor={(u) => u.id}
+              minWidth={720}
               onRowClick={(u) => setSelectedUserId(u.id)}
               emptyState={
                 <EmptyState
@@ -878,423 +1240,6 @@ export function AdminUsersManager({
         </div>
       </div>
 
-      {/* Provision New User Centered Modal Dialog */}
-      {showCreateModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10, 12, 18, 0.65)",
-            backdropFilter: "blur(6px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
-          onClick={() => setShowCreateModal(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="animate-fade-in-up"
-            style={{
-              background: "var(--card-bg-crm)",
-              width: "100%",
-              maxWidth: 520,
-              maxHeight: "min(90vh, 720px)",
-              borderRadius: "var(--radius-card)",
-              border: "1px solid var(--border-hairline-light)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                flexShrink: 0,
-                padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline-light)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "var(--card-bg-crm)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: "rgba(14, 165, 233, 0.12)",
-                    border: "1px solid rgba(14, 165, 233, 0.25)",
-                    color: "var(--accent-blue)",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <UserPlus size={18} />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-                    Provision New User
-                  </h3>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
-                    Creates account &amp; dispatches initiation setup email
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                aria-label="Close"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                  transition: "color 0.15s ease, background 0.15s ease",
-                }}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            {createdResult ? (
-              <div style={{ padding: "24px", display: "grid", gap: 16 }}>
-                <div
-                  style={{
-                    padding: 18,
-                    background: "rgba(16, 185, 129, 0.12)",
-                    border: "1px solid rgba(16, 185, 129, 0.3)",
-                    borderRadius: 16,
-                    textAlign: "center",
-                  }}
-                >
-                  <CheckCircle2 size={32} color="#10b981" style={{ margin: "0 auto 8px" }} />
-                  <div style={{ fontWeight: 700, color: "#10b981", fontSize: 14 }}>
-                    Account Initialized Successfully!
-                  </div>
-                  <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "6px 0 0" }}>
-                    {createdResult.emailSent
-                      ? "A welcome initiation email was dispatched to the client with a secure link to set their password."
-                      : "Email dispatch failed. Please share the manual initiation link below:"}
-                  </p>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
-                    Initiation Link
-                  </label>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input
-                      type="text"
-                      readOnly
-                      value={createdResult.setupUrl}
-                      style={{
-                        flex: 1,
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        border: "1px solid var(--border-hairline)",
-                        fontSize: 12,
-                        fontFamily: "monospace",
-                        outline: "none",
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(createdResult.setupUrl);
-                        setCopiedLink(true);
-                        setTimeout(() => setCopiedLink(false), 2000);
-                      }}
-                      style={{
-                        padding: "8px 16px",
-                        borderRadius: "var(--radius-pill)",
-                        border: "none",
-                        background: "var(--ink-crm)",
-                        color: "var(--ink-crm-text, #FFFFFF)",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      {copiedLink ? <Check size={14} /> : <Copy size={14} />}
-                      {copiedLink ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    style={{
-                      padding: "10px 24px",
-                      borderRadius: "var(--radius-pill)",
-                      border: "none",
-                      background: "var(--ink-crm)",
-                      color: "var(--ink-crm-text, #FFFFFF)",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form
-                onSubmit={handleCreateUser}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  flex: "1 1 auto",
-                  minHeight: 0,
-                  overflow: "hidden",
-                }}
-              >
-                {/* Scrollable Form Body */}
-                <div
-                  className="drawer-content"
-                  style={{
-                    flex: "1 1 auto",
-                    overflowY: "auto",
-                    padding: "20px 24px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 16,
-                  }}
-                >
-                  {createError && (
-                    <div
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        background: "rgba(239, 68, 68, 0.12)",
-                        color: "#ef4444",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                        fontSize: 12,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <AlertCircle size={15} />
-                      <span>{createError}</span>
-                    </div>
-                  )}
-
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Full Name <span style={{ color: "var(--accent-blue)" }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Alex Morgan"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Email Address <span style={{ color: "var(--accent-blue)" }}>*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="client@company.com"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Access Role <span style={{ color: "var(--accent-blue)" }}>*</span>
-                    </label>
-                    <select
-                      value={newRole}
-                      onChange={(e) =>
-                        setNewRole(e.target.value as "CLIENT" | "ADMIN" | "DEVELOPER" | "FINANCE")
-                      }
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value="CLIENT">Client (Standard Portal Access)</option>
-                      <option value="DEVELOPER">Developer (Workspace Access)</option>
-                      <option value="FINANCE">Finance (Invoicing &amp; Billing)</option>
-                      <option value="ADMIN">Administrator (Full Access)</option>
-                    </select>
-                  </div>
-
-                  {/* 2-Column Phone & Date of Birth Grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <div>
-                      <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                        Phone {newRole !== "CLIENT" ? "*" : "(Optional)"}
-                      </label>
-                      <input
-                        type="tel"
-                        required={newRole !== "CLIENT"}
-                        placeholder="+91 98765 43210"
-                        value={newPhone}
-                        onChange={(e) => setNewPhone(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          borderRadius: 12,
-                          border: "1px solid var(--border-hairline)",
-                          background: "var(--surface-raised)",
-                          color: "var(--text-primary)",
-                          fontSize: 13,
-                          outline: "none",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                        Date of Birth {newRole !== "CLIENT" ? "*" : "(Optional)"}
-                      </label>
-                      <input
-                        type="date"
-                        required={newRole !== "CLIENT"}
-                        value={newDob}
-                        onChange={(e) => setNewDob(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          borderRadius: 12,
-                          border: "1px solid var(--border-hairline)",
-                          background: "var(--surface-raised)",
-                          color: "var(--text-primary)",
-                          fontSize: 13,
-                          outline: "none",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pinned Sticky Footer */}
-                <div
-                  style={{
-                    flexShrink: 0,
-                    padding: "16px 24px",
-                    borderTop: "1px solid var(--border-hairline-light)",
-                    background: "var(--card-bg-crm)",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: 12,
-                    alignItems: "center",
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: "var(--radius-pill)",
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={createLoading}
-                    style={{
-                      padding: "10px 24px",
-                      borderRadius: "var(--radius-pill)",
-                      border: "none",
-                      background: "var(--ink-crm)",
-                      color: "var(--ink-crm-text, #FFFFFF)",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      cursor: createLoading ? "not-allowed" : "pointer",
-                      opacity: createLoading ? 0.7 : 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    {createLoading ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        <span>Provisioning...</span>
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* In-App Confirmation Modal */}
       <ConfirmModal

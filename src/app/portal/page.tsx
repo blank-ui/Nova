@@ -85,7 +85,7 @@ export default async function PortalOverviewPage() {
       </p>
 
       {/* Stats Summary Bar */}
-      <div className="animate-fade-in-up" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 40 }}>
+      <div className="animate-fade-in-up" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16, marginBottom: 40 }}>
         <div className="card card-hover-glow" style={{ padding: 22 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--muted)", fontSize: 13, marginBottom: 8 }}>
             <FolderKanban size={16} color="var(--blue)" /> Total Projects
@@ -129,7 +129,7 @@ export default async function PortalOverviewPage() {
 
       {/* Projects List Section */}
       <section>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 20 }}>
           <h2 style={{ fontSize: 24, letterSpacing: "-.04em", margin: 0 }}>Recent Projects</h2>
           {projects.length > 0 && (
             <Link href="/portal/projects" className="nav-link" style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
@@ -139,7 +139,7 @@ export default async function PortalOverviewPage() {
         </div>
 
         {projects.length === 0 ? (
-          <div className="card card-hover-glow" style={{ padding: "44px 32px", textAlign: "center", maxWidth: 680, margin: "0 auto" }}>
+          <div className="card card-hover-glow" style={{ padding: "clamp(28px, 5vw, 44px) clamp(16px, 4vw, 32px)", textAlign: "center", maxWidth: 680, margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
               <NovaMascotFull width={160} height={160} />
             </div>
@@ -153,7 +153,7 @@ export default async function PortalOverviewPage() {
           </div>
         ) : (
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 20 }}>
             {projects.slice(0, 4).map((p) => {
               const completedCount = p.tasks.filter((t) => t.completedAt !== null).length;
               const pendingMilestones = p.milestones.filter((m) => m.completedAt === null).length;
@@ -201,16 +201,21 @@ export default async function PortalOverviewPage() {
 
       {/* Project Inquiries & Submissions */}
       <section style={{ marginTop: 50 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 20 }}>
           <div>
             <h2 style={{ fontSize: 24, letterSpacing: "-.04em", margin: "0 0 4px" }}>Project Inquiries &amp; Pipeline</h2>
             <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
               Submitted requests, scopes, and proposal pipeline stages with the Nova team.
             </p>
           </div>
-          <Link href="/contact" className="button button-outline" style={{ fontSize: 12, padding: "6px 14px", height: "auto" }}>
-            New Inquiry &rarr;
-          </Link>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link href="/portal/projects" className="button button-outline" style={{ fontSize: 12, padding: "6px 14px", height: "auto" }}>
+              Detailed Status Tracker &rarr;
+            </Link>
+            <Link href="/contact" className="button" style={{ fontSize: 12, padding: "6px 14px", height: "auto" }}>
+              New Scope
+            </Link>
+          </div>
         </div>
 
         {clientInquiries.length === 0 ? (
@@ -218,7 +223,7 @@ export default async function PortalOverviewPage() {
             No prior inquiries logged for this workspace. Use the button above to submit your next initiative.
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: 16 }}>
             {clientInquiries.map((inq) => (
               <div
                 key={inq.id}
@@ -261,20 +266,37 @@ export default async function PortalOverviewPage() {
                   </div>
 
                   <h4 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.03em" }}>
-                    {inq.service}
+                    <Link href="/portal/projects" style={{ color: "inherit", textDecoration: "none" }}>
+                      {inq.service}
+                    </Link>
                   </h4>
-                  <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6, margin: "0 0 14px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6, margin: "0 0 10px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                     {inq.message}
                   </p>
+
+                  {(inq.referenceUrl || inq.referenceImage) && (
+                    <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap", fontSize: 10 }}>
+                      {inq.referenceUrl && (
+                        <span style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-raised)", border: "1px solid var(--border-hairline)", color: "var(--accent-blue, #6C4CFF)" }}>
+                          🔗 Benchmark
+                        </span>
+                      )}
+                      {inq.referenceImage && (
+                        <span style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-raised)", border: "1px solid var(--border-hairline)", color: "var(--text-secondary)" }}>
+                          🖼️ Mockup
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 8 }}>
                   <span style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>
                     Budget: {inq.budget || "Custom Scope"}
                   </span>
-                  <span style={{ fontSize: 11, color: "var(--muted)" }}>
-                    {inq.company || "Direct Engagement"}
-                  </span>
+                  <Link href="/portal/projects" style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)", textDecoration: "none" }}>
+                    Track Stage &rarr;
+                  </Link>
                 </div>
               </div>
             ))}
@@ -291,7 +313,7 @@ export default async function PortalOverviewPage() {
           Direct communication lines with your designated Nova studio engineers and account lead.
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 250px), 1fr))", gap: 18 }}>
           {/* Client Details Card */}
           <div className="card" style={{ padding: 22 }}>
             <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em", display: "block", marginBottom: 12 }}>

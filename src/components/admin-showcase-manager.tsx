@@ -20,6 +20,10 @@ import {
   X,
   Code,
   Layers,
+  ArrowLeft,
+  UploadCloud,
+  Upload,
+  Link as LinkIcon,
 } from "lucide-react";
 import {
   PageHeader,
@@ -88,6 +92,51 @@ export function AdminShowcaseManager({
   const [newProjectUrl, setNewProjectUrl] = useState("");
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
+  // Image upload states & direct file support
+  const [imageUploadMode, setImageUploadMode] = useState<"upload" | "url">("upload");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  async function uploadImageFile(file: File) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (PNG, JPG, WEBP, GIF).", "Invalid File");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image file size must be 10MB or less.", "File Too Large");
+      return;
+    }
+
+    setIsUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/admin/gallery/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload image");
+      }
+
+      setNewImageUrl(data.url);
+      setUploadedFileName(file.name);
+      toast.success("Screenshot uploaded successfully!", "Image Uploaded");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to upload image";
+      toast.error(msg, "Upload Error");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
   // Keyboard shortcut: Escape closes modal
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -99,6 +148,29 @@ export function AdminShowcaseManager({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Support pasting image from clipboard (e.g. Snipping tool / screenshots)
+  useEffect(() => {
+    if (!showAddModal) return;
+
+    function handlePaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith("image/")) {
+          const file = items[i].getAsFile();
+          if (file) {
+            uploadImageFile(file);
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [showAddModal]);
 
   // Search and filter state
   const [repoSearch, setRepoSearch] = useState("");
@@ -212,6 +284,11 @@ export function AdminShowcaseManager({
 
   async function handleAddGalleryItem(e: React.FormEvent) {
     e.preventDefault();
+    if (!newImageUrl.trim()) {
+      toast.error("Please upload an image file or provide an image URL.", "Image Required");
+      return;
+    }
+
     setGalleryBusy(true);
     setGalleryMessage(null);
 
@@ -221,7 +298,7 @@ export function AdminShowcaseManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newTitle,
-          imageUrl: newImageUrl,
+          imageUrl: newImageUrl.trim(),
           description: newDescription,
           category: newCategory,
           repoName: newRepoName || null,
@@ -235,6 +312,7 @@ export function AdminShowcaseManager({
       setShowAddModal(false);
       setNewTitle("");
       setNewImageUrl("");
+      setUploadedFileName(null);
       setNewDescription("");
       setNewProjectUrl("");
       setNewRepoName("");
@@ -268,6 +346,595 @@ export function AdminShowcaseManager({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Delete failed", "Error");
     }
+  }
+
+  if (showAddModal) {
+    return (
+      <div className="animate-fade-in-up" style={{ width: "100%", maxWidth: 840, margin: "0 auto", paddingBottom: 40 }}>
+        {/* Navigation Bar */}
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={() => setShowAddModal(false)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary)",
+              background: "var(--card-bg-crm)",
+              border: "1px solid var(--border-hairline)",
+              borderRadius: "var(--radius-pill)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Showcase Portfolio
+          </button>
+        </div>
+
+        <SectionCard
+          title="Add Screenshot Showcase Item"
+          headerRight={
+            <Badge variant="info">Gallery Publication</Badge>
+          }
+        >
+          <p style={{ margin: "-8px 0 20px", fontSize: 13, color: "var(--text-muted-crm)" }}>
+            Publish a design, web build, or prototype screenshot to the public Nova project gallery.
+          </p>
+
+          <form onSubmit={handleAddGalleryItem} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Project Title <span style={{ color: "var(--accent-blue)" }}>*</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. AI-Powered CRM Dashboard"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {/* Screenshot / Project Image Upload */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", color: "var(--text-secondary)" }}>
+                  Screenshot / Project Image <span style={{ color: "var(--accent-blue)" }}>*</span>
+                </label>
+                <div style={{ display: "inline-flex", padding: 2, background: "var(--surface-raised)", borderRadius: 99, border: "1px solid var(--border-hairline)" }}>
+                  <button
+                    type="button"
+                    onClick={() => setImageUploadMode("upload")}
+                    style={{
+                      padding: "4px 12px",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      borderRadius: 99,
+                      border: "none",
+                      background: imageUploadMode === "upload" ? "var(--card-bg-crm)" : "transparent",
+                      color: imageUploadMode === "upload" ? "var(--text-primary)" : "var(--text-muted-crm)",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      boxShadow: imageUploadMode === "upload" ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <UploadCloud size={13} /> Direct Upload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageUploadMode("url")}
+                    style={{
+                      padding: "4px 12px",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      borderRadius: 99,
+                      border: "none",
+                      background: imageUploadMode === "url" ? "var(--card-bg-crm)" : "transparent",
+                      color: imageUploadMode === "url" ? "var(--text-primary)" : "var(--text-muted-crm)",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      boxShadow: imageUploadMode === "url" ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <LinkIcon size={13} /> Image URL
+                  </button>
+                </div>
+              </div>
+
+              {/* Mode 1: Direct File Upload */}
+              {imageUploadMode === "upload" && (
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadImageFile(file);
+                    }}
+                  />
+
+                  {newImageUrl ? (
+                    /* Image Uploaded Preview Card */
+                    <div
+                      style={{
+                        padding: 16,
+                        borderRadius: 14,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--surface-raised)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              background: "rgba(16, 185, 129, 0.15)",
+                              color: "#10B981",
+                              display: "grid",
+                              placeItems: "center",
+                            }}
+                          >
+                            <CheckCircle2 size={18} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                              {uploadedFileName || "Image Uploaded"}
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted-crm)" }}>
+                              Ready for gallery publication · {newImageUrl}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploadingImage}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              borderRadius: "var(--radius-pill)",
+                              border: "1px solid var(--border-hairline)",
+                              background: "var(--card-bg-crm)",
+                              color: "var(--text-primary)",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <Upload size={12} /> Replace
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewImageUrl("");
+                              setUploadedFileName(null);
+                            }}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              borderRadius: "var(--radius-pill)",
+                              border: "1px solid var(--border-hairline)",
+                              background: "var(--card-bg-crm)",
+                              color: "var(--accent-red, #EF4444)",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <X size={12} /> Remove
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Visual Preview */}
+                      <div
+                        style={{
+                          width: "100%",
+                          maxHeight: 280,
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          background: "var(--card-bg-crm)",
+                          border: "1px solid var(--border-hairline)",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          padding: 8,
+                        }}
+                      >
+                        <img
+                          src={newImageUrl}
+                          alt="Showcase Preview"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: 260,
+                            borderRadius: 6,
+                            objectFit: "contain",
+                            display: "block",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    /* Dropzone when no image yet */
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(true);
+                      }}
+                      onDragLeave={() => setIsDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(false);
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) uploadImageFile(file);
+                      }}
+                      onClick={() => !isUploadingImage && fileInputRef.current?.click()}
+                      style={{
+                        padding: "36px 20px",
+                        borderRadius: 14,
+                        border: isDragOver
+                          ? "2px dashed var(--accent-blue, #2F54EB)"
+                          : "2px dashed var(--border-hairline)",
+                        background: isDragOver
+                          ? "rgba(47, 84, 235, 0.05)"
+                          : "var(--surface-raised)",
+                        cursor: isUploadingImage ? "wait" : "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textAlign: "center",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {isUploadingImage ? (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                          <Loader2 size={32} className="animate-spin" color="var(--accent-blue)" />
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                            Uploading screenshot...
+                          </div>
+                          <div style={{ fontSize: 11, color: "var(--text-muted-crm)" }}>
+                            Saving and validating image integrity
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: "50%",
+                              background: "rgba(47, 84, 235, 0.1)",
+                              color: "var(--accent-blue, #2F54EB)",
+                              display: "grid",
+                              placeItems: "center",
+                              marginBottom: 12,
+                            }}
+                          >
+                            <UploadCloud size={24} />
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+                            Click to upload or drag & drop screenshot
+                          </div>
+                          <div style={{ fontSize: 12, color: "var(--text-muted-crm)", marginBottom: 10 }}>
+                            PNG, JPG, WEBP, or GIF (up to 10 MB)
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "var(--text-secondary)",
+                              padding: "4px 10px",
+                              borderRadius: 99,
+                              background: "var(--card-bg-crm)",
+                              border: "1px solid var(--border-hairline)",
+                            }}
+                          >
+                            Tip: You can also paste screenshots directly (Ctrl+V)
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Mode 2: External Image URL */}
+              {imageUploadMode === "url" && (
+                <div>
+                  <input
+                    type="text"
+                    placeholder="https://images.unsplash.com/photo-... or /uploads/gallery/..."
+                    value={newImageUrl}
+                    onChange={(e) => {
+                      setNewImageUrl(e.target.value);
+                      setUploadedFileName(null);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      fontSize: 13,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+
+                  {/* Live preview for URL */}
+                  {newImageUrl && (
+                    <div
+                      style={{
+                        marginTop: 10,
+                        padding: 10,
+                        borderRadius: 10,
+                        background: "var(--surface-raised)",
+                        border: "1px solid var(--border-hairline)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 60,
+                          height: 44,
+                          borderRadius: 6,
+                          overflow: "hidden",
+                          background: "var(--card-bg-crm)",
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <img
+                          src={newImageUrl}
+                          alt="Preview"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
+                          URL Preview Active
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "var(--text-muted-crm)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {newImageUrl}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewImageUrl("");
+                          setUploadedFileName(null);
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "var(--text-muted-crm)",
+                          cursor: "pointer",
+                          padding: 4,
+                        }}
+                        title="Clear URL"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Category
+                </label>
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="UI/UX Design">UI/UX Design</option>
+                  <option value="Full-Stack App">Full-Stack App</option>
+                  <option value="Mobile App">Mobile App</option>
+                  <option value="SaaS Platform">SaaS Platform</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Repository (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nova"
+                  value={newRepoName}
+                  onChange={(e) => setNewRepoName(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Live Demo URL (Optional)
+              </label>
+              <input
+                type="url"
+                placeholder="https://app.example.com"
+                value={newProjectUrl}
+                onChange={(e) => setNewProjectUrl(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Description <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Key deliverables, design system tokens, or technology stack..."
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: 70,
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  resize: "vertical",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+
+            {/* Action Buttons Footer */}
+            <div
+              style={{
+                paddingTop: 18,
+                borderTop: "1px solid var(--border-hairline-light)",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 12,
+                alignItems: "center",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={galleryBusy}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "none",
+                  background: "var(--ink-crm)",
+                  color: "var(--ink-crm-text, #FFFFFF)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: galleryBusy ? "not-allowed" : "pointer",
+                  opacity: galleryBusy ? 0.7 : 1,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {galleryBusy ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  "Publish Item"
+                )}
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+      </div>
+    );
   }
 
   return (
@@ -561,7 +1228,7 @@ export function AdminShowcaseManager({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))",
                 gap: 16,
               }}
             >
@@ -713,7 +1380,7 @@ export function AdminShowcaseManager({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
                 gap: 20,
               }}
             >
@@ -817,328 +1484,7 @@ export function AdminShowcaseManager({
         </div>
       )}
 
-      {/* Add Screenshot Centered Modal Dialog */}
-      {showAddModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10, 12, 18, 0.65)",
-            backdropFilter: "blur(6px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
-          onClick={() => setShowAddModal(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="animate-fade-in-up"
-            style={{
-              background: "var(--card-bg-crm)",
-              width: "100%",
-              maxWidth: 520,
-              maxHeight: "min(90vh, 720px)",
-              borderRadius: "var(--radius-card)",
-              border: "1px solid var(--border-hairline-light)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                flexShrink: 0,
-                padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline-light)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "var(--card-bg-crm)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: "rgba(14, 165, 233, 0.12)",
-                    border: "1px solid rgba(14, 165, 233, 0.25)",
-                    color: "var(--accent-blue)",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <ImageIcon size={18} />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-                    Add Screenshot Showcase
-                  </h3>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted-crm)" }}>
-                    Publish a design or web build to public gallery
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAddModal(false)}
-                aria-label="Close"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                  transition: "color 0.15s ease, background 0.15s ease",
-                }}
-              >
-                <X size={15} />
-              </button>
-            </div>
 
-            <form
-              onSubmit={handleAddGalleryItem}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: "1 1 auto",
-                minHeight: 0,
-                overflow: "hidden",
-              }}
-            >
-              {/* Scrollable Form Body */}
-              <div
-                className="drawer-content"
-                style={{
-                  flex: "1 1 auto",
-                  overflowY: "auto",
-                  padding: "20px 24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                }}
-              >
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Project Title <span style={{ color: "var(--accent-blue)" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. AI-Powered CRM Dashboard"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Image URL / Asset Path <span style={{ color: "var(--accent-blue)" }}>*</span>
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    placeholder="https://images.unsplash.com/photo-..."
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Category
-                    </label>
-                    <select
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value="UI/UX Design">UI/UX Design</option>
-                      <option value="Full-Stack App">Full-Stack App</option>
-                      <option value="Mobile App">Mobile App</option>
-                      <option value="SaaS Platform">SaaS Platform</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                      Repository (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nova"
-                      value={newRepoName}
-                      onChange={(e) => setNewRepoName(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--surface-raised)",
-                        color: "var(--text-primary)",
-                        fontSize: 13,
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Live Demo URL (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://app.example.com"
-                    value={newProjectUrl}
-                    onChange={(e) => setNewProjectUrl(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Description <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Key deliverables, design system tokens, or technology stack..."
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                    style={{
-                      width: "100%",
-                      minHeight: 56,
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      resize: "vertical",
-                      outline: "none",
-                      boxSizing: "border-box",
-                      fontFamily: "inherit",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Pinned Sticky Footer */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  padding: "16px 24px",
-                  borderTop: "1px solid var(--border-hairline-light)",
-                  background: "var(--card-bg-crm)",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 12,
-                  alignItems: "center",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={galleryBusy}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "none",
-                    background: "var(--ink-crm)",
-                    color: "var(--ink-crm-text, #FFFFFF)",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: galleryBusy ? "not-allowed" : "pointer",
-                    opacity: galleryBusy ? 0.7 : 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {galleryBusy ? "Publishing..." : "Publish Item"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* In-App Confirmation Modal */}
       <ConfirmModal

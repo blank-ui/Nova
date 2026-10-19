@@ -39,9 +39,9 @@ export default async function DeveloperReposPage() {
 
       <div style={{ display: "grid", gap: 16, maxWidth: 840 }}>
         {repos.map((repo) => (
-          <div key={repo.name} className="card" style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <div key={repo.name} className="card" style={{ padding: "clamp(16px, 3.5vw, 20px) clamp(16px, 3.5vw, 24px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
                   {repo.name}
                 </h3>
@@ -52,7 +52,7 @@ export default async function DeveloperReposPage() {
               <p style={{ fontSize: 13, color: "var(--muted)", margin: "6px 0 10px", lineHeight: 1.5 }}>
                 {repo.desc}
               </p>
-              <div style={{ display: "flex", gap: 16, fontSize: 11, color: "var(--muted)" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 11, color: "var(--muted)" }}>
                 <span>Default Branch: <strong>{repo.branch}</strong></span>
                 <span>Language: <strong>{repo.language}</strong></span>
               </div>

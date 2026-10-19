@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, FolderKanban, Users, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { Shield, FolderKanban, Users, Image as ImageIcon, MessageSquare, Calendar } from "lucide-react";
 import { NovaLogo, NovaMascotAvatar } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";
@@ -18,6 +18,7 @@ export function AdminNav({
 
   const isOverview = pathname === "/admin";
   const isInquiries = pathname?.startsWith("/admin/inquiry");
+  const isAppointments = pathname?.startsWith("/admin/appointments");
   const isProjects = pathname?.startsWith("/admin/projects");
   const isUsers = pathname?.startsWith("/admin/users");
   const isSecurity = pathname === "/admin/security";
@@ -48,7 +49,7 @@ export function AdminNav({
           gap: 16,
         }}
       >
-        <div className="no-scrollbar" style={{ display: "flex", alignItems: "center", gap: 24, overflowX: "auto" }}>
+        <div className="no-scrollbar" style={{ display: "flex", alignItems: "center", gap: 24, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <Link
             href="/admin"
             style={{
@@ -76,6 +77,13 @@ export function AdminNav({
               style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
             >
               <MessageSquare size={15} /> Inquiries (CRM)
+            </Link>
+            <Link
+              className={`nav-link ${isAppointments ? "nav-link-active" : ""}`}
+              href="/admin/appointments"
+              style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, padding: "6px 0" }}
+            >
+              <Calendar size={15} /> Appointments
             </Link>
             <Link
               className={`nav-link ${isProjects ? "nav-link-active" : ""}`}

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   TrendingUp,
   FolderKanban,
@@ -25,6 +26,8 @@ import {
   FileText,
   AlertCircle,
   Sparkles,
+  ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import { NovaMascotAvatar } from "@/components/brand";
 import { useToast } from "@/components/toast";
@@ -91,6 +94,7 @@ export function AdminDashboardCRM({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [funnelView, setFunnelView] = useState<"total" | "weighted">("total");
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<number | null>(null);
+  const searchParams = useSearchParams();
   const [createProjectModal, setCreateProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
@@ -99,6 +103,17 @@ export function AdminDashboardCRM({
   );
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [localProjects, setLocalProjects] = useState<DashboardProject[]>(projects);
+
+  useEffect(() => {
+    if (searchParams?.get("action") === "create-project" || searchParams?.get("create") === "project") {
+      setCreateProjectModal(true);
+    }
+    function onOpen() {
+      setCreateProjectModal(true);
+    }
+    window.addEventListener("nova:open-create-project", onOpen);
+    return () => window.removeEventListener("nova:open-create-project", onOpen);
+  }, [searchParams]);
 
   const adminFirstName = sessionUser.name ? sessionUser.name.trim().split(/\s+/)[0] : "Admin";
 
@@ -180,6 +195,142 @@ export function AdminDashboardCRM({
     } finally {
       setIsCreatingProject(false);
     }
+  }
+
+  if (createProjectModal) {
+    return (
+      <div className="shell animate-fade-in-up" style={{ padding: "40px 0 80px", maxWidth: 840, margin: "0 auto" }}>
+        {/* Navigation Bar */}
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={() => setCreateProjectModal(false)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary, var(--muted))",
+              background: "var(--surface-raised, var(--paper))",
+              border: "1px solid var(--border-hairline, var(--line))",
+              borderRadius: 99,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to CRM Overview
+          </button>
+        </div>
+
+        <div
+          className="card"
+          style={{
+            padding: "28px 32px",
+            background: "var(--card-bg, var(--paper))",
+            border: "1px solid var(--border-hairline, var(--line))",
+            borderRadius: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+            <FolderKanban size={22} color="#2563EB" />
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--ink)" }}>
+              Provision New Workspace Project
+            </h2>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 24px", lineHeight: 1.6 }}>
+            Create an active workspace project. This will immediately display in the client&apos;s portal, developer boards, and real project pipelines.
+          </p>
+
+          <form onSubmit={handleCreateProject} style={{ display: "grid", gap: 18 }}>
+            <div>
+              <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--ink)" }}>
+                Project Name *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Flight Booking Portal Redesign"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                className="field"
+                style={{ width: "100%" }}
+              />
+            </div>
+
+            <div>
+              <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--ink)" }}>
+                Description (Optional)
+              </label>
+              <textarea
+                placeholder="Scope of work, deliverables, and timeline..."
+                rows={4}
+                value={newProjectDesc}
+                onChange={(e) => setNewProjectDesc(e.target.value)}
+                className="field"
+                style={{ resize: "vertical", width: "100%" }}
+              />
+            </div>
+
+            {inquiries.length > 0 && (
+              <div>
+                <label className="auth-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block", color: "var(--ink)" }}>
+                  Associate with Client / Lead
+                </label>
+                <select
+                  value={newProjectClientId}
+                  onChange={(e) => setNewProjectClientId(e.target.value)}
+                  className="field"
+                  style={{ width: "100%" }}
+                >
+                  <option value={sessionUser.id}>Admin Workspace ({sessionUser.name || sessionUser.email})</option>
+                  {inquiries.map((inq) => (
+                    <option key={inq.id} value={inq.id}>
+                      {inq.name} · {inq.service} ({inq.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 12,
+                marginTop: 8,
+                paddingTop: 18,
+                borderTop: "1px solid var(--border-hairline, var(--line))",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setCreateProjectModal(false)}
+                className="button button-outline"
+                style={{ minWidth: 100, justifyContent: "center" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isCreatingProject}
+                className="button"
+                style={{ minWidth: 150, justifyContent: "center", display: "inline-flex", alignItems: "center", gap: 8 }}
+              >
+                {isCreatingProject ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> Provisioning...
+                  </>
+                ) : (
+                  "Create Project"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -871,7 +1022,7 @@ export function AdminDashboardCRM({
                     <span style={{ color: "var(--muted)" }}>Qualification &amp; Leads</span>
                     <span style={{ fontWeight: 700, color: "var(--ink)" }}>{stageQualification}</span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 99, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                  <div style={{ height: 8, borderRadius: 99, background: "var(--subtle-fill)", overflow: "hidden" }}>
                     <div
                       style={{
                         width: `${totalRecordsCount > 0 ? (stageQualification / totalRecordsCount) * 100 : 0}%`,
@@ -888,7 +1039,7 @@ export function AdminDashboardCRM({
                     <span style={{ color: "var(--muted)" }}>Proposal &amp; Scoping</span>
                     <span style={{ fontWeight: 700, color: "var(--ink)" }}>{stageProposal}</span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 99, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                  <div style={{ height: 8, borderRadius: 99, background: "var(--subtle-fill)", overflow: "hidden" }}>
                     <div
                       style={{
                         width: `${totalRecordsCount > 0 ? (stageProposal / totalRecordsCount) * 100 : 0}%`,
@@ -905,7 +1056,7 @@ export function AdminDashboardCRM({
                     <span style={{ color: "var(--muted)" }}>Active Development</span>
                     <span style={{ fontWeight: 700, color: "var(--ink)" }}>{stageActive}</span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 99, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                  <div style={{ height: 8, borderRadius: 99, background: "var(--subtle-fill)", overflow: "hidden" }}>
                     <div
                       style={{
                         width: `${totalRecordsCount > 0 ? (stageActive / totalRecordsCount) * 100 : 0}%`,
@@ -922,7 +1073,7 @@ export function AdminDashboardCRM({
                     <span style={{ color: "var(--muted)" }}>Delivered &amp; Converted</span>
                     <span style={{ fontWeight: 700, color: "var(--ink)" }}>{stageCompleted}</span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 99, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                  <div style={{ height: 8, borderRadius: 99, background: "var(--subtle-fill)", overflow: "hidden" }}>
                     <div
                       style={{
                         width: `${totalRecordsCount > 0 ? (stageCompleted / totalRecordsCount) * 100 : 0}%`,
@@ -1515,125 +1666,7 @@ export function AdminDashboardCRM({
         </div>
       </div>
 
-      {/* Modal: Create Project */}
-      {createProjectModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10, 12, 18, 0.45)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "stretch",
-            zIndex: 1000,
-          }}
-          onClick={() => setCreateProjectModal(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="drawer-slide-in drawer-responsive"
-            style={{
-              background: "var(--surface-raised, var(--paper))",
-              width: "min(500px, 100%)",
-              height: "100%",
-              maxHeight: "100vh",
-              padding: "28px 24px",
-              boxShadow: "-12px 0 40px rgba(0,0,0,0.3)",
-              borderLeft: "1px solid var(--border-hairline, var(--line))",
-              display: "flex",
-              flexDirection: "column",
-              overflowY: "auto",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <FolderKanban size={20} color="#2563EB" />
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Provision New Project</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCreateProjectModal(false)}
-                style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted)" }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 18px", lineHeight: 1.5 }}>
-              Create an active workspace project. This will immediately display in the client&apos;s portal and projects grid.
-            </p>
 
-            <form onSubmit={handleCreateProject} style={{ display: "grid", gap: 14 }}>
-              <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
-                  Project Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Flight Booking Portal Redesign"
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  className="field"
-                />
-              </div>
-
-              <div>
-                <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
-                  Description (Optional)
-                </label>
-                <textarea
-                  placeholder="Scope of work, deliverables, and timeline..."
-                  rows={3}
-                  value={newProjectDesc}
-                  onChange={(e) => setNewProjectDesc(e.target.value)}
-                  className="field"
-                  style={{ resize: "vertical" }}
-                />
-              </div>
-
-              {inquiries.length > 0 && (
-                <div>
-                  <label className="auth-label" style={{ fontSize: 11, marginBottom: 4, display: "block" }}>
-                    Associate with Client / Lead
-                  </label>
-                  <select
-                    value={newProjectClientId}
-                    onChange={(e) => setNewProjectClientId(e.target.value)}
-                    className="field"
-                  >
-                    <option value={sessionUser.id}>Admin Workspace ({sessionUser.name || sessionUser.email})</option>
-                    {inquiries.map((inq) => (
-                      <option key={inq.id} value={inq.id}>
-                        {inq.name} · {inq.service} ({inq.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-                <button
-                  type="button"
-                  onClick={() => setCreateProjectModal(false)}
-                  className="button button-outline"
-                  style={{ flex: 1, justifyContent: "center" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreatingProject}
-                  className="button"
-                  style={{ flex: 1, justifyContent: "center" }}
-                >
-                  {isCreatingProject ? "Creating..." : "Create Project"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Global CRM Responsive Styles */}
       <style>{`
@@ -1647,6 +1680,15 @@ export function AdminDashboardCRM({
         @media (max-width: 900px) {
           .crm-main-layout {
             grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .crm-card {
+            padding: 16px 14px !important;
+            border-radius: 18px !important;
+          }
+          .crm-top-stat {
+            flex: 1 1 100% !important;
           }
         }
       `}</style>

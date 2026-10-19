@@ -19,7 +19,10 @@ import { authClient } from "@/lib/auth-client";
 import { PasswordInput } from "@/components/password-input";
 import { evaluatePasswordStrength } from "@/lib/password-policy";
 import { useToast } from "@/components/toast";
-import { Avatar, AvatarMenu } from "@/components/admin-ui";
+import { Avatar } from "@/components/admin-ui";
+
+const MAX_AGE_13_DATE = new Date(Date.now() - 13 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+const MAX_DOB_TODAY = new Date().toISOString().split("T")[0];
 
 interface UserProfileSecurityProps {
   initialUser: {
@@ -48,6 +51,14 @@ export function UserProfileSecurity({
 }: UserProfileSecurityProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
   const toast = useToast();
+
+  // Discord integration state
+  const initialDiscord = initialUser.discordHandle ?? "";
+  const [discordHandle, setDiscordHandle] = useState(initialDiscord);
+  const [savedDiscordHandle, setSavedDiscordHandle] = useState(initialDiscord);
+  const [discordSaving, setDiscordSaving] = useState(false);
+  const [discordDisconnecting, setDiscordDisconnecting] = useState(false);
+  const [discordMessage, setDiscordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Detect status / linked params from OAuth redirect on mount
   useEffect(() => {
@@ -84,6 +95,11 @@ export function UserProfileSecurity({
   // Profile fields state
   const [name, setName] = useState(initialUser.name);
   const [phone, setPhone] = useState(initialUser.phone ?? "");
+  const [savedPhone, setSavedPhone] = useState(initialUser.phone ?? "");
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtpSending, setPhoneOtpSending] = useState(false);
+  const [phoneOtpCountdown, setPhoneOtpCountdown] = useState(0);
   const [dateOfBirth, setDateOfBirth] = useState(() => {
     if (!initialUser.dateOfBirth) return "";
     const d = new Date(initialUser.dateOfBirth);
@@ -93,14 +109,22 @@ export function UserProfileSecurity({
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  useEffect(() => {
+    if (phoneOtpCountdown <= 0) return;
+    const timer = setTimeout(() => setPhoneOtpCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [phoneOtpCountdown]);
+
   const initialDobStr = initialUser.dateOfBirth
     ? new Date(initialUser.dateOfBirth).toISOString().split("T")[0]
     : "";
+  const isPhoneChanged = phone.trim() !== savedPhone;
+  const isPhoneOtpRequired = Boolean(savedPhone && isPhoneChanged);
   const isProfileDirty =
     name.trim() !== initialUser.name ||
-    phone.trim() !== (initialUser.phone ?? "") ||
+    phone.trim() !== savedPhone ||
     dateOfBirth !== initialDobStr;
-  const maxDobStr = new Date().toISOString().split("T")[0];
+  const maxDobStr = accountRole === "CLIENT" ? MAX_AGE_13_DATE : MAX_DOB_TODAY;
 
   useEffect(() => {
     function onAvatarUpdated(e: Event) {
@@ -113,14 +137,6 @@ export function UserProfileSecurity({
     window.addEventListener("nova:avatar-updated", onAvatarUpdated);
     return () => window.removeEventListener("nova:avatar-updated", onAvatarUpdated);
   }, [initialUser.id]);
-
-  // Discord integration state
-  const initialDiscord = initialUser.discordHandle ?? "";
-  const [discordHandle, setDiscordHandle] = useState(initialDiscord);
-  const [savedDiscordHandle, setSavedDiscordHandle] = useState(initialDiscord);
-  const [discordSaving, setDiscordSaving] = useState(false);
-  const [discordDisconnecting, setDiscordDisconnecting] = useState(false);
-  const [discordMessage, setDiscordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function handleLinkDiscordOAuth() {
     setDiscordSaving(true);
@@ -245,6 +261,34 @@ export function UserProfileSecurity({
   const [sessionsMessage, setSessionsMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // 1. Profile Update
+  async function handleSendPhoneOtp() {
+    setPhoneOtpSending(true);
+    setProfileMessage(null);
+    try {
+      const res = await fetch("/api/user/phone-otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPhone: phone.trim() }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to send verification code.");
+      }
+      setPhoneOtpSent(true);
+      setPhoneOtpCountdown(60);
+      toast.success(
+        `A 6-digit verification code has been sent to your registered email (${initialUser.email}).`,
+        "Code Sent"
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to send verification code.";
+      setProfileMessage({ type: "error", text: msg });
+      toast.error(msg, "OTP Request Failed");
+    } finally {
+      setPhoneOtpSending(false);
+    }
+  }
+
   async function handleProfileSave(e: FormEvent) {
     e.preventDefault();
     const trimmed = name.trim();
@@ -263,6 +307,33 @@ export function UserProfileSecurity({
         toast.error(msg, "Validation Error");
         return;
       }
+      if (accountRole === "CLIENT") {
+        const today = new Date();
+        const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+        if (parsedDob > minAgeDate) {
+          const msg = "You must be at least 13 years of age.";
+          setProfileMessage({ type: "error", text: msg });
+          toast.error(msg, "Validation Error");
+          return;
+        }
+      }
+    }
+
+    if (isPhoneOtpRequired) {
+      if (!phoneOtpSent) {
+        await handleSendPhoneOtp();
+        toast.info(
+          "Enter the 6-digit code sent to your registered email to confirm updating your phone number.",
+          "Verification Code Required"
+        );
+        return;
+      }
+      if (!phoneOtp.trim()) {
+        const msg = "Please enter the 6-digit verification code sent to your registered email.";
+        setProfileMessage({ type: "error", text: msg });
+        toast.error(msg, "Verification Code Required");
+        return;
+      }
     }
 
     setProfileSaving(true);
@@ -276,12 +347,18 @@ export function UserProfileSecurity({
           name: trimmed,
           phone: phone.trim() || null,
           dateOfBirth: dateOfBirth ? dateOfBirth : null,
+          ...(isPhoneOtpRequired ? { otp: phoneOtp.trim() } : {}),
         }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.error || "Failed to update profile information.");
       }
+
+      setSavedPhone(phone.trim());
+      setPhoneOtp("");
+      setPhoneOtpSent(false);
+      setPhoneOtpCountdown(0);
 
       // 2. Also keep Better Auth session cookie updated if name changed
       if (trimmed !== initialUser.name) {
@@ -802,6 +879,92 @@ export function UserProfileSecurity({
                 <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginTop: 4 }}>
                   For direct updates, consultation scheduling &amp; verification.
                 </span>
+
+                {isPhoneOtpRequired && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: "14px 16px",
+                      borderRadius: 12,
+                      background: "var(--surface-raised, var(--paper))",
+                      border: "1px solid var(--border-hairline, var(--line))",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <Mail size={16} color="var(--blue)" style={{ marginTop: 2, flexShrink: 0 }} />
+                      <div style={{ fontSize: 12, color: "var(--ink)", lineHeight: 1.5 }}>
+                        <strong>Email Verification Required:</strong> To update your verified phone number from{" "}
+                        <code style={{ background: "var(--subtle-fill)", padding: "1px 4px", borderRadius: 4 }}>{savedPhone}</code> to{" "}
+                        <code style={{ background: "var(--subtle-fill)", padding: "1px 4px", borderRadius: 4 }}>{phone.trim() || "(remove)"}</code>, a 6-digit one-time code must be sent to your registered email (<strong>{initialUser.email}</strong>).
+                      </div>
+                    </div>
+
+                    {!phoneOtpSent ? (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={handleSendPhoneOtp}
+                          disabled={phoneOtpSending}
+                          className="button button-outline"
+                          style={{ fontSize: 12, padding: "7px 14px" }}
+                        >
+                          {phoneOtpSending ? (
+                            <>
+                              <Loader2 size={13} className="animate-spin" /> Sending Verification Code...
+                            </>
+                          ) : (
+                            `Send Code to ${initialUser.email}`
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                          <div style={{ flex: 1, minWidth: 160 }}>
+                            <label htmlFor="phone-otp-input" style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 4, color: "var(--text-secondary, var(--ink))" }}>
+                              Enter 6-Digit Email Code *
+                            </label>
+                            <input
+                              id="phone-otp-input"
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={6}
+                              placeholder="123456"
+                              value={phoneOtp}
+                              onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                              className="field"
+                              style={{ letterSpacing: "0.2em", fontWeight: 700, fontSize: 15 }}
+                            />
+                          </div>
+                          <div style={{ alignSelf: "flex-end" }}>
+                            <button
+                              type="button"
+                              onClick={handleSendPhoneOtp}
+                              disabled={phoneOtpSending || phoneOtpCountdown > 0}
+                              className="button button-ghost"
+                              style={{ fontSize: 12, padding: "8px 12px" }}
+                            >
+                              {phoneOtpSending ? (
+                                <Loader2 size={13} className="animate-spin" />
+                              ) : phoneOtpCountdown > 0 ? (
+                                `Resend in ${phoneOtpCountdown}s`
+                              ) : (
+                                "Resend Code"
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 11, color: "#10b981", display: "flex", alignItems: "center", gap: 4 }}>
+                          <CheckCircle2 size={12} /> Code sent to {initialUser.email}. Check your inbox or spam folder.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -943,8 +1106,11 @@ export function UserProfileSecurity({
                   type="button"
                   onClick={() => {
                     setName(initialUser.name);
-                    setPhone(initialUser.phone ?? "");
+                    setPhone(savedPhone);
                     setDateOfBirth(initialDobStr);
+                    setPhoneOtp("");
+                    setPhoneOtpSent(false);
+                    setPhoneOtpCountdown(0);
                     setProfileMessage(null);
                   }}
                   className="button button-outline"

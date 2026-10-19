@@ -8,7 +8,9 @@ import {
 export const dynamic = "force-dynamic";
 
 const DEFAULT_DISCORD_PUBLIC_KEY =
-  "13a75f2198e156aa6e73de8ce3f43f013dafe86a64a5a1acee36a1a74c6f789e";
+  process.env.NODE_ENV !== "production"
+    ? "13a75f2198e156aa6e73de8ce3f43f013dafe86a64a5a1acee36a1a74c6f789e"
+    : "";
 
 export async function GET() {
   const publicKey = process.env.DISCORD_PUBLIC_KEY || DEFAULT_DISCORD_PUBLIC_KEY;

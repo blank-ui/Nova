@@ -1,17 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { NovaLogo } from "@/components/brand";
+import { useLanguage } from "@/components/language-provider";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { t } = useLanguage();
 
   return (
     <footer
       style={{
         background: "#0c0e1a",
         color: "#f6f4ee",
-        padding: "72px 0 32px",
-        marginTop: 90,
+        padding: "clamp(40px, 6vw, 72px) 0 32px",
+        marginTop: "clamp(48px, 8vw, 90px)",
         borderTop: "1px solid rgba(108, 76, 255, 0.2)",
       }}
     >
@@ -19,7 +24,7 @@ export function Footer() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
             gap: "clamp(28px, 4vw, 40px)",
             paddingBottom: 54,
             borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
@@ -38,7 +43,7 @@ export function Footer() {
               />
             </Link>
             <p style={{ color: "#a6adbd", fontSize: 13, lineHeight: 1.7, marginTop: 18 }}>
-              Independent digital product and design studio. Operated on behalf of <strong>All Sky Fares LLC</strong>.
+              {t("footer.tagline", "Independent digital product and design studio. Operated on behalf of All Sky Fares LLC.")}
             </p>
             <p style={{ color: "#7e8799", fontSize: 12, lineHeight: 1.6, marginTop: 8 }}>
               Direct inquiries: <a href="mailto:nova@allskyfares.com" style={{ color: "var(--cyan)", textDecoration: "underline" }}>nova@allskyfares.com</a>
@@ -52,20 +57,17 @@ export function Footer() {
           {/* Column 2: Capabilities & Services */}
           <div>
             <div className="eyebrow" style={{ color: "#8b92a4", marginBottom: 18 }}>
-              Capabilities
+              {t("services.eyebrow", "Capabilities")}
             </div>
             <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
               <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
-                Websites & Experiences
+                {t("services.web_apps", "Custom Web Applications")}
               </Link>
               <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
-                Custom Web Applications & SaaS
+                {t("services.design", "UI/UX & Design Systems")}
               </Link>
               <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
-                Operations & CRM Dashboards
-              </Link>
-              <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
-                Product Design & Prototyping
+                {t("services.crm", "Client Portals & CRM Dashboards")}
               </Link>
               <Link href="/services" style={{ color: "#d0d4e0", transition: "color 0.15s" }}>
                 API Integrations & Automation
@@ -76,23 +78,23 @@ export function Footer() {
           {/* Column 3: Studio & Workspaces */}
           <div>
             <div className="eyebrow" style={{ color: "#8b92a4", marginBottom: 18 }}>
-              Studio & Portals
+              {t("nav.about", "Studio")} & {t("nav.portal", "Portals")}
             </div>
             <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
               <Link href="/about" style={{ color: "#d0d4e0" }}>
-                About Studio
+                {t("nav.about", "Studio")}
               </Link>
               <Link href="/portfolio" style={{ color: "#d0d4e0" }}>
-                Selected Work & Gallery
+                {t("nav.portfolio", "Selected Work & Gallery")}
               </Link>
               <Link href="/process" style={{ color: "#d0d4e0" }}>
-                Our 4-Step Process
+                {t("nav.process", "Our 4-Step Process")}
               </Link>
               <Link href="/faq" style={{ color: "#d0d4e0" }}>
-                Frequently Asked Questions
+                {t("nav.faq", "Frequently Asked Questions")}
               </Link>
               <Link href="/portal" style={{ color: "#67E8F9", fontWeight: 600 }}>
-                Client Portal Sign In &rarr;
+                {t("nav.portal", "Client Portal")} &rarr;
               </Link>
             </div>
           </div>
@@ -100,11 +102,11 @@ export function Footer() {
           {/* Column 4: Contact & Channels */}
           <div>
             <div className="eyebrow" style={{ color: "#8b92a4", marginBottom: 18 }}>
-              Connect
+              {t("contact.eyebrow", "Connect")}
             </div>
             <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
               <Link href="/contact" style={{ color: "#d0d4e0" }}>
-                Start a Project <ArrowUpRight size={12} style={{ display: "inline" }} />
+                {t("hero.start_project", "Start a Project")} <ArrowUpRight size={12} style={{ display: "inline" }} />
               </Link>
               <a href="mailto:nova@allskyfares.com" style={{ color: "#d0d4e0" }}>
                 nova@allskyfares.com
@@ -142,20 +144,22 @@ export function Footer() {
             flexWrap: "wrap",
           }}
         >
-          <div>
-            © {currentYear} All Sky Fares LLC. All rights reserved. Nova is a studio service operated on behalf of All Sky Fares LLC.
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <span>© {currentYear} All Sky Fares LLC. {t("footer.rights", "All rights reserved.")}</span>
+            <LanguageSwitcher compact />
           </div>
 
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <Link href="/privacy" style={{ color: "#9ba3b5" }}>Privacy</Link>
-            <Link href="/terms" style={{ color: "#9ba3b5" }}>Terms</Link>
-            <Link href="/cookies" style={{ color: "#9ba3b5" }}>Cookies</Link>
-            <Link href="/refund-policy" style={{ color: "#9ba3b5" }}>Refunds</Link>
-            <Link href="/support-policy" style={{ color: "#9ba3b5" }}>Support</Link>
-            <Link href="/accessibility" style={{ color: "#9ba3b5" }}>Accessibility</Link>
+            <Link href="/privacy" style={{ color: "#9ba3b5" }}>{t("footer.privacy", "Privacy")}</Link>
+            <Link href="/terms" style={{ color: "#9ba3b5" }}>{t("footer.terms", "Terms")}</Link>
+            <Link href="/cookies" style={{ color: "#9ba3b5" }}>{t("footer.cookies", "Cookies")}</Link>
+            <Link href="/refund-policy" style={{ color: "#9ba3b5" }}>{t("footer.refunds", "Refunds")}</Link>
+            <Link href="/support-policy" style={{ color: "#9ba3b5" }}>{t("footer.support", "Support")}</Link>
+            <Link href="/accessibility" style={{ color: "#9ba3b5" }}>{t("footer.accessibility", "Accessibility")}</Link>
           </div>
         </div>
       </div>
     </footer>
   );
 }
+

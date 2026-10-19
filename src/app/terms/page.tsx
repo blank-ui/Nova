@@ -1,4 +1,10 @@
 import LegalPage from "@/components/legal-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Terms and conditions governing the use of Nova and professional engagements with All Sky Fares LLC.",
+};
 
 export default function Terms() {
   return (
@@ -30,6 +36,9 @@ export default function Terms() {
               </p>
               <p style={{ marginTop: 10 }}>
                 All professional engagements, deliverable milestones, project timelines, payment schedules, and technical specifications are formally established in a mutually executed Master Services Agreement (MSA), Statement of Work (SOW), or project proposal signed by authorized representatives of both parties. In the event of any conflict between these website Terms and an executed SOW, the terms of the executed SOW shall prevail.
+              </p>
+              <p style={{ marginTop: 10 }}>
+                For specific rules regarding discovery deposits, milestone acceptance, pro-rata unused hours, and our 30-day warranty, please review our <a href="/refund-policy" style={{ color: "var(--blue)" }}>Refund &amp; Cancellation Policy</a>. For technical incident priorities and post-launch response times, please review our <a href="/support-policy" style={{ color: "var(--blue)" }}>Support Policy &amp; SLA</a>.
               </p>
             </>
           ),

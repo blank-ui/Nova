@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin, twoFactor } from "better-auth/plugins";
@@ -17,12 +16,16 @@ const appUrl =
       ? defaultAppUrl
       : "http://localhost:3000";
 
-const defaultSecret = "rljd-lQGEUNMH93ERQ9mJz9uWd0y9HWUsBgsfeRUuMs";
-const secret = process.env.AUTH_SECRET ?? defaultSecret;
+const isProd = process.env.NODE_ENV === "production";
+const secret = process.env.AUTH_SECRET || (!isProd ? "rljd-lQGEUNMH93ERQ9mJz9uWd0y9HWUsBgsfeRUuMs" : "");
+
+if (isProd && !secret) {
+  throw new Error("FATAL: AUTH_SECRET must be configured in production environment.");
+}
 
 const googleConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-const discordClientId = process.env.DISCORD_CLIENT_ID || "1558773921686360155";
-const discordClientSecret = process.env.DISCORD_CLIENT_SECRET || "ciSouW4gzTfBHTZSxRWKJPU4pKlfnrz1";
+const discordClientId = process.env.DISCORD_CLIENT_ID || (!isProd ? "1558773921686360155" : "");
+const discordClientSecret = process.env.DISCORD_CLIENT_SECRET || (!isProd ? "ciSouW4gzTfBHTZSxRWKJPU4pKlfnrz1" : "");
 const discordConfigured = Boolean(discordClientId && discordClientSecret);
 
 export const auth = betterAuth({
@@ -85,6 +88,13 @@ export const auth = betterAuth({
   },
   user: {
     modelName: "User",
+    additionalFields: {
+      dateOfBirth: {
+        type: "string",
+        required: false,
+        input: true,
+      },
+    },
     changeEmail: {
       enabled: true,
       sendChangeEmailConfirmation: async ({ newEmail, url }) => {
@@ -113,6 +123,35 @@ export const auth = betterAuth({
   },
   verification: { modelName: "AuthVerification" },
   databaseHooks: {
+    user: {
+      create: {
+        before: async (user, context) => {
+          const rawDob = (context?.body as Record<string, unknown> | undefined)?.dateOfBirth;
+          if (rawDob && typeof rawDob === "string") {
+            const parsed = new Date(rawDob.trim());
+            const now = new Date();
+            const minAgeDate = new Date(now.getFullYear() - 13, now.getMonth(), now.getDate());
+            if (isNaN(parsed.getTime()) || parsed > minAgeDate) {
+              throw new Error("You must be at least 13 years of age to create an account.");
+            }
+          }
+          return { data: user };
+        },
+        after: async (user, context) => {
+          const rawDob = (context?.body as Record<string, unknown> | undefined)?.dateOfBirth;
+          if (rawDob && typeof rawDob === "string" && user?.id) {
+            try {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { dateOfBirth: rawDob.trim() },
+              });
+            } catch (err) {
+              console.error("Failed to sync dateOfBirth on user creation:", err);
+            }
+          }
+        },
+      },
+    },
     account: {
       create: {
         after: async (account) => {

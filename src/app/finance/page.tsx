@@ -61,7 +61,7 @@ export default async function FinanceWorkspace() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
           gap: 16,
           marginBottom: 36,
         }}
@@ -98,12 +98,12 @@ export default async function FinanceWorkspace() {
       </div>
 
       {/* Financial Pipeline Table */}
-      <div className="card" style={{ padding: 28, marginBottom: 28 }}>
+      <div className="card" style={{ padding: "clamp(18px, 4vw, 28px)", marginBottom: 28 }}>
         <h2 style={{ fontSize: 20, letterSpacing: "-.03em", margin: "0 0 16px", color: "var(--ink)" }}>
           Project Scope & Budget Valuations
         </h2>
 
-        <div style={{ overflowX: "auto" }}>
+        <div className="data-table-container" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--line)", color: "var(--muted)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".06em" }}>

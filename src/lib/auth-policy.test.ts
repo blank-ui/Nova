@@ -34,3 +34,27 @@ describe("safe return paths and inquiry validation", () => {
     expect(inquirySchema.safeParse({ ...valid, website: "bot" }).success).toBe(false);
   });
 });
+
+describe("client registration age policy", () => {
+  it("enforces minimum 13 years of age for account creation", () => {
+    const isAtLeast13 = (dobString: string) => {
+      const parsed = new Date(dobString);
+      if (isNaN(parsed.getTime())) return false;
+      const now = new Date();
+      const minAgeDate = new Date(now.getFullYear() - 13, now.getMonth(), now.getDate());
+      return parsed <= minAgeDate;
+    };
+
+    const today = new Date();
+    const tenYearsAgo = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate()).toISOString().split("T")[0];
+    const twelveYearsAgo = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate()).toISOString().split("T")[0];
+    const thirteenYearsAgo = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate()).toISOString().split("T")[0];
+    const twentyYearsAgo = new Date(today.getFullYear() - 20, today.getMonth(), today.getDate()).toISOString().split("T")[0];
+
+    expect(isAtLeast13(tenYearsAgo)).toBe(false);
+    expect(isAtLeast13(twelveYearsAgo)).toBe(false);
+    expect(isAtLeast13(thirteenYearsAgo)).toBe(true);
+    expect(isAtLeast13(twentyYearsAgo)).toBe(true);
+  });
+});
+

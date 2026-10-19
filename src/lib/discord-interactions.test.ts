@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import crypto from "node:crypto";
-import { verifyDiscordSignature, InteractionType, InteractionResponseType } from "./discord-interactions";
+import { verifyDiscordSignature, InteractionType } from "./discord-interactions";
 
 describe("Discord Interactions verification", () => {
   it("correctly verifies a valid Ed25519 signature", () => {

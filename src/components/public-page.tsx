@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight, Check, Sparkles, Clock, ShieldCheck } from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { NovaMascotAvatar } from "@/components/brand";
+import { useLanguage } from "@/components/language-provider";
 
 export function PublicPage({
   eyebrow,
@@ -10,9 +13,9 @@ export function PublicPage({
   subtitle,
   children,
 }: {
-  eyebrow: string;
+  eyebrow: React.ReactNode;
   title: React.ReactNode;
-  subtitle: string;
+  subtitle: React.ReactNode;
   children?: React.ReactNode;
 }) {
   return (
@@ -61,7 +64,7 @@ export function PublicPage({
 
             <h1
               style={{
-                fontSize: "clamp(46px, 6.8vw, 84px)",
+                fontSize: "clamp(32px, 6vw, 76px)",
                 lineHeight: 1.02,
                 letterSpacing: "-.075em",
                 fontWeight: 700,
@@ -99,20 +102,20 @@ export function PublicPage({
 export function FeatureGrid({
   items,
 }: {
-  items: { title: string; text: string; icon?: React.ReactNode }[];
+  items: { title: React.ReactNode; text: React.ReactNode; icon?: React.ReactNode }[];
 }) {
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
         gap: 18,
       }}
     >
       {items.map((item, i) => (
         <article
           className="card card-hover-glow"
-          key={item.title}
+          key={typeof item.title === "string" ? item.title : i}
           style={{
             padding: 28,
             minHeight: 200,
@@ -158,12 +161,14 @@ export function FeatureGrid({
 }
 
 export function CTA({
-  title = "Have a big idea?",
-  subtitle = "Let's shape it together.",
+  title,
+  subtitle,
 }: {
-  title?: string;
-  subtitle?: string;
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div
       className="card card-hover-glow animate-fade-in-up"
@@ -199,27 +204,31 @@ export function CTA({
             lineHeight: 1.1,
           }}
         >
-          {title}
-          <br />
-          <span style={{ color: "var(--muted)" }}>{subtitle}</span>
+          {title || t("hero.cta_title", "Have a big idea? Let's make it real.")}
+          {subtitle && (
+            <>
+              <br />
+              <span style={{ color: "var(--muted)" }}>{subtitle}</span>
+            </>
+          )}
         </h2>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 14, fontSize: 12, color: "var(--muted)" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <Clock size={13} style={{ color: "#10b981" }} /> Replies within 24 hours
+            <Clock size={13} style={{ color: "#10b981" }} /> {t("hero.cta_hours", "Replies within 24 hours")}
           </span>
           <span>·</span>
           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <ShieldCheck size={13} style={{ color: "var(--blue)" }} /> Verified direct contract
+            <ShieldCheck size={13} style={{ color: "var(--blue)" }} /> {t("hero.cta_contract", "Contract entity: All Sky Fares LLC")}
           </span>
         </div>
       </div>
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Link className="button" href="/contact" style={{ padding: "14px 24px", fontSize: 14 }}>
-          Start a project <ArrowUpRight size={16} />
+          {t("hero.start_project", "Start a project")} <ArrowUpRight size={16} />
         </Link>
         <Link className="button button-outline" href="/portfolio" style={{ padding: "14px 22px", fontSize: 14 }}>
-          Explore our work
+          {t("hero.explore_work", "Explore our work")}
         </Link>
       </div>
     </div>

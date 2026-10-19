@@ -26,7 +26,7 @@ export default async function InvoicesPage() {
         </p>
       </div>
 
-      <div className="card" style={{ padding: 28 }}>
+      <div className="card" style={{ padding: "clamp(16px, 4vw, 28px)" }}>
         {projects.length === 0 ? (
           <div style={{ padding: "40px 0", textAlign: "center", color: "var(--muted)" }}>
             <Receipt size={32} style={{ color: "var(--muted)", margin: "0 auto 10px" }} />
@@ -39,7 +39,7 @@ export default async function InvoicesPage() {
               <div
                 key={proj.id}
                 style={{
-                  padding: "16px 20px",
+                  padding: "clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px)",
                   borderRadius: 12,
                   background: "var(--paper)",
                   border: "1px solid var(--line)",

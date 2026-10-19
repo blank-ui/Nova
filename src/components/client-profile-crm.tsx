@@ -27,9 +27,11 @@ import {
   X,
   Layers,
   FileText,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
-import { Avatar } from "@/components/admin-ui";
+import { Avatar, SectionCard, Badge } from "@/components/admin-ui";
+import { getIndianHolidaysForMonth, IndianHoliday } from "@/lib/indian-holidays";
 
 export interface ClientProfileData {
   id: string;
@@ -64,6 +66,8 @@ export interface InquiryItem {
   service: string;
   budget?: string | null;
   message: string;
+  referenceUrl?: string | null;
+  referenceImage?: string | null;
   status: string;
   createdAt: string;
 }
@@ -75,6 +79,7 @@ interface ClientProfileCRMProps {
   inquiryStatusSection?: React.ReactNode;
   backUrl?: string;
   pageTitle?: string;
+  showHeader?: boolean;
 }
 
 function DiscordIcon({ size = 18 }: { size?: number }) {
@@ -100,6 +105,7 @@ export function ClientProfileCRM({
   inquiryStatusSection,
   backUrl = "/admin/users",
   pageTitle = "Customer Information",
+  showHeader = true,
 }: ClientProfileCRMProps) {
   const toast = useToast();
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -129,6 +135,39 @@ export function ClientProfileCRM({
   const [calendarAptTitle, setCalendarAptTitle] = useState("Milestone Review Meeting");
   const [calendarAptTime, setCalendarAptTime] = useState("14:00");
   const [isSubmittingApt, setIsSubmittingApt] = useState(false);
+  const [selectedInquiryDetail, setSelectedInquiryDetail] = useState<InquiryItem | null>(null);
+  const [updatingDetailStatus, setUpdatingDetailStatus] = useState(false);
+  const [modalStatusChoice, setModalStatusChoice] = useState<string>("NEW");
+
+  function openInquiryDetails(inq: InquiryItem) {
+    setSelectedInquiryDetail(inq);
+    setModalStatusChoice(inq.status);
+    const el = document.getElementById("lead-inquiry-details");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  async function handleUpdateModalStatus() {
+    if (!selectedInquiryDetail) return;
+    setUpdatingDetailStatus(true);
+    try {
+      const res = await fetch(`/api/admin/inquiries?id=${encodeURIComponent(selectedInquiryDetail.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: modalStatusChoice }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update status");
+      toast.success(`Inquiry status updated to ${modalStatusChoice}`, "Saved");
+      selectedInquiryDetail.status = modalStatusChoice;
+      setSelectedInquiryDetail({ ...selectedInquiryDetail, status: modalStatusChoice });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error updating status", "Error");
+    } finally {
+      setUpdatingDetailStatus(false);
+    }
+  }
 
   // Keyboard shortcut: Escape to close all modals
   useEffect(() => {
@@ -137,19 +176,52 @@ export function ClientProfileCRM({
         setCalendarActionModal(null);
         setEditContactModal(false);
         setCreateProjectModal(false);
+        setSelectedInquiryDetail(null);
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Listen for left rail / external trigger to open project creation form
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "create-project" || params.get("create") === "project") {
+        setCreateProjectModal(true);
+      }
+    }
+    function onOpen() {
+      setCreateProjectModal(true);
+    }
+    window.addEventListener("nova:open-create-project", onOpen);
+    return () => window.removeEventListener("nova:open-create-project", onOpen);
+  }, []);
+
+  // Dynamic Calendar Date Helper
+  const [currentDate] = useState(() => new Date());
+  const currentMonthName = currentDate.toLocaleString("default", { month: "long" });
+  const currentYear = currentDate.getFullYear();
+  const currentMonthNum = String(currentDate.getMonth() + 1).padStart(2, "0");
+  const daysInCurrentMonth = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
+  const indianHolidays = getIndianHolidaysForMonth(currentYear, currentDate.getMonth());
+
   async function handleCreateCalendarAppointment(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedCalendarDay) return;
+
+    const selectedDateObj = new Date(currentYear, currentDate.getMonth(), selectedCalendarDay, 23, 59, 59);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    if (selectedDateObj < todayStart) {
+      toast.error("Cannot schedule an appointment on a past date.", "Past Date");
+      return;
+    }
+
     setIsSubmittingApt(true);
     try {
       const dayStr = String(selectedCalendarDay).padStart(2, "0");
-      const dateIso = `2026-10-${dayStr}T${calendarAptTime || "12:00"}:00`;
+      const dateIso = `${currentYear}-${currentMonthNum}-${dayStr}T${calendarAptTime || "12:00"}:00`;
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,7 +240,7 @@ export function ClientProfileCRM({
         ...prev,
         [selectedCalendarDay]: [...(prev[selectedCalendarDay] || []), `${calendarAptTime} · ${calendarAptTitle}`],
       }));
-      toast.success(`Appointment confirmed for October ${selectedCalendarDay}!`, "Appointment Set");
+      toast.success(`Appointment confirmed for ${currentMonthName} ${selectedCalendarDay}!`, "Appointment Set");
       setCalendarActionModal(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to set appointment", "Error");
@@ -180,11 +252,20 @@ export function ClientProfileCRM({
   function handleSaveCalendarNote(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedCalendarDay || !calendarNoteText.trim()) return;
+
+    const selectedDateObj = new Date(currentYear, currentDate.getMonth(), selectedCalendarDay, 23, 59, 59);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    if (selectedDateObj < todayStart) {
+      toast.error("Cannot leave a note on a date before today.", "Past Date Restricted");
+      return;
+    }
+
     setDayNotes((prev) => ({
       ...prev,
       [selectedCalendarDay]: [...(prev[selectedCalendarDay] || []), calendarNoteText.trim()],
     }));
-    toast.success(`Note saved for October ${selectedCalendarDay}!`, "Note Added");
+    toast.success(`Note saved for ${currentMonthName} ${selectedCalendarDay}!`, "Note Added");
     setCalendarNoteText("");
     setCalendarActionModal(null);
   }
@@ -312,10 +393,311 @@ export function ClientProfileCRM({
     }
   }
 
+  if (createProjectModal) {
+    return (
+      <div className="crm-container animate-fade-in-up" style={{ maxWidth: 840, margin: "0 auto", padding: "24px 20px 80px" }}>
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={() => setCreateProjectModal(false)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary, var(--muted))",
+              background: "var(--surface-raised, var(--paper))",
+              border: "1px solid var(--border-hairline, var(--line))",
+              borderRadius: 99,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Client Profile
+          </button>
+        </div>
+
+        <SectionCard
+          title="Provision Client Project"
+          headerRight={<Badge variant="info">Client Workspace</Badge>}
+        >
+          <p style={{ margin: "-8px 0 24px", fontSize: 13, color: "var(--text-muted-crm)" }}>
+            Create an active development project in the workspace for <strong>{user.name}</strong>.
+          </p>
+
+          <form onSubmit={handleCreateRealProject} style={{ display: "grid", gap: 20 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Project Name <span style={{ color: "var(--accent-blue)" }}>*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                placeholder="e.g. NextGen Web Platform"
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                Scope / Description <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
+              </label>
+              <textarea
+                rows={4}
+                value={newProjectDesc}
+                onChange={(e) => setNewProjectDesc(e.target.value)}
+                placeholder="Project deliverables, tech stack, and goals..."
+                style={{
+                  width: "100%",
+                  minHeight: 100,
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontSize: 13,
+                  resize: "vertical",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 12, paddingTop: 16, borderTop: "1px solid var(--border-hairline-light)" }}>
+              <button
+                type="button"
+                onClick={() => setCreateProjectModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isCreatingProject}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "none",
+                  background: "var(--ink-crm)",
+                  color: "var(--ink-crm-text, #FFFFFF)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: isCreatingProject ? "not-allowed" : "pointer",
+                  opacity: isCreatingProject ? 0.7 : 1,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {isCreatingProject && <Loader2 size={14} className="animate-spin" />}
+                {isCreatingProject ? "Creating…" : "Create Project"}
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+      </div>
+    );
+  }
+
+  if (editContactModal) {
+    return (
+      <div className="crm-container animate-fade-in-up" style={{ maxWidth: 840, margin: "0 auto", padding: "24px 20px 80px" }}>
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={() => setEditContactModal(false)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary, var(--muted))",
+              background: "var(--surface-raised, var(--paper))",
+              border: "1px solid var(--border-hairline, var(--line))",
+              borderRadius: 99,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Client Profile
+          </button>
+        </div>
+
+        <SectionCard
+          title="Client Contact Details"
+          headerRight={<Badge variant="info">Client Record</Badge>}
+        >
+          <p style={{ margin: "-8px 0 24px", fontSize: 13, color: "var(--text-muted-crm)" }}>
+            Update contact parameters on record for <strong>{user.name}</strong>.
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setEditContactModal(false);
+              toast.success("Client parameters updated.", "Saved");
+            }}
+            style={{ display: "grid", gap: 20 }}
+          >
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  defaultValue={user.name}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  defaultValue={companyName}
+                  placeholder="Not specified"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  defaultValue={phoneNumber}
+                  placeholder="Not provided"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
+                  Discord Handle
+                </label>
+                <input
+                  type="text"
+                  defaultValue={user.discordHandle || ""}
+                  placeholder="username"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--surface-raised)",
+                    color: "var(--text-primary)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 12, paddingTop: 16, borderTop: "1px solid var(--border-hairline-light)" }}>
+              <button
+                type="button"
+                onClick={() => setEditContactModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "none",
+                  background: "var(--ink-crm)",
+                  color: "var(--ink-crm-text, #FFFFFF)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                Save Details
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+      </div>
+    );
+  }
+
   return (
-    <div className="crm-container" style={{ maxWidth: 1360, margin: "0 auto", padding: "16px 20px 80px" }}>
+    <div className="crm-container" style={{ maxWidth: 1360, margin: "0 auto", padding: showHeader ? "16px 20px 80px" : "0 0 80px" }}>
       {/* Top Header Bar */}
-      <header
+      {showHeader && (
+        <header
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -361,7 +743,7 @@ export function ClientProfileCRM({
               {pageTitle}
             </h1>
             <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500 }}>
-              Client Profile &middot; {user.name} ({user.email})
+              {user.role === "ADMIN" ? "Admin Workspace Account" : user.role === "DEVELOPER" ? "Developer Account" : user.role === "FINANCE" ? "Finance Account" : "Client Profile"} &middot; {user.name} ({user.email})
             </span>
           </div>
         </div>
@@ -422,7 +804,7 @@ export function ClientProfileCRM({
                 )}
               </div>
               <span style={{ fontSize: 11, color: "var(--muted)" }}>
-                {totalRecordsCount} Total Client Engagement{totalRecordsCount === 1 ? "" : "s"}
+                {totalRecordsCount} {user.role === "ADMIN" ? "Total Workspace Engagement" : "Total Client Engagement"}{totalRecordsCount === 1 ? "" : "s"}
               </span>
             </div>
           </div>
@@ -526,6 +908,7 @@ export function ClientProfileCRM({
           </div>
         </div>
       </header>
+      )}
 
       {/* Main CRM Grid: Left 62% - Right 38% */}
       <div
@@ -624,7 +1007,9 @@ export function ClientProfileCRM({
                   No active projects or inquiries yet
                 </h3>
                 <p style={{ fontSize: 12, color: "var(--muted)", maxWidth: 360, margin: "0 auto 16px", lineHeight: 1.6 }}>
-                  This client does not have any active projects or inquiry submissions logged in the workspace.
+                  {user.role === "ADMIN"
+                    ? "No active projects or inquiry submissions logged in this admin workspace."
+                    : "This client does not have any active projects or inquiry submissions logged in the workspace."}
                 </p>
                 <button
                   type="button"
@@ -632,7 +1017,7 @@ export function ClientProfileCRM({
                   className="button"
                   style={{ fontSize: 12, padding: "8px 16px" }}
                 >
-                  <Plus size={14} /> Provision First Project
+                  <Plus size={14} /> {user.role === "ADMIN" ? "Provision Studio Project" : "Provision First Project"}
                 </button>
               </div>
             ) : (
@@ -720,6 +1105,15 @@ export function ClientProfileCRM({
                   return (
                     <div
                       key={inq.id}
+                      onClick={() => openInquiryDetails(inq)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openInquiryDetails(inq);
+                        }
+                      }}
                       style={{
                         background: c.bg,
                         color: c.text,
@@ -731,15 +1125,38 @@ export function ClientProfileCRM({
                         minHeight: 145,
                         boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
                         position: "relative",
+                        cursor: "pointer",
+                        transition: "transform 0.15s ease, box-shadow 0.15s ease",
                       }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: c.pill }}>
                           {new Date(inq.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
                         </span>
-                        <Link href={`/admin/inquiry/${inq.id}`} style={{ color: "inherit", opacity: 0.85 }} title="View Inquiry">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openInquiryDetails(inq);
+                          }}
+                          style={{
+                            background: c.pill,
+                            border: "none",
+                            color: "inherit",
+                            width: 28,
+                            height: 28,
+                            borderRadius: 8,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                          title="Open Inquiry Details"
+                        >
                           <ExternalLink size={14} />
-                        </Link>
+                        </button>
                       </div>
 
                       <div style={{ margin: "12px 0" }}>
@@ -747,6 +1164,20 @@ export function ClientProfileCRM({
                         <div style={{ fontSize: 11, opacity: 0.85, marginTop: 4 }}>
                           {inq.company || "Client Opportunity Lead"}
                         </div>
+                        {(inq.referenceUrl || inq.referenceImage) && (
+                          <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                            {inq.referenceUrl && (
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: "rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                                🔗 Benchmark
+                              </span>
+                            )}
+                            {inq.referenceImage && (
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: "rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                                🖼️ Mockup
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -805,7 +1236,7 @@ export function ClientProfileCRM({
                   marginBottom: 14,
                 }}
               >
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>October 2026</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>{currentMonthName} {currentYear}</span>
               </div>
 
               {/* Calendar Grid */}
@@ -825,18 +1256,20 @@ export function ClientProfileCRM({
                   </div>
                 ))}
 
-                {/* Day Numbers 1 to 31 */}
-                {Array.from({ length: 31 }, (_, i) => {
+                {/* Day Numbers 1 to daysInCurrentMonth */}
+                {Array.from({ length: daysInCurrentMonth }, (_, i) => {
                   const day = i + 1;
                   const isSelected = selectedCalendarDay === day;
                   const hasApt = Boolean(dayAppointments[day]?.length);
                   const hasNote = Boolean(dayNotes[day]?.length);
+                  const holiday = indianHolidays[day];
 
                   return (
                     <button
                       key={day}
                       type="button"
                       onClick={() => setSelectedCalendarDay(day)}
+                      title={holiday ? `🇮🇳 ${holiday.name} (${holiday.type})` : undefined}
                       style={{
                         aspectRatio: "1/1",
                         borderRadius: 10,
@@ -850,6 +1283,8 @@ export function ClientProfileCRM({
                         fontWeight: isSelected ? 800 : 500,
                         background: isSelected
                           ? "rgba(47,84,235,0.12)"
+                          : holiday
+                          ? "rgba(255,153,51,0.1)"
                           : hasApt
                           ? "rgba(108,76,224,0.08)"
                           : "transparent",
@@ -861,6 +1296,17 @@ export function ClientProfileCRM({
                     >
                       <span>{day}</span>
                       <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
+                        {holiday && (
+                          <span
+                            style={{
+                              width: 4,
+                              height: 4,
+                              borderRadius: "50%",
+                              background: "#ff9933",
+                            }}
+                            title={`🇮🇳 ${holiday.name}`}
+                          />
+                        )}
                         {hasApt && (
                           <span
                             style={{
@@ -889,6 +1335,19 @@ export function ClientProfileCRM({
                 })}
               </div>
 
+              {/* Calendar Legend */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, padding: "4px 6px", fontSize: 10, color: "var(--text-muted-crm)", flexWrap: "wrap" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff9933" }} /> 🇮🇳 Indian Holiday
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6C4CE0" }} /> Appointment
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669" }} /> Note
+                </span>
+              </div>
+
               {/* Day Details & Interactive Actions when Day Selected */}
               {selectedCalendarDay ? (
                 <div
@@ -900,114 +1359,174 @@ export function ClientProfileCRM({
                     border: "1px solid var(--border-hairline, #C8CED7)",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>
-                      October {selectedCalendarDay}, 2026
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCalendarDay(null);
-                        setCalendarActionModal(null);
-                      }}
-                      style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted-crm)", fontSize: 11 }}
-                    >
-                      Clear
-                    </button>
-                  </div>
+                  {(() => {
+                    const selectedDateObj = new Date(currentYear, currentDate.getMonth(), selectedCalendarDay, 23, 59, 59);
+                    const todayStart = new Date();
+                    todayStart.setHours(0, 0, 0, 0);
+                    const isPastDay = selectedDateObj < todayStart;
+                    const selectedDayHoliday = indianHolidays[selectedCalendarDay];
 
-                  {/* Existing Day Appointments */}
-                  {dayAppointments[selectedCalendarDay]?.map((apt, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        fontSize: 11,
-                        padding: "4px 8px",
-                        borderRadius: 6,
-                        background: "rgba(108,76,224,0.1)",
-                        color: "#6C4CE0",
-                        fontWeight: 600,
-                        marginBottom: 4,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <Calendar size={11} />
-                      <span>{apt}</span>
-                    </div>
-                  ))}
+                    return (
+                      <>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>
+                            {currentMonthName} {selectedCalendarDay}, {currentYear}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCalendarDay(null);
+                              setCalendarActionModal(null);
+                            }}
+                            style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted-crm)", fontSize: 11 }}
+                          >
+                            Clear
+                          </button>
+                        </div>
 
-                  {/* Existing Day Notes */}
-                  {dayNotes[selectedCalendarDay]?.map((note, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        fontSize: 11,
-                        padding: "4px 8px",
-                        borderRadius: 6,
-                        background: "rgba(5,150,105,0.08)",
-                        color: "#059669",
-                        fontWeight: 500,
-                        marginBottom: 4,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <FileText size={11} />
-                      <span>{note}</span>
-                    </div>
-                  ))}
+                        {/* Indian Holiday Card */}
+                        {selectedDayHoliday && (
+                          <div
+                            style={{
+                              padding: "8px 12px",
+                              background: "rgba(255, 153, 51, 0.12)",
+                              border: "1px solid rgba(255, 153, 51, 0.35)",
+                              borderRadius: 10,
+                              marginBottom: 8,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <span style={{ fontSize: 16 }}>🇮🇳</span>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: "#d97706" }}>
+                                {selectedDayHoliday.name} &middot; <span style={{ fontSize: 10, textTransform: "uppercase" }}>{selectedDayHoliday.type} Holiday</span>
+                              </div>
+                              {selectedDayHoliday.description && (
+                                <div style={{ fontSize: 10, color: "var(--text-muted-crm)", marginTop: 2 }}>
+                                  {selectedDayHoliday.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
-                  {/* Action Buttons to Set Appointment or Leave Note */}
-                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                    <button
-                      type="button"
-                      onClick={() => setCalendarActionModal("appointment")}
-                      style={{
-                        flex: 1,
-                        padding: "6px 10px",
-                        borderRadius: 99,
-                        border: "none",
-                        background: "var(--accent-blue, #2F54EB)",
-                        color: "#FFFFFF",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <Calendar size={12} />
-                      <span>Set Appointment</span>
-                    </button>
+                        {/* Existing Day Appointments */}
+                        {dayAppointments[selectedCalendarDay]?.map((apt, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              fontSize: 11,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              background: "rgba(108,76,224,0.1)",
+                              color: "#6C4CE0",
+                              fontWeight: 600,
+                              marginBottom: 4,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <Calendar size={11} />
+                            <span>{apt}</span>
+                          </div>
+                        ))}
 
-                    <button
-                      type="button"
-                      onClick={() => setCalendarActionModal("note")}
-                      style={{
-                        flex: 1,
-                        padding: "6px 10px",
-                        borderRadius: 99,
-                        border: "1px solid var(--border-hairline, #C8CED7)",
-                        background: "var(--paper, #FFFFFF)",
-                        color: "var(--text-primary)",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <Edit3 size={12} />
-                      <span>Leave Note</span>
-                    </button>
-                  </div>
+                        {/* Existing Day Notes */}
+                        {dayNotes[selectedCalendarDay]?.map((note, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              fontSize: 11,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              background: "rgba(5,150,105,0.08)",
+                              color: "#059669",
+                              fontWeight: 500,
+                              marginBottom: 4,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <FileText size={11} />
+                            <span>{note}</span>
+                          </div>
+                        ))}
+
+                        {/* Action Buttons: Blocked for Past Dates */}
+                        {isPastDay ? (
+                          <div
+                            style={{
+                              marginTop: 8,
+                              padding: "8px 12px",
+                              borderRadius: 10,
+                              background: "var(--subtle-fill)",
+                              color: "var(--text-muted-crm)",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <Clock size={13} />
+                            <span>This date is in the past. Notes and appointments cannot be scheduled before today.</span>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                            <button
+                              type="button"
+                              onClick={() => setCalendarActionModal("appointment")}
+                              style={{
+                                flex: 1,
+                                padding: "6px 10px",
+                                borderRadius: 99,
+                                border: "none",
+                                background: "var(--accent-blue, #2F54EB)",
+                                color: "#FFFFFF",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <Calendar size={12} />
+                              <span>Set Appointment</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setCalendarActionModal("note")}
+                              style={{
+                                flex: 1,
+                                padding: "6px 10px",
+                                borderRadius: 99,
+                                border: "1px solid var(--border-hairline, #C8CED7)",
+                                background: "var(--paper, #FFFFFF)",
+                                color: "var(--text-primary)",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <Edit3 size={12} />
+                              <span>Leave Note</span>
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   {/* Subform: Set Appointment */}
                   {calendarActionModal === "appointment" && (
@@ -1154,7 +1673,7 @@ export function ClientProfileCRM({
                       <span style={{ color: "var(--muted)" }}>Qualification &amp; Leads</span>
                       <span style={{ fontWeight: 700, color: "var(--ink)" }}>{stageQualification}</span>
                     </div>
-                    <div style={{ height: 8, borderRadius: 99, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                    <div style={{ height: 8, borderRadius: 99, background: "var(--subtle-fill)", overflow: "hidden" }}>
                       <div
                         style={{
                           width: `${totalRecordsCount > 0 ? (stageQualification / totalRecordsCount) * 100 : 0}%`,
@@ -1171,7 +1690,7 @@ export function ClientProfileCRM({
                       <span style={{ color: "var(--muted)" }}>Proposal &amp; Scoping</span>
                       <span style={{ fontWeight: 700, color: "var(--ink)" }}>{stageProposal}</span>
                     </div>
-                    <div style={{ height: 8, borderRadius: 99, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                    <div style={{ height: 8, borderRadius: 99, background: "var(--subtle-fill)", overflow: "hidden" }}>
                       <div
                         style={{
                           width: `${totalRecordsCount > 0 ? (stageProposal / totalRecordsCount) * 100 : 0}%`,
@@ -1188,7 +1707,7 @@ export function ClientProfileCRM({
                       <span style={{ color: "var(--muted)" }}>Active Development</span>
                       <span style={{ fontWeight: 700, color: "var(--ink)" }}>{stageActive}</span>
                     </div>
-                    <div style={{ height: 8, borderRadius: 99, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                    <div style={{ height: 8, borderRadius: 99, background: "var(--subtle-fill)", overflow: "hidden" }}>
                       <div
                         style={{
                           width: `${totalRecordsCount > 0 ? (stageActive / totalRecordsCount) * 100 : 0}%`,
@@ -1259,7 +1778,7 @@ export function ClientProfileCRM({
                   }}
                 />
                 <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>
-                  {user.banned ? "Suspended" : "Active Client"}
+                  {user.banned ? "Suspended" : user.role === "ADMIN" ? "Active Admin" : user.role === "DEVELOPER" ? "Active Developer" : user.role === "FINANCE" ? "Active Finance" : "Active Client"}
                 </span>
               </div>
               <button
@@ -1737,428 +2256,316 @@ export function ClientProfileCRM({
         </div>
       </div>
 
-      {/* Centered Modal: Create Real Project */}
-      {createProjectModal && (
+      {/* PROJECT INQUIRY DETAILS MODAL */}
+      {selectedInquiryDetail && (
         <div
-          role="dialog"
-          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(10, 12, 18, 0.65)",
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.65)",
             backdropFilter: "blur(6px)",
             display: "flex",
-            justifyContent: "center",
             alignItems: "center",
+            justifyContent: "center",
             padding: 16,
-            zIndex: 1000,
+            overflowY: "auto",
           }}
-          onClick={() => setCreateProjectModal(false)}
+          onClick={() => setSelectedInquiryDetail(null)}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
-            className="animate-fade-in-up"
             style={{
-              background: "var(--card-bg-crm)",
+              background: "var(--paper)",
+              border: "1px solid var(--line)",
+              borderRadius: 22,
+              maxWidth: 680,
               width: "100%",
-              maxWidth: 500,
-              maxHeight: "min(90vh, 640px)",
-              borderRadius: "var(--radius-card)",
-              border: "1px solid var(--border-hairline-light)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.25)",
+              padding: "24px 28px",
+              position: "relative",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div
-              style={{
-                flexShrink: 0,
-                padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline-light)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "var(--card-bg-crm)",
-              }}
-            >
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Provision Project</h3>
-                <p style={{ fontSize: 12, color: "var(--text-muted-crm)", margin: "2px 0 0" }}>
-                  Create an active development project in the workspace for <strong>{user.name}</strong>.
-                </p>
+                <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--accent-blue, #6C4CFF)", letterSpacing: "0.06em", display: "block", marginBottom: 4 }}>
+                  Project Inquiry Lead &middot; #{selectedInquiryDetail.id.slice(-8)}
+                </span>
+                <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "var(--ink)", letterSpacing: "-0.03em" }}>
+                  {selectedInquiryDetail.service}
+                </h2>
               </div>
               <button
                 type="button"
-                onClick={() => setCreateProjectModal(false)}
-                aria-label="Close"
+                onClick={() => setSelectedInquiryDetail(null)}
                 style={{
                   width: 32,
                   height: 32,
                   borderRadius: "50%",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                  transition: "color 0.15s ease, background 0.15s ease",
-                }}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleCreateRealProject}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: "1 1 auto",
-                minHeight: 0,
-                overflow: "hidden",
-              }}
-            >
-              <div
-                className="drawer-content"
-                style={{
-                  flex: "1 1 auto",
-                  overflowY: "auto",
-                  padding: "20px 24px",
+                  border: "1px solid var(--line)",
+                  background: "var(--paper-alt, rgba(0,0,0,0.04))",
+                  color: "var(--muted)",
                   display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                }}
-              >
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Project Name <span style={{ color: "var(--accent-blue)" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newProjectName}
-                    onChange={(e) => setNewProjectName(e.target.value)}
-                    placeholder="e.g. NextGen Web Platform"
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Scope / Description <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted-crm)" }}>(Optional)</span>
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={newProjectDesc}
-                    onChange={(e) => setNewProjectDesc(e.target.value)}
-                    placeholder="Project deliverables, tech stack, and goals..."
-                    style={{
-                      width: "100%",
-                      minHeight: 70,
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-hairline)",
-                      background: "var(--surface-raised)",
-                      color: "var(--text-primary)",
-                      fontSize: 13,
-                      resize: "vertical",
-                      outline: "none",
-                      boxSizing: "border-box",
-                      fontFamily: "inherit",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Pinned Sticky Footer */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  padding: "16px 24px",
-                  borderTop: "1px solid var(--border-hairline-light)",
-                  background: "var(--card-bg-crm)",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 12,
                   alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+                title="Close details"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Badges / Meta row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  padding: "3px 10px",
+                  borderRadius: 99,
+                  background:
+                    selectedInquiryDetail.status === "NEW"
+                      ? "rgba(255,181,71,0.18)"
+                      : selectedInquiryDetail.status === "CONVERTED" || selectedInquiryDetail.status === "QUALIFIED"
+                      ? "rgba(16,185,129,0.18)"
+                      : "rgba(37,99,235,0.18)",
+                  color:
+                    selectedInquiryDetail.status === "NEW"
+                      ? "#d97706"
+                      : selectedInquiryDetail.status === "CONVERTED" || selectedInquiryDetail.status === "QUALIFIED"
+                      ? "#059669"
+                      : "#2563eb",
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => setCreateProjectModal(false)}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreatingProject}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "none",
-                    background: "var(--ink-crm)",
-                    color: "var(--ink-crm-text, #FFFFFF)",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: isCreatingProject ? "not-allowed" : "pointer",
-                    opacity: isCreatingProject ? 0.7 : 1,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {isCreatingProject ? "Creating…" : "Create Project"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                {selectedInquiryDetail.status}
+              </span>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                Submitted {new Date(selectedInquiryDetail.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </span>
+              {selectedInquiryDetail.budget && (
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", background: "var(--surface-raised)", padding: "2px 8px", borderRadius: 6, border: "1px solid var(--border-hairline)" }}>
+                  💰 {selectedInquiryDetail.budget}
+                </span>
+              )}
+            </div>
 
-      {/* Centered Modal: Edit Contact Details */}
-      {editContactModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10, 12, 18, 0.65)",
-            backdropFilter: "blur(6px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
-          onClick={() => setEditContactModal(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="animate-fade-in-up"
-            style={{
-              background: "var(--card-bg-crm)",
-              width: "100%",
-              maxWidth: 480,
-              maxHeight: "min(90vh, 600px)",
-              borderRadius: "var(--radius-card)",
-              border: "1px solid var(--border-hairline-light)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            {/* Modal Header */}
+            {/* Client Overview Card */}
             <div
               style={{
-                flexShrink: 0,
-                padding: "20px 24px 16px",
-                borderBottom: "1px solid var(--border-hairline-light)",
+                padding: "14px 18px",
+                borderRadius: 14,
+                background: "var(--surface-raised, rgba(0,0,0,0.02))",
+                border: "1px solid var(--border-hairline-light, var(--line))",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 12,
+                marginBottom: 18,
+                fontSize: 12,
+              }}
+            >
+              <div>
+                <span style={{ color: "var(--muted)", display: "block", fontSize: 11 }}>Client Name</span>
+                <strong style={{ color: "var(--ink)", fontSize: 13 }}>{selectedInquiryDetail.name}</strong>
+              </div>
+              <div>
+                <span style={{ color: "var(--muted)", display: "block", fontSize: 11 }}>Email Address</span>
+                <a href={`mailto:${selectedInquiryDetail.email}`} style={{ color: "var(--accent-blue, #6C4CFF)", fontWeight: 600 }}>
+                  {selectedInquiryDetail.email}
+                </a>
+              </div>
+              {selectedInquiryDetail.phone && (
+                <div>
+                  <span style={{ color: "var(--muted)", display: "block", fontSize: 11 }}>Direct Phone</span>
+                  <span style={{ color: "var(--ink)", fontWeight: 600 }}>{selectedInquiryDetail.phone}</span>
+                </div>
+              )}
+              {selectedInquiryDetail.company && (
+                <div>
+                  <span style={{ color: "var(--muted)", display: "block", fontSize: 11 }}>Company / Organization</span>
+                  <span style={{ color: "var(--ink)", fontWeight: 600 }}>{selectedInquiryDetail.company}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Scope / Message */}
+            <div style={{ marginBottom: 20 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted-crm, var(--muted))", display: "block", marginBottom: 6 }}>
+                Project Scope &amp; Message:
+              </span>
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: 12,
+                  background: "var(--paper-alt, rgba(0,0,0,0.03))",
+                  border: "1px solid var(--line)",
+                  fontSize: 13,
+                  lineHeight: 1.7,
+                  color: "var(--ink)",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {selectedInquiryDetail.message}
+              </div>
+            </div>
+
+            {/* Reference Materials & Visual Inspiration */}
+            {(selectedInquiryDetail.referenceUrl || selectedInquiryDetail.referenceImage) && (
+              <div style={{ marginBottom: 20 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted-crm, var(--muted))", display: "block", marginBottom: 8 }}>
+                  Reference Materials &amp; Inspiration:
+                </span>
+
+                <div style={{ display: "grid", gap: 10 }}>
+                  {selectedInquiryDetail.referenceUrl && (
+                    <div
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        background: "var(--surface-raised)",
+                        border: "1px solid var(--border-hairline)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ minWidth: 0, overflow: "hidden" }}>
+                        <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>Benchmark / Inspiration Link</span>
+                        <span style={{ fontSize: 12, color: "var(--accent-blue, #6C4CFF)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                          {selectedInquiryDetail.referenceUrl}
+                        </span>
+                      </div>
+                      <a
+                        href={selectedInquiryDetail.referenceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="button button-outline"
+                        style={{ fontSize: 11, padding: "5px 12px", height: "auto", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4 }}
+                      >
+                        Visit &rarr;
+                      </a>
+                    </div>
+                  )}
+
+                  {selectedInquiryDetail.referenceImage && (
+                    <div>
+                      <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginBottom: 6 }}>
+                        Uploaded Reference Mockup / Wireframe
+                      </span>
+                      <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border-hairline)", background: "var(--surface-raised)", maxWidth: 360 }}>
+                        <img
+                          src={selectedInquiryDetail.referenceImage}
+                          alt="Reference inspiration"
+                          style={{ width: "100%", maxHeight: 220, objectFit: "cover", display: "block" }}
+                        />
+                        <div style={{ padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--paper)" }}>
+                          <span style={{ fontSize: 11, color: "var(--muted)" }}>Click to view original</span>
+                          <a
+                            href={selectedInquiryDetail.referenceImage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-blue, #6C4CFF)", textDecoration: "none" }}
+                          >
+                            Open Full Size &rarr;
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Status Update Section */}
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: "var(--surface-raised, rgba(0,0,0,0.02))",
+                border: "1px solid var(--border-hairline)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                background: "var(--card-bg-crm)",
-              }}
-            >
-              <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Client Contact Details</h3>
-                <p style={{ fontSize: 12, color: "var(--text-muted-crm)", margin: "2px 0 0" }}>
-                  Update client parameters on record.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditContactModal(false)}
-                aria-label="Close"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                  transition: "color 0.15s ease, background 0.15s ease",
-                }}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <div
-              className="drawer-content"
-              style={{
-                flex: "1 1 auto",
-                overflowY: "auto",
-                padding: "20px 24px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-              }}
-            >
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  defaultValue={user.name}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    borderRadius: 12,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                  Company Name
-                </label>
-                <input
-                  type="text"
-                  defaultValue={companyName}
-                  placeholder="Not specified"
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    borderRadius: 12,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  defaultValue={phoneNumber}
-                  placeholder="Not provided"
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    borderRadius: 12,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                  Discord Handle
-                </label>
-                <input
-                  type="text"
-                  defaultValue={user.discordHandle || ""}
-                  placeholder="username"
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    borderRadius: 12,
-                    border: "1px solid var(--border-hairline)",
-                    background: "var(--surface-raised)",
-                    color: "var(--text-primary)",
-                    fontSize: 13,
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Pinned Sticky Footer */}
-            <div
-              style={{
-                flexShrink: 0,
-                padding: "16px 24px",
-                borderTop: "1px solid var(--border-hairline-light)",
-                background: "var(--card-bg-crm)",
-                display: "flex",
-                justifyContent: "flex-end",
                 gap: 12,
-                alignItems: "center",
+                flexWrap: "wrap",
+                marginBottom: 20,
               }}
             >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 200 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>Update Status:</span>
+                <select
+                  value={modalStatusChoice}
+                  onChange={(e) => setModalStatusChoice(e.target.value)}
+                  disabled={updatingDetailStatus}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    border: "1px solid var(--border-hairline)",
+                    background: "var(--paper)",
+                    color: "var(--ink)",
+                    fontWeight: 600,
+                  }}
+                >
+                  <option value="NEW">NEW</option>
+                  <option value="CONTACTED">CONTACTED</option>
+                  <option value="QUALIFIED">QUALIFIED</option>
+                  <option value="PROPOSAL_SENT">PROPOSAL SENT</option>
+                  <option value="CONVERTED">CONVERTED</option>
+                  <option value="CLOSED">CLOSED</option>
+                </select>
+              </div>
               <button
                 type="button"
-                onClick={() => setEditContactModal(false)}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "var(--radius-pill)",
-                  border: "1px solid var(--border-hairline)",
-                  background: "var(--surface-raised)",
-                  color: "var(--text-primary)",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
+                onClick={handleUpdateModalStatus}
+                disabled={updatingDetailStatus || modalStatusChoice === selectedInquiryDetail.status}
+                className="button"
+                style={{ fontSize: 11, padding: "6px 14px", height: "auto" }}
               >
-                Cancel
+                {updatingDetailStatus ? "Saving..." : "Save Status"}
               </button>
+            </div>
+
+            {/* Footer Actions */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 16 }}>
               <button
                 type="button"
                 onClick={() => {
-                  setEditContactModal(false);
-                  toast.success("Client parameters updated.", "Saved");
+                  const inqId = selectedInquiryDetail.id;
+                  setSelectedInquiryDetail(null);
+                  if (typeof window !== "undefined") {
+                    if (window.location.pathname.includes(`/admin/inquiry/${inqId}`)) {
+                      const auditEl = document.getElementById("inquiry-audit-history") || document.getElementById("lead-inquiry-details");
+                      if (auditEl) {
+                        auditEl.scrollIntoView({ behavior: "smooth" });
+                        auditEl.style.boxShadow = "0 0 0 3px var(--accent-blue, #6C4CFF)";
+                        setTimeout(() => {
+                          if (auditEl) auditEl.style.boxShadow = "none";
+                        }, 2000);
+                      }
+                    } else {
+                      window.location.assign(`/admin/inquiry/${inqId}#inquiry-audit-history`);
+                    }
+                  }
                 }}
-                style={{
-                  padding: "10px 24px",
-                  borderRadius: "var(--radius-pill)",
-                  border: "none",
-                  background: "var(--ink-crm)",
-                  color: "var(--ink-crm-text, #FFFFFF)",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
+                className="button button-outline"
+                style={{ fontSize: 12, padding: "8px 16px", height: "auto", cursor: "pointer" }}
               >
-                Save Details
+                Open Full Audit Page &rarr;
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedInquiryDetail(null)}
+                className="button"
+                style={{ fontSize: 12, padding: "8px 16px", height: "auto" }}
+              >
+                Done
               </button>
             </div>
           </div>
@@ -2178,9 +2585,18 @@ export function ClientProfileCRM({
         .crm-action-circle:hover {
           transform: scale(1.08);
         }
-        @media (max-width: 900px) {
+        @media (max-width: 1040px) {
           .crm-main-layout {
             grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .crm-card {
+            padding: 16px 14px !important;
+            border-radius: 18px !important;
+          }
+          .crm-top-stat {
+            flex: 1 1 100% !important;
           }
         }
       `}</style>

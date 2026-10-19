@@ -17,6 +17,8 @@ export const inquirySchema = z.object({
   service: z.string().trim().min(2).max(120),
   budget: z.string().trim().max(80).optional().or(z.literal("")),
   message: z.string().trim().min(20).max(5000),
+  referenceUrl: z.string().trim().max(2000).optional().or(z.literal("")),
+  referenceImage: z.string().trim().max(2000).optional().or(z.literal("")),
   website: z.string().max(0).optional(),
 });
 

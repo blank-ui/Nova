@@ -1,4 +1,10 @@
 import LegalPage from "@/components/legal-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "How All Sky Fares LLC collects, uses, protects, and respects your personal data across Nova.",
+};
 
 export default function Privacy() {
   return (
@@ -153,7 +159,7 @@ export default function Privacy() {
           title: "8. Children's Privacy",
           body: (
             <p>
-              Nova is a business-to-business digital service platform. Our website and client portals are not intended for or marketed to individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe a minor has submitted personal information to Nova, please contact us immediately so we can promptly delete the data.
+              Nova is a digital product, web engineering, and client collaboration platform. Users must be at least thirteen (13) years of age to register for an account or submit project inquiries. We do not knowingly collect, solicit, or maintain personal information from children under the age of 13 in compliance with the Children&apos;s Online Privacy Protection Act (COPPA), GDPR Article 8, and the Digital Personal Data Protection Act (DPDPA). If we discover that a user under 13 has registered or provided personal data, we will immediately delete their records and deactivate the account. If you believe a child under 13 has provided personal details to Nova, please notify us immediately at <code>nova@allskyfares.com</code>.
             </p>
           ),
         },

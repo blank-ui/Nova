@@ -5,13 +5,16 @@ import { hashPassword } from "better-auth/crypto";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "System user status management is disabled in production environments." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get("secret");
-  const expectedSecret =
-    process.env.ADMIN_BOOTSTRAP_SECRET || "12d4b78048eee8007f127d694ad2dffc7bc0377392e37d41";
+  const expectedSecret = process.env.ADMIN_BOOTSTRAP_SECRET;
 
-  if (!secret || secret !== expectedSecret) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!expectedSecret || !secret || secret !== expectedSecret) {
+    return NextResponse.json({ error: "Unauthorized: Invalid or unconfigured secret" }, { status: 401 });
   }
 
   const email = searchParams.get("email")?.toLowerCase().trim();

@@ -69,6 +69,8 @@ export async function POST(request: Request) {
         service: parsed.data.service,
         budget: parsed.data.budget || null,
         message: parsed.data.message,
+        referenceUrl: parsed.data.referenceUrl || null,
+        referenceImage: parsed.data.referenceImage || null,
       },
     });
 
@@ -82,6 +84,8 @@ export async function POST(request: Request) {
       service: created.service,
       budget: created.budget,
       message: created.message,
+      referenceUrl: created.referenceUrl,
+      referenceImage: created.referenceImage,
     }).catch((err) => console.error("Discord webhook dispatch error:", err));
 
     return NextResponse.json({ received: true }, { status: 201 });

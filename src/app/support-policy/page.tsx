@@ -1,4 +1,10 @@
 import LegalPage from "@/components/legal-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Support Policy & SLA",
+  description: "Clear guidelines for maintenance, technical assistance, and post-launch stability with All Sky Fares LLC.",
+};
 
 export default function Support() {
   return (

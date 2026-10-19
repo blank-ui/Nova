@@ -482,9 +482,37 @@ export function AdminOverview({ user, metrics, recentInquiries }: AdminOverviewP
         }
         @media (max-width: 680px) {
           .workspace-modules-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
           }
           .overview-subgrid {
+            grid-template-columns: 1fr !important;
+          }
+          .stat-tile {
+            padding: 14px !important;
+            min-height: 132px !important;
+          }
+          .stat-tile-title {
+            font-size: 13px !important;
+          }
+          .stat-tile-value {
+            font-size: 30px !important;
+          }
+          .stat-tile-caption {
+            font-size: 10px !important;
+          }
+          .stat-tile-footer {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 2px !important;
+            margin-top: 10px !important;
+          }
+          .stat-tile-caption {
+            text-align: left !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .workspace-modules-grid {
             grid-template-columns: 1fr !important;
           }
         }

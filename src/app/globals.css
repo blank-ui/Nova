@@ -98,10 +98,14 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 body {
   margin: 0;
+  overflow-x: hidden;
+  max-width: 100%;
   background: var(--paper);
   color: var(--ink);
   font-family: Manrope, Arial, sans-serif;
@@ -541,14 +545,209 @@ button, input, textarea, select {
     font-size: 26px !important;
   }
 
+  .page-header-pretitle {
+    font-size: 24px !important;
+  }
+
+  .page-header-stats {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 2px 0 4px !important;
+    overflow: visible !important;
+  }
+
+  .page-header-stat-item {
+    min-width: 0 !important;
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border-hairline) !important;
+    border-radius: var(--radius-tile) !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* When there are an odd number of stat items (e.g. 3 stats in 2 columns),
+     the last item spans both columns symmetrically */
+  .page-header-stat-item:last-child:nth-child(odd) {
+    grid-column: span 2 !important;
+  }
+
+  .page-header-stat-item > div:first-child {
+    width: 36px !important;
+    height: 36px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .page-header-stat-value {
+    font-size: 19px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .page-header-stat-caption {
+    font-size: 10px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Keep the number + badge row from pushing the card wider than its column. */
+  .page-header-stat-item > div:last-child {
+    min-width: 0 !important;
+  }
+
+  .page-header-stat-item > div:last-child > div:first-child {
+    flex-wrap: wrap !important;
+    row-gap: 4px !important;
+  }
+
+  .crm-filter-pills {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .crm-filter-pills::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .crm-search-form {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
   .data-table-container {
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hairline) transparent;
   }
 }
 
 @media (max-width: 480px) {
   .page-header h1 {
     font-size: 22px !important;
+  }
+
+  .page-header-pretitle {
+    font-size: 19px !important;
+  }
+
+  .workspace-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .stat-tile {
+    padding: 12px 10px !important;
+    min-height: 124px !important;
+  }
+
+  .stat-tile-value {
+    font-size: 24px !important;
+  }
+
+  .stat-tile-caption {
+    font-size: 9.5px !important;
+  }
+}
+
+/* Data tables collapse into readable cards on phones instead of forcing
+   sideways scrolling through a 700px-wide grid. */
+@media (max-width: 640px) {
+  .data-table-inner {
+    min-width: 0 !important;
+  }
+
+  .data-table-head {
+    display: none !important;
+  }
+
+  .data-table-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  .data-table-cell {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    text-align: right !important;
+    font-size: 12px;
+  }
+
+  .data-table-cell::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted-crm);
+    text-align: left;
+  }
+
+  .data-table-cell[data-label=""]::before,
+  .data-table-cell[data-label="Actions"]::before {
+    display: none;
+  }
+
+  .data-table-cell[data-label="Actions"] {
+    justify-content: flex-end !important;
+  }
+
+  .data-table-cell > * {
+    min-width: 0;
+  }
+}
+
+/* Mobile iOS input zoom prevention & touch target optimizations */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .appointment-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+
+  .appointment-item-center {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 10px !important;
+    border-top: 1px solid var(--border-hairline-light) !important;
+  }
+
+  .appointment-item-center > div {
+    text-align: left !important;
+  }
+
+  .appointment-item-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    padding-top: 8px !important;
   }
 }
 
@@ -570,6 +769,103 @@ button, input, textarea, select {
 .drawer-content {
   scrollbar-width: thin;
   scrollbar-color: var(--border-hairline) transparent;
+}
+
+/* ========================================================================= */
+/* Notifications popover: touch targets & mobile sheet behavior              */
+/* ========================================================================= */
+.notification-action-btn,
+.notification-footer-link,
+.notification-row-dismiss {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.notification-action-btn:hover {
+  background: var(--subtle-fill, rgba(0, 0, 0, 0.05)) !important;
+}
+
+.notification-footer-link:hover {
+  text-decoration: underline !important;
+}
+
+.notification-row-main:hover {
+  background: var(--subtle-fill, rgba(0, 0, 0, 0.03)) !important;
+}
+
+.notification-row-dismiss:hover {
+  background: var(--subtle-fill, rgba(0, 0, 0, 0.06)) !important;
+  color: var(--text-primary) !important;
+}
+
+@media (max-width: 640px) {
+  /* Anchor the popover to the viewport so it can never overflow off-screen
+     when the bell sits away from the right edge. */
+  .notification-popover {
+    position: fixed !important;
+    top: 68px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-height: calc(100dvh - 84px) !important;
+  }
+
+  .notification-popover-header {
+    padding: 12px 14px !important;
+    flex-wrap: wrap !important;
+    row-gap: 4px !important;
+    column-gap: 8px !important;
+  }
+
+  /* On phones the actions drop to their own row so "Mark read" and
+     "Clear read (n)" never squeeze the title. */
+  .notification-popover-header > div:first-child {
+    flex: 1 1 auto !important;
+  }
+
+  .notification-popover-header > div:last-child {
+    flex: 1 1 100% !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    margin: 0 -8px !important;
+  }
+
+  /* Let the list consume the remaining height and scroll inside the sheet. */
+  .notification-list {
+    max-height: none !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overscroll-behavior: contain;
+  }
+
+  .notification-row-main {
+    padding: 12px 2px 12px 14px !important;
+    gap: 10px !important;
+  }
+
+  .notification-popover-footer {
+    padding: 8px 12px !important;
+    flex-wrap: wrap !important;
+    row-gap: 6px !important;
+  }
+}
+
+/* Touch devices (phones and tablets) need 44px targets even on wide screens. */
+@media (hover: none) and (pointer: coarse) {
+  .notification-action-btn,
+  .notification-footer-link {
+    min-height: 44px !important;
+    padding: 10px 8px !important;
+    font-size: 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  .notification-row-dismiss {
+    width: 44px !important;
+    height: 44px !important;
+    margin-top: 2px !important;
+    margin-right: 2px !important;
+  }
 }
 
 /* Centered Form Modal Dialogs */
@@ -598,3 +894,140 @@ button, input, textarea, select {
 .drawer-content::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted-crm);
 }
+
+@media (max-width: 1040px) {
+  .users-layout-grid,
+  .inquiries-layout-grid,
+  .crm-main-layout,
+  .overview-grid {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .users-layout-grid > div,
+  .inquiries-layout-grid > div,
+  .crm-main-layout > div,
+  .overview-grid > div {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .data-table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Floating Bottom Dock for LeftRail on Tablet & Mobile (≤ 900px) */
+@media (max-width: 900px) {
+  .left-rail-container {
+    position: fixed !important;
+    bottom: 14px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+    height: 52px !important;
+    flex-direction: row !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    z-index: 990 !important;
+    gap: 8px !important;
+    background: rgba(24, 27, 23, 0.94) !important;
+    backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .left-rail-container::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .left-rail-btn {
+    width: 42px !important;
+    height: 42px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .admin-page-wrapper {
+    padding-bottom: 78px !important;
+  }
+
+  .workspace-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .stat-tile {
+    padding: 16px 14px !important;
+    min-height: 136px !important;
+  }
+
+  .stat-tile-value {
+    font-size: 28px !important;
+  }
+
+  .stat-tile-caption {
+    font-size: 11px !important;
+  }
+}
+
+/* Hero Mascot Mobile Adaptations */
+@media (max-width: 640px) {
+  .hero-mascot-spotlight {
+    padding: 22px 18px !important;
+    min-height: auto !important;
+  }
+
+  .hero-mascot-visual {
+    position: relative !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin: 12px 0 16px !important;
+  }
+
+  .hero-mascot-visual svg {
+    max-width: 170px !important;
+    height: auto !important;
+  }
+}
+
+/* Stage Name Responsiveness for Tracker */
+@media (max-width: 600px) {
+  .desktop-stage-name {
+    display: none !important;
+  }
+  .mobile-stage-name {
+    display: block !important;
+  }
+}
+@media (min-width: 601px) {
+  .desktop-stage-name {
+    display: block !important;
+  }
+  .mobile-stage-name {
+    display: none !important;
+  }
+}
+
+/* Coarse Pointer Touch Target Accessibility (Apple HIG & Web.dev 44px min) */
+@media (hover: none) and (pointer: coarse) {
+  .button,
+  .button-outline,
+  .left-rail-btn,
+  .tab-button,
+  .nav-link {
+    min-height: 44px;
+    align-items: center;
+  }
+}
+

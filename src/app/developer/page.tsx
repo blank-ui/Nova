@@ -70,7 +70,7 @@ export default async function DeveloperWorkspace() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
           gap: 16,
           marginBottom: 36,
         }}
@@ -108,7 +108,7 @@ export default async function DeveloperWorkspace() {
 
       {/* Main Sprint Tasks Section */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
-        <div className="card" style={{ padding: 28 }}>
+        <div className="card" style={{ padding: "clamp(18px, 4vw, 28px)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div>
               <h2 style={{ fontSize: 20, letterSpacing: "-.03em", margin: "0 0 4px", color: "var(--ink)" }}>

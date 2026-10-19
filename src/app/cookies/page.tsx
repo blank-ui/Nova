@@ -1,4 +1,10 @@
 import LegalPage from "@/components/legal-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cookie Notice",
+  description: "How All Sky Fares LLC uses strictly necessary cookies and storage technologies on Nova.",
+};
 
 export default function Cookies() {
   return (
@@ -62,6 +68,12 @@ export default function Cookies() {
                       <td style={{ padding: "10px 12px" }}>Strictly Necessary</td>
                       <td style={{ padding: "10px 12px" }}>Browser session storage storing post-login redirect path so users return to their intended project page upon login.</td>
                       <td style={{ padding: "10px 12px" }}>Until browser tab closed</td>
+                    </tr>
+                    <tr style={{ borderBottom: "1px solid var(--line, #e2e5ec)" }}>
+                      <td style={{ padding: "10px 12px", fontFamily: "monospace" }}>nova-locale</td>
+                      <td style={{ padding: "10px 12px" }}>Functionality / Preference</td>
+                      <td style={{ padding: "10px 12px" }}>Stores your selected language preference across page navigations and sessions without tracking your identity.</td>
+                      <td style={{ padding: "10px 12px" }}>1 year</td>
                     </tr>
                   </tbody>
                 </table>
