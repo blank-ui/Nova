@@ -114,18 +114,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Role must be CLIENT, ADMIN, DEVELOPER, or FINANCE." }, { status: 400 });
   }
 
-  const phone = typeof body.phone === "string" ? body.phone.trim() : null;
-  const dateOfBirth = typeof body.dateOfBirth === "string" ? body.dateOfBirth.trim() : null;
-
-  const isStaffRole = ["ADMIN", "DEVELOPER", "FINANCE"].includes(role);
-  if (isStaffRole) {
-    if (!phone || phone.length < 7) {
-      return NextResponse.json({ error: "Staff account requires a valid phone number." }, { status: 400 });
-    }
-    if (!dateOfBirth) {
-      return NextResponse.json({ error: "Staff account requires a date of birth for identity records." }, { status: 400 });
-    }
-  }
+  const phone = typeof body.phone === "string" && body.phone.trim().length > 0 ? body.phone.trim() : null;
+  const dateOfBirth = typeof body.dateOfBirth === "string" && body.dateOfBirth.trim().length > 0 ? body.dateOfBirth.trim() : null;
 
   try {
     const existing = await prisma.user.findUnique({

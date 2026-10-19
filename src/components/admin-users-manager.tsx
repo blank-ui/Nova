@@ -148,23 +148,10 @@ export function AdminUsersManager({
     setCreateError("");
     setCreatedResult(null);
 
-    const isStaff = newRole !== "CLIENT";
-    if (isStaff) {
-      if (!newName.trim() || newName.trim().length < 2) {
-        setCreateError("Staff account requires a full name.");
-        setCreateLoading(false);
-        return;
-      }
-      if (!newDob.trim()) {
-        setCreateError("Staff account requires date of birth.");
-        setCreateLoading(false);
-        return;
-      }
-      if (!newPhone.trim() || newPhone.trim().length < 7) {
-        setCreateError("Staff account requires a valid phone number.");
-        setCreateLoading(false);
-        return;
-      }
+    if (!newName.trim() || newName.trim().length < 2) {
+      setCreateError("Please provide a name of at least 2 characters.");
+      setCreateLoading(false);
+      return;
     }
 
     try {
@@ -769,11 +756,10 @@ export function AdminUsersManager({
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Phone {newRole !== "CLIENT" ? "*" : "(Optional)"}
+                    Phone <span style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</span>
                   </label>
                   <input
                     type="tel"
-                    required={newRole !== "CLIENT"}
                     placeholder="+91 98765 43210"
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
@@ -793,11 +779,10 @@ export function AdminUsersManager({
 
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6, color: "var(--text-secondary)" }}>
-                    Date of Birth {newRole !== "CLIENT" ? "*" : "(Optional)"}
+                    Date of Birth <span style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</span>
                   </label>
                   <input
                     type="date"
-                    required={newRole !== "CLIENT"}
                     value={newDob}
                     onChange={(e) => setNewDob(e.target.value)}
                     style={{
