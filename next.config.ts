@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   images: { remotePatterns: [] },
+  experimental: {
+    cpus: 1,
+  },
   async headers() {
     return [
       {
