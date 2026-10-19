@@ -16,6 +16,10 @@ import {
   Calendar,
   DollarSign,
   ArrowLeft,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize2,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 
@@ -59,6 +63,37 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
   const [customNote, setCustomNote] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [isFitWidth, setIsFitWidth] = useState(false);
+
+  function handleZoomIn() {
+    setIsFitWidth(false);
+    setZoom((prev) => Math.min(2.0, Math.round((prev + 0.15) * 100) / 100));
+  }
+
+  function handleZoomOut() {
+    setIsFitWidth(false);
+    setZoom((prev) => Math.max(0.5, Math.round((prev - 0.15) * 100) / 100));
+  }
+
+  function handleResetZoom() {
+    setIsFitWidth(false);
+    setZoom(1);
+  }
+
+  function handleToggleFitWidth() {
+    if (isFitWidth) {
+      setIsFitWidth(false);
+      setZoom(1);
+    } else {
+      setIsFitWidth(true);
+      if (typeof window !== "undefined") {
+        const availableWidth = Math.max(480, window.innerWidth - 64);
+        const computed = Math.min(1.6, Math.max(0.65, Math.round((availableWidth / 920) * 100) / 100));
+        setZoom(computed);
+      }
+    }
+  }
 
   // Keyboard shortcut: Escape closes dispatch submodal or primary invoice modal
   useEffect(() => {
@@ -287,46 +322,47 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
           <div
             className="invoice-control-bar no-print"
             style={{
-              padding: "14px clamp(16px, 3vw, 36px)",
+              padding: "12px clamp(16px, 2.5vw, 32px)",
               background: "var(--surface-raised, #F6F4EE)",
               borderBottom: "1px solid var(--border-hairline, rgba(0,0,0,0.08))",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: 16,
+              gap: 12,
               flexShrink: 0,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {/* Left: Navigation and Invoice Info */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <button
                 type="button"
                 onClick={onClose}
                 className="button button-outline"
                 style={{
-                  padding: "8px 14px",
+                  padding: "7px 14px",
                   fontSize: 12,
                   fontWeight: 700,
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 7,
                   cursor: "pointer",
                   borderRadius: 10,
                 }}
                 title="Back to Invoices (Esc)"
               >
-                <ArrowLeft size={15} />
+                <ArrowLeft size={14} />
                 <span>Back to Invoices</span>
               </button>
 
-              <div style={{ height: 24, width: 1, background: "var(--border-hairline, rgba(0,0,0,0.12))" }} />
+              <div style={{ height: 22, width: 1, background: "var(--border-hairline, rgba(0,0,0,0.12))" }} />
 
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <div
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 10,
+                    width: 30,
+                    height: 30,
+                    borderRadius: 8,
                     background: "var(--ink-crm, #101322)",
                     color: "#FFFFFF",
                     display: "flex",
@@ -334,24 +370,144 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     justifyContent: "center",
                   }}
                 >
-                  <Receipt size={16} />
+                  <Receipt size={15} />
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800 }}>Invoice {invoice.invoiceNumber}</div>
                   <div style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)" }}>
-                    {invoice.projectName} &middot; Status: <strong style={{ color: "#059669" }}>{invoice.status}</strong>
+                    {invoice.projectName} &middot; <strong style={{ color: "#059669" }}>{invoice.status}</strong>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            {/* Center: Zoom and Fit Controls */}
+            <div
+              className="invoice-zoom-toolbar"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 2,
+                background: "#FFFFFF",
+                border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
+                borderRadius: 10,
+                padding: "3px 6px",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                disabled={zoom <= 0.5}
+                title="Zoom Out (-15%)"
+                style={{
+                  padding: "5px 8px",
+                  borderRadius: 6,
+                  border: "none",
+                  background: "transparent",
+                  color: zoom <= 0.5 ? "#9CA3AF" : "#101322",
+                  cursor: zoom <= 0.5 ? "not-allowed" : "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ZoomOut size={14} />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetZoom}
+                title="Reset to 100%"
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: 6,
+                  border: "none",
+                  background: zoom === 1 && !isFitWidth ? "rgba(0,0,0,0.06)" : "transparent",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  fontVariantNumeric: "tabular-nums",
+                  color: "#101322",
+                  cursor: "pointer",
+                  minWidth: 46,
+                  textAlign: "center",
+                }}
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                disabled={zoom >= 2.0}
+                title="Zoom In (+15%)"
+                style={{
+                  padding: "5px 8px",
+                  borderRadius: 6,
+                  border: "none",
+                  background: "transparent",
+                  color: zoom >= 2.0 ? "#9CA3AF" : "#101322",
+                  cursor: zoom >= 2.0 ? "not-allowed" : "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ZoomIn size={14} />
+              </button>
+
+              <div style={{ height: 16, width: 1, background: "rgba(0,0,0,0.1)", margin: "0 4px" }} />
+
+              <button
+                type="button"
+                onClick={handleToggleFitWidth}
+                title={isFitWidth ? "Return to 100%" : "Fit document to window width"}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  border: "none",
+                  background: isFitWidth ? "var(--ink-crm, #101322)" : "transparent",
+                  color: isFitWidth ? "#FFFFFF" : "#4B5563",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <Maximize2 size={12} />
+                <span>Fit Width</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetZoom}
+                title="Reset zoom to 100%"
+                style={{
+                  padding: "4px 6px",
+                  borderRadius: 6,
+                  border: "none",
+                  background: "transparent",
+                  color: "#6B7280",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <RotateCcw size={12} />
+              </button>
+            </div>
+
+            {/* Right: Actions */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <button
                 type="button"
                 onClick={handlePrint}
                 className="button button-outline"
                 style={{
-                  padding: "8px 14px",
+                  padding: "7px 13px",
                   fontSize: 12,
                   fontWeight: 600,
                   display: "inline-flex",
@@ -371,7 +527,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                 onClick={handleDownloadHtml}
                 className="button button-outline"
                 style={{
-                  padding: "8px 14px",
+                  padding: "7px 13px",
                   fontSize: 12,
                   fontWeight: 600,
                   display: "inline-flex",
@@ -394,7 +550,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                 }}
                 className="button"
                 style={{
-                  padding: "8px 16px",
+                  padding: "7px 15px",
                   fontSize: 12,
                   fontWeight: 700,
                   display: "inline-flex",
@@ -425,29 +581,55 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   justifyContent: "center",
                   cursor: "pointer",
                   color: "var(--text-muted-crm, #6B7280)",
-                  marginLeft: 4,
+                  marginLeft: 2,
                 }}
               >
-                <X size={18} />
+                <X size={17} />
               </button>
             </div>
           </div>
 
-          {/* Printable Invoice Sheet Body (Utilizes total space) */}
+          {/* Document Workspace Canvas */}
           <div
-            className="invoice-printable-sheet"
+            className="invoice-canvas-scroll-container"
             style={{
-              padding: "clamp(24px, 4vw, 48px) clamp(24px, 5vw, 64px)",
-              overflowY: "auto",
               flex: 1,
-              background: "#FFFFFF",
-              color: "#101322",
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-              width: "100%",
-              maxWidth: "100%",
+              overflow: "auto",
+              background: "#ECE9E2",
+              padding: "32px 16px 80px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
               boxSizing: "border-box",
+              width: "100%",
             }}
           >
+            <div
+              className="invoice-zoom-wrapper"
+              style={{
+                width: "100%",
+                maxWidth: 920,
+                zoom: zoom,
+                transformOrigin: "top center",
+                transition: "zoom 0.15s ease-out, transform 0.15s ease-out",
+                boxSizing: "border-box",
+                margin: "0 auto",
+              }}
+            >
+              <div
+                className="invoice-printable-sheet"
+                style={{
+                  background: "#FFFFFF",
+                  color: "#101322",
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  borderRadius: 14,
+                  boxShadow: "0 16px 44px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.04)",
+                  border: "1px solid #DCD7CD",
+                  padding: "48px 52px",
+                  boxSizing: "border-box",
+                  width: "100%",
+                }}
+              >
             {/* Invoice Top Header */}
             <div
               style={{
@@ -683,6 +865,8 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
       {/* Nested Dispatch Modal */}
       {sendModalOpen && (
@@ -826,6 +1010,10 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
             width: 100% !important;
             padding: 24px !important;
             box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            zoom: 1 !important;
+            transform: none !important;
             background: #ffffff !important;
           }
           .no-print {
