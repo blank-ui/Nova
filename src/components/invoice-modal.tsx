@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Printer,
@@ -20,6 +21,7 @@ import {
   ZoomOut,
   RotateCcw,
   Maximize2,
+  FileText,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 
@@ -65,6 +67,15 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
   const [customNote, setCustomNote] = useState("");
   const [zoom, setZoom] = useState(1);
   const [isFitWidth, setIsFitWidth] = useState(false);
+  const [paperFormat, setPaperFormat] = useState<"A4" | "Letter">("A4");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const sheetMaxWidth = paperFormat === "A4" ? 794 : 816;
+  const sheetMinHeight = paperFormat === "A4" ? 1123 : 1056;
 
   function handleZoomIn() {
     setIsFitWidth(false);
@@ -88,10 +99,19 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
     } else {
       setIsFitWidth(true);
       if (typeof window !== "undefined") {
-        const availableWidth = Math.max(480, window.innerWidth - 64);
-        const computed = Math.min(1.6, Math.max(0.65, Math.round((availableWidth / 920) * 100) / 100));
+        const availableWidth = Math.max(340, window.innerWidth - 64);
+        const computed = Math.min(1.5, Math.max(0.5, Math.round((availableWidth / sheetMaxWidth) * 100) / 100));
         setZoom(computed);
       }
+    }
+  }
+
+  function handlePaperFormatChange(format: "A4" | "Letter") {
+    setPaperFormat(format);
+    if (isFitWidth && typeof window !== "undefined") {
+      const availableWidth = Math.max(340, window.innerWidth - 64);
+      const width = format === "A4" ? 794 : 816;
+      setZoom(Math.min(1.5, Math.max(0.5, Math.round((availableWidth / width) * 100) / 100)));
     }
   }
 
@@ -111,7 +131,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose, sendModalOpen]);
 
-  if (!isOpen || !invoice) return null;
+  if (!isOpen || !invoice || !mounted) return null;
 
   const formattedIssueDate = new Date(invoice.issuedAt).toLocaleDateString("en-US", {
     month: "long",
@@ -155,6 +175,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
   <meta charset="utf-8"/>
   <title>Invoice ${invoice.invoiceNumber} — Nova</title>
   <style>
+    @page { size: ${paperFormat === "A4" ? "A4 portrait" : "letter portrait"}; margin: 15mm; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #fff; color: #101322; padding: 40px; margin: 0; }
     .header { display: flex; justify-content: space-between; border-bottom: 2px solid #101322; padding-bottom: 20px; }
     .title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
@@ -284,21 +305,26 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
     }
   };
 
-  return (
+  return createPortal(
     <>
       {/* Primary Invoice Modal Overlay / Total Space Canvas */}
       <div
         className="invoice-modal-overlay"
         style={{
           position: "fixed",
-          inset: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           background: "var(--surface-primary, #FFFFFF)",
-          zIndex: 9999,
+          zIndex: 99999,
           display: "flex",
           flexDirection: "column",
-          width: "100vw",
-          height: "100vh",
+          width: "100%",
+          height: "100%",
           overflow: "hidden",
+          margin: 0,
+          padding: 0,
         }}
       >
         <div
@@ -307,7 +333,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
             width: "100%",
             height: "100%",
             maxWidth: "100%",
-            maxHeight: "100vh",
+            maxHeight: "100%",
             background: "var(--surface-primary, #FFFFFF)",
             color: "var(--text-primary, #101322)",
             borderRadius: 0,
@@ -318,51 +344,54 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
             position: "relative",
           }}
         >
-          {/* Top Floating Control Bar (Full-width, hidden during print) */}
+          {/* Top Floating Control Bar (Full-width, zero-leak, compact) */}
           <div
             className="invoice-control-bar no-print"
             style={{
-              padding: "12px clamp(16px, 2.5vw, 32px)",
+              padding: "10px 18px",
               background: "var(--surface-raised, #F6F4EE)",
               borderBottom: "1px solid var(--border-hairline, rgba(0,0,0,0.08))",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              flexWrap: "wrap",
               gap: 12,
               flexShrink: 0,
+              width: "100%",
+              boxSizing: "border-box",
+              overflowX: "auto",
+              scrollbarWidth: "none",
             }}
           >
             {/* Left: Navigation and Invoice Info */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
               <button
                 type="button"
                 onClick={onClose}
                 className="button button-outline"
                 style={{
-                  padding: "7px 14px",
+                  padding: "6px 12px",
                   fontSize: 12,
                   fontWeight: 700,
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 7,
+                  gap: 6,
                   cursor: "pointer",
-                  borderRadius: 10,
+                  borderRadius: 8,
                 }}
                 title="Back to Invoices (Esc)"
               >
                 <ArrowLeft size={14} />
-                <span>Back to Invoices</span>
+                <span>Back</span>
               </button>
 
-              <div style={{ height: 22, width: 1, background: "var(--border-hairline, rgba(0,0,0,0.12))" }} />
+              <div style={{ height: 20, width: 1, background: "var(--border-hairline, rgba(0,0,0,0.12))" }} />
 
-              <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div
                   style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 8,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 7,
                     background: "var(--ink-crm, #101322)",
                     color: "#FFFFFF",
                     display: "flex",
@@ -370,156 +399,202 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     justifyContent: "center",
                   }}
                 >
-                  <Receipt size={15} />
+                  <Receipt size={14} />
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800 }}>Invoice {invoice.invoiceNumber}</div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)" }}>
-                    {invoice.projectName} &middot; <strong style={{ color: "#059669" }}>{invoice.status}</strong>
+                  <div style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{invoice.projectName}</span>
+                    &middot;
+                    <strong style={{ color: "#059669" }}>{invoice.status}</strong>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Center: Zoom and Fit Controls */}
+            {/* Center: Zoom and Paper Format Controls */}
             <div
-              className="invoice-zoom-toolbar"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 2,
-                background: "#FFFFFF",
-                border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
-                borderRadius: 10,
-                padding: "3px 6px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                gap: 8,
+                flexWrap: "nowrap",
+                flexShrink: 0,
               }}
             >
-              <button
-                type="button"
-                onClick={handleZoomOut}
-                disabled={zoom <= 0.5}
-                title="Zoom Out (-15%)"
+              {/* Zoom Pill */}
+              <div
+                className="invoice-zoom-toolbar"
                 style={{
-                  padding: "5px 8px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "transparent",
-                  color: zoom <= 0.5 ? "#9CA3AF" : "#101322",
-                  cursor: zoom <= 0.5 ? "not-allowed" : "pointer",
                   display: "inline-flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 2,
+                  background: "#FFFFFF",
+                  border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
+                  borderRadius: 8,
+                  padding: "2px 5px",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
-                <ZoomOut size={14} />
-              </button>
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  disabled={zoom <= 0.5}
+                  title="Zoom Out (-15%)"
+                  style={{
+                    padding: "4px 7px",
+                    borderRadius: 5,
+                    border: "none",
+                    background: "transparent",
+                    color: zoom <= 0.5 ? "#9CA3AF" : "#101322",
+                    cursor: zoom <= 0.5 ? "not-allowed" : "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ZoomOut size={13} />
+                </button>
 
-              <button
-                type="button"
-                onClick={handleResetZoom}
-                title="Reset to 100%"
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: zoom === 1 && !isFitWidth ? "rgba(0,0,0,0.06)" : "transparent",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  fontVariantNumeric: "tabular-nums",
-                  color: "#101322",
-                  cursor: "pointer",
-                  minWidth: 46,
-                  textAlign: "center",
-                }}
-              >
-                {Math.round(zoom * 100)}%
-              </button>
+                <button
+                  type="button"
+                  onClick={handleResetZoom}
+                  title="Reset to 100%"
+                  style={{
+                    padding: "3px 6px",
+                    borderRadius: 5,
+                    border: "none",
+                    background: zoom === 1 && !isFitWidth ? "rgba(0,0,0,0.06)" : "transparent",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    fontVariantNumeric: "tabular-nums",
+                    color: "#101322",
+                    cursor: "pointer",
+                    minWidth: 40,
+                    textAlign: "center",
+                  }}
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
 
-              <button
-                type="button"
-                onClick={handleZoomIn}
-                disabled={zoom >= 2.0}
-                title="Zoom In (+15%)"
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 2.0}
+                  title="Zoom In (+15%)"
+                  style={{
+                    padding: "4px 7px",
+                    borderRadius: 5,
+                    border: "none",
+                    background: "transparent",
+                    color: zoom >= 2.0 ? "#9CA3AF" : "#101322",
+                    cursor: zoom >= 2.0 ? "not-allowed" : "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ZoomIn size={13} />
+                </button>
+
+                <div style={{ height: 14, width: 1, background: "rgba(0,0,0,0.1)", margin: "0 3px" }} />
+
+                <button
+                  type="button"
+                  onClick={handleToggleFitWidth}
+                  title={isFitWidth ? "Return to 100%" : "Fit document to window width"}
+                  style={{
+                    padding: "3px 8px",
+                    borderRadius: 5,
+                    border: "none",
+                    background: isFitWidth ? "var(--ink-crm, #101322)" : "transparent",
+                    color: isFitWidth ? "#FFFFFF" : "#4B5563",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <Maximize2 size={11} />
+                  <span>Fit</span>
+                </button>
+              </div>
+
+              {/* Paper Format Selector: A4 vs Letter */}
+              <div
                 style={{
-                  padding: "5px 8px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "transparent",
-                  color: zoom >= 2.0 ? "#9CA3AF" : "#101322",
-                  cursor: zoom >= 2.0 ? "not-allowed" : "pointer",
                   display: "inline-flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  background: "#FFFFFF",
+                  border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
+                  borderRadius: 8,
+                  padding: 2,
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
-                <ZoomIn size={14} />
-              </button>
-
-              <div style={{ height: 16, width: 1, background: "rgba(0,0,0,0.1)", margin: "0 4px" }} />
-
-              <button
-                type="button"
-                onClick={handleToggleFitWidth}
-                title={isFitWidth ? "Return to 100%" : "Fit document to window width"}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: isFitWidth ? "var(--ink-crm, #101322)" : "transparent",
-                  color: isFitWidth ? "#FFFFFF" : "#4B5563",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                }}
-              >
-                <Maximize2 size={12} />
-                <span>Fit Width</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleResetZoom}
-                title="Reset zoom to 100%"
-                style={{
-                  padding: "4px 6px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "transparent",
-                  color: "#6B7280",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <RotateCcw size={12} />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handlePaperFormatChange("A4")}
+                  title="ISO A4 Standard (210mm × 297mm)"
+                  style={{
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    border: "none",
+                    background: paperFormat === "A4" ? "var(--ink-crm, #101322)" : "transparent",
+                    color: paperFormat === "A4" ? "#FFFFFF" : "#6B7280",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <FileText size={11} />
+                  <span>A4</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePaperFormatChange("Letter")}
+                  title="US Letter (8.5in × 11in)"
+                  style={{
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    border: "none",
+                    background: paperFormat === "Letter" ? "var(--ink-crm, #101322)" : "transparent",
+                    color: paperFormat === "Letter" ? "#FFFFFF" : "#6B7280",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                  }}
+                >
+                  <span>Letter</span>
+                </button>
+              </div>
             </div>
 
-            {/* Right: Actions */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {/* Right: Actions (Cleanly sized, non-overflowing) */}
+            <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
               <button
                 type="button"
                 onClick={handlePrint}
                 className="button button-outline"
                 style={{
-                  padding: "7px 13px",
+                  padding: "6px 11px",
                   fontSize: 12,
                   fontWeight: 600,
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
                   cursor: "pointer",
-                  borderRadius: 10,
+                  borderRadius: 8,
                 }}
                 title="Print or Save as PDF"
               >
-                <Printer size={14} />
-                <span>Print / Save PDF</span>
+                <Printer size={13} />
+                <span>Print / PDF</span>
               </button>
 
               <button
@@ -527,19 +602,19 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                 onClick={handleDownloadHtml}
                 className="button button-outline"
                 style={{
-                  padding: "7px 13px",
+                  padding: "6px 11px",
                   fontSize: 12,
                   fontWeight: 600,
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
                   cursor: "pointer",
-                  borderRadius: 10,
+                  borderRadius: 8,
                 }}
                 title="Download HTML Document"
               >
-                <Download size={14} />
-                <span>Download</span>
+                <Download size={13} />
+                <span>HTML</span>
               </button>
 
               <button
@@ -550,20 +625,20 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                 }}
                 className="button"
                 style={{
-                  padding: "7px 15px",
+                  padding: "6px 14px",
                   fontSize: 12,
                   fontWeight: 700,
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
                   cursor: "pointer",
                   background: "var(--ink-crm, #101322)",
                   color: "#FFFFFF",
-                  borderRadius: 10,
+                  borderRadius: 8,
                 }}
               >
-                <Send size={14} />
-                <span>Send to Client</span>
+                <Send size={13} />
+                <span>Send</span>
               </button>
 
               <button
@@ -571,8 +646,8 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                 onClick={onClose}
                 aria-label="Close invoice"
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 30,
+                  height: 30,
                   borderRadius: "50%",
                   background: "rgba(0,0,0,0.05)",
                   border: "none",
@@ -584,7 +659,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   marginLeft: 2,
                 }}
               >
-                <X size={17} />
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -596,7 +671,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
               flex: 1,
               overflow: "auto",
               background: "#ECE9E2",
-              padding: "32px 16px 80px",
+              padding: "28px 16px 80px",
               display: "flex",
               justifyContent: "center",
               alignItems: "flex-start",
@@ -608,7 +683,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
               className="invoice-zoom-wrapper"
               style={{
                 width: "100%",
-                maxWidth: 920,
+                maxWidth: sheetMaxWidth,
                 zoom: zoom,
                 transformOrigin: "top center",
                 transition: "zoom 0.15s ease-out, transform 0.15s ease-out",
@@ -622,12 +697,13 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   background: "#FFFFFF",
                   color: "#101322",
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  borderRadius: 14,
-                  boxShadow: "0 16px 44px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.04)",
+                  borderRadius: 10,
+                  boxShadow: "0 14px 40px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.03)",
                   border: "1px solid #DCD7CD",
-                  padding: "48px 52px",
+                  padding: "44px 48px",
                   boxSizing: "border-box",
                   width: "100%",
+                  minHeight: sheetMinHeight,
                 }}
               >
             {/* Invoice Top Header */}
@@ -993,9 +1069,13 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
         </div>
       )}
 
-      {/* Print-only CSS rules */}
+      {/* Print-only CSS rules with configurable paper format */}
       <style>{`
         @media print {
+          @page {
+            size: ${paperFormat === "A4" ? "A4 portrait" : "letter portrait"};
+            margin: 12mm;
+          }
           body * {
             visibility: hidden !important;
           }
@@ -1008,7 +1088,8 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
-            padding: 24px !important;
+            max-width: 100% !important;
+            padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
             border-radius: 0 !important;
@@ -1021,6 +1102,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
           }
         }
       `}</style>
-    </>
+    </>,
+    document.body
   );
 }
