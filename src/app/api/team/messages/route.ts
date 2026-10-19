@@ -146,6 +146,9 @@ export async function POST(request: Request) {
     });
   } catch (err: any) {
     console.error("Failed to post team message:", err);
-    return NextResponse.json({ error: "Failed to dispatch message" }, { status: 500 });
+    return NextResponse.json({
+      error: "Failed to dispatch message",
+      detail: err?.message || String(err),
+    }, { status: 500 });
   }
 }
