@@ -429,7 +429,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 2,
-                  background: "#FFFFFF",
+                  background: "var(--card-bg-crm, #FFFFFF)",
                   border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
                   borderRadius: 8,
                   padding: "2px 5px",
@@ -446,7 +446,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     borderRadius: 5,
                     border: "none",
                     background: "transparent",
-                    color: zoom <= 0.5 ? "#9CA3AF" : "#101322",
+                    color: zoom <= 0.5 ? "var(--text-muted-crm, #9CA3AF)" : "var(--text-primary, #101322)",
                     cursor: zoom <= 0.5 ? "not-allowed" : "pointer",
                     display: "inline-flex",
                     alignItems: "center",
@@ -468,7 +468,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     fontSize: 11,
                     fontWeight: 700,
                     fontVariantNumeric: "tabular-nums",
-                    color: "#101322",
+                    color: "var(--text-primary, #101322)",
                     cursor: "pointer",
                     minWidth: 40,
                     textAlign: "center",
@@ -487,7 +487,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     borderRadius: 5,
                     border: "none",
                     background: "transparent",
-                    color: zoom >= 2.0 ? "#9CA3AF" : "#101322",
+                    color: zoom >= 2.0 ? "var(--text-muted-crm, #9CA3AF)" : "var(--text-primary, #101322)",
                     cursor: zoom >= 2.0 ? "not-allowed" : "pointer",
                     display: "inline-flex",
                     alignItems: "center",
@@ -497,7 +497,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   <ZoomIn size={13} />
                 </button>
 
-                <div style={{ height: 14, width: 1, background: "rgba(0,0,0,0.1)", margin: "0 3px" }} />
+                <div style={{ height: 14, width: 1, background: "var(--border-hairline, rgba(0,0,0,0.1))", margin: "0 3px" }} />
 
                 <button
                   type="button"
@@ -508,7 +508,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     borderRadius: 5,
                     border: "none",
                     background: isFitWidth ? "var(--ink-crm, #101322)" : "transparent",
-                    color: isFitWidth ? "#FFFFFF" : "#4B5563",
+                    color: isFitWidth ? "#FFFFFF" : "var(--text-muted-crm, #4B5563)",
                     fontSize: 11,
                     fontWeight: 700,
                     cursor: "pointer",
@@ -527,7 +527,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  background: "#FFFFFF",
+                  background: "var(--card-bg-crm, #FFFFFF)",
                   border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
                   borderRadius: 8,
                   padding: 2,
@@ -543,7 +543,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     borderRadius: 6,
                     border: "none",
                     background: paperFormat === "A4" ? "var(--ink-crm, #101322)" : "transparent",
-                    color: paperFormat === "A4" ? "#FFFFFF" : "#6B7280",
+                    color: paperFormat === "A4" ? "#FFFFFF" : "var(--text-muted-crm, #6B7280)",
                     fontSize: 11,
                     fontWeight: 800,
                     cursor: "pointer",
@@ -564,7 +564,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     borderRadius: 6,
                     border: "none",
                     background: paperFormat === "Letter" ? "var(--ink-crm, #101322)" : "transparent",
-                    color: paperFormat === "Letter" ? "#FFFFFF" : "#6B7280",
+                    color: paperFormat === "Letter" ? "#FFFFFF" : "var(--text-muted-crm, #6B7280)",
                     fontSize: 11,
                     fontWeight: 800,
                     cursor: "pointer",
@@ -966,21 +966,22 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
             style={{
               width: "100%",
               maxWidth: 460,
-              background: "#FFFFFF",
-              color: "#101322",
+              background: "var(--card-bg, #FFFFFF)",
+              color: "var(--ink, #101322)",
               borderRadius: 20,
               padding: 24,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.25)",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+              border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", gap: 8, color: "var(--ink, #101322)" }}>
                 <Mail size={18} color="#2563EB" /> Send Invoice to Client
               </div>
               <button
                 type="button"
                 onClick={() => setSendModalOpen(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280" }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm, #6B7280)" }}
               >
                 <X size={18} />
               </button>
@@ -988,7 +989,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
 
             <form onSubmit={handleSendInvoice} style={{ display: "grid", gap: 14 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4, color: "var(--ink, #101322)" }}>
                   Recipient Client Email *
                 </label>
                 <input
@@ -1000,7 +1001,9 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     width: "100%",
                     padding: "10px 12px",
                     borderRadius: 10,
-                    border: "1px solid #D1D5DB",
+                    border: "1px solid var(--border-hairline, #D1D5DB)",
+                    background: "var(--surface-raised, #F9FAFB)",
+                    color: "var(--ink, #101322)",
                     fontSize: 13,
                     outline: "none",
                   }}
@@ -1008,7 +1011,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4, color: "var(--ink, #101322)" }}>
                   Commercial Message Note (Optional)
                 </label>
                 <textarea
@@ -1020,7 +1023,9 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     width: "100%",
                     padding: "10px 12px",
                     borderRadius: 10,
-                    border: "1px solid #D1D5DB",
+                    border: "1px solid var(--border-hairline, #D1D5DB)",
+                    background: "var(--surface-raised, #F9FAFB)",
+                    color: "var(--ink, #101322)",
                     fontSize: 13,
                     outline: "none",
                   }}
@@ -1034,8 +1039,9 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   style={{
                     padding: "8px 16px",
                     borderRadius: 10,
-                    border: "1px solid #D1D5DB",
+                    border: "1px solid var(--border-hairline, #D1D5DB)",
                     background: "transparent",
+                    color: "var(--ink, #101322)",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -1050,7 +1056,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                     padding: "8px 18px",
                     borderRadius: 10,
                     border: "none",
-                    background: "#101322",
+                    background: "var(--ink-crm, #101322)",
                     color: "#FFFFFF",
                     fontSize: 13,
                     fontWeight: 700,
