@@ -34,6 +34,12 @@ export const auth = betterAuth({
   trustedOrigins: Array.from(new Set([defaultAppUrl, appUrl, "http://localhost:3000", "http://127.0.0.1:3000"])),
   database: prismaAdapter(prisma, { provider: "mysql" }),
   rateLimit: { enabled: true, storage: "database", window: 60, max: 60, modelName: "AuthRateLimit" },
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for", "x-real-ip", "cf-connecting-ip"],
+      trustedProxies: ["127.0.0.1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,

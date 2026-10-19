@@ -248,6 +248,50 @@ const FOREIGN_KEYS = [
   "ALTER TABLE `AuditLog` ADD CONSTRAINT `AuditLog_actorId_fkey` FOREIGN KEY (`actorId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;",
 ];
 
+const COLUMN_MIGRATIONS = [
+  // User columns
+  "ALTER TABLE `User` ADD COLUMN `phone` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `dateOfBirth` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `discordHandle` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `discordId` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `twoFactorEnabled` BOOLEAN NOT NULL DEFAULT false",
+  "ALTER TABLE `User` ADD COLUMN `banned` BOOLEAN NOT NULL DEFAULT false",
+  "ALTER TABLE `User` ADD COLUMN `banReason` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `banExpires` DATETIME(3) NULL",
+  "ALTER TABLE `User` ADD COLUMN `emailVerifiedAt` DATETIME(3) NULL",
+  "ALTER TABLE `User` ADD COLUMN `passwordHash` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `role` VARCHAR(191) NOT NULL DEFAULT 'CLIENT'",
+
+  // Inquiry columns
+  "ALTER TABLE `Inquiry` ADD COLUMN `phone` VARCHAR(191) NULL",
+  "ALTER TABLE `Inquiry` ADD COLUMN `dateOfBirth` VARCHAR(191) NULL",
+  "ALTER TABLE `Inquiry` ADD COLUMN `company` VARCHAR(191) NULL",
+  "ALTER TABLE `Inquiry` ADD COLUMN `budget` VARCHAR(191) NULL",
+  "ALTER TABLE `Inquiry` ADD COLUMN `referenceUrl` TEXT NULL",
+  "ALTER TABLE `Inquiry` ADD COLUMN `referenceImage` TEXT NULL",
+  "ALTER TABLE `Inquiry` ADD COLUMN `status` VARCHAR(191) NOT NULL DEFAULT 'NEW'",
+
+  // AuthAccount columns
+  "ALTER TABLE `AuthAccount` ADD COLUMN `password` TEXT NULL",
+  "ALTER TABLE `AuthAccount` ADD COLUMN `scope` VARCHAR(191) NULL",
+  "ALTER TABLE `AuthAccount` ADD COLUMN `idToken` TEXT NULL",
+  "ALTER TABLE `AuthAccount` ADD COLUMN `accessToken` TEXT NULL",
+  "ALTER TABLE `AuthAccount` ADD COLUMN `refreshToken` TEXT NULL",
+  "ALTER TABLE `AuthAccount` ADD COLUMN `accessTokenExpiresAt` DATETIME(3) NULL",
+  "ALTER TABLE `AuthAccount` ADD COLUMN `refreshTokenExpiresAt` DATETIME(3) NULL",
+
+  // AuthSession columns
+  "ALTER TABLE `AuthSession` ADD COLUMN `ipAddress` VARCHAR(191) NULL",
+  "ALTER TABLE `AuthSession` ADD COLUMN `userAgent` TEXT NULL",
+  "ALTER TABLE `AuthSession` ADD COLUMN `impersonatedBy` VARCHAR(191) NULL",
+
+  // Appointment columns
+  "ALTER TABLE `Appointment` ADD COLUMN `duration` INT NOT NULL DEFAULT 30",
+  "ALTER TABLE `Appointment` ADD COLUMN `meetingLink` VARCHAR(191) NULL",
+  "ALTER TABLE `Appointment` ADD COLUMN `notes` TEXT NULL",
+  "ALTER TABLE `Appointment` ADD COLUMN `assignedStaffId` VARCHAR(191) NULL",
+];
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get("secret");
@@ -260,7 +304,7 @@ export async function GET(req: Request) {
   const rawDbUrl = process.env.DATABASE_URL || "";
   const maskedDbUrl = rawDbUrl.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@");
 
-  const results: Array<{ step: number; status: string; detail?: string }> = [];
+  const results: Array<{ step: number | string; status: string; detail?: string }> = [];
 
   try {
     // 1. Create tables
@@ -278,7 +322,23 @@ export async function GET(req: Request) {
       }
     }
 
-    // 2. Add foreign keys (ignore if already exists)
+    // 2. Add missing columns to existing tables (ignoring if column already exists)
+    for (let i = 0; i < COLUMN_MIGRATIONS.length; i++) {
+      const colStmt = COLUMN_MIGRATIONS[i];
+      try {
+        await prisma.$executeRawUnsafe(colStmt);
+        results.push({ step: `col_${i + 1}`, status: "column_added" });
+      } catch (err) {
+        // Ignored if column already exists (Duplicate column name)
+        results.push({
+          step: `col_${i + 1}`,
+          status: "column_skipped_or_exists",
+          detail: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    // 3. Add foreign keys (ignore if already exists)
     for (let i = 0; i < FOREIGN_KEYS.length; i++) {
       const fk = FOREIGN_KEYS[i];
       try {
@@ -294,7 +354,7 @@ export async function GET(req: Request) {
       }
     }
 
-    // 3. Auto-verify any unverified users
+    // 4. Auto-verify any unverified users
     try {
       await prisma.user.updateMany({
         where: { emailVerified: false },
