@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth-guards";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendSmtpEmail, buildNovaEmailHtml } from "@/lib/auth-email";
+import { generateNextInvoiceNumber } from "@/lib/invoice-utils";
 import type { ProjectStatus } from "@prisma/client";
 
 /**
@@ -132,6 +133,39 @@ export async function POST(request: Request) {
         },
       });
 
+      // Auto-issue paid invoice if requested or for finance role
+      let createdInvoice = null;
+      if (body.autoInvoice || session.user.role === "FINANCE") {
+        try {
+          const nextInvoiceNumber = await generateNextInvoiceNumber(prisma);
+          const rawAmount = body.amount ?? (body.budget ? parseFloat(String(body.budget).replace(/[^0-9.]/g, "")) : 12500);
+          const invAmount = isNaN(rawAmount) || rawAmount <= 0 ? 12500 : rawAmount;
+
+          createdInvoice = await prisma.invoice.create({
+            data: {
+              invoiceNumber: nextInvoiceNumber,
+              projectId: project.id,
+              clientId: targetUser.id,
+              amount: invAmount,
+              currency: body.currency || "USD",
+              status: "PAID",
+              paidAt: new Date(),
+              items: [
+                {
+                  description: `${project.name} — Commercial Milestone Scope`,
+                  quantity: 1,
+                  unitPrice: invAmount,
+                  amount: invAmount,
+                },
+              ],
+              notes: body.notes || "Commercial scope milestone settled in full under All Sky Fares LLC Master Services Agreement.",
+            },
+          });
+        } catch (invErr) {
+          console.error("[Scope API] Failed to auto-create invoice:", invErr);
+        }
+      }
+
       // If inquiryId was provided, mark it CONVERTED
       if (inquiryId) {
         await prisma.inquiry.update({
@@ -144,13 +178,14 @@ export async function POST(request: Request) {
       await prisma.auditLog.create({
         data: {
           actorId: session.user.id,
-          action: "PROJECT_SCOPE_TAKEN",
+          action: session.user.role === "FINANCE" ? "FINANCIAL_SCOPE_COMMISSIONED" : "PROJECT_SCOPE_TAKEN",
           entityType: "Project",
           entityId: project.id,
           metadata: {
             name: project.name,
             clientId: targetUser.id,
             inquiryId,
+            invoiceNumber: createdInvoice?.invoiceNumber,
           },
         },
       }).catch(() => null);
@@ -158,7 +193,10 @@ export async function POST(request: Request) {
       return NextResponse.json({
         ok: true,
         project,
-        message: `Project scope "${project.name}" provisioned successfully.`,
+        invoice: createdInvoice,
+        message: createdInvoice
+          ? `Commercial scope "${project.name}" provisioned and invoice ${createdInvoice.invoiceNumber} generated.`
+          : `Project scope "${project.name}" provisioned successfully.`,
       });
     } catch (err) {
       console.error("[Scope API] Failed to create project:", err);

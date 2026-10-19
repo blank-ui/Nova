@@ -22,10 +22,24 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 
-export function LeftRail() {
+export interface LeftRailProps {
+  user?: {
+    id?: string;
+    role?: string;
+    email?: string;
+    name?: string | null;
+  };
+}
+
+export function LeftRail({ user }: LeftRailProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const toast = useToast();
+
+  const userRole = user?.role;
+  const isFinanceUser = userRole === "FINANCE";
+  const isDeveloperUser = userRole === "DEVELOPER";
+  const isClientUser = userRole === "CLIENT";
 
   const isPortal = pathname?.startsWith("/portal");
   const isDeveloper = pathname?.startsWith("/developer");
@@ -219,10 +233,16 @@ export function LeftRail() {
     },
   ];
 
-  const navItems = isDeveloper
+  const navItems = isFinanceUser
+    ? financeNavItems
+    : isDeveloperUser
     ? developerNavItems
+    : isClientUser
+    ? clientNavItems
     : isFinance
     ? financeNavItems
+    : isDeveloper
+    ? developerNavItems
     : isPortal
     ? clientNavItems
     : adminNavItems;
@@ -245,10 +265,10 @@ export function LeftRail() {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     setSearchOpen(false);
-    if (isDeveloper) {
-      router.push(`/portal/projects?search=${encodeURIComponent(searchQuery.trim())}`);
-    } else if (isFinance) {
+    if (isFinanceUser || isFinance) {
       router.push(`/finance?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else if (isDeveloperUser || isDeveloper) {
+      router.push(`/portal/projects?search=${encodeURIComponent(searchQuery.trim())}`);
     } else if (isPortal) {
       router.push(`/portal/projects?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
@@ -381,10 +401,10 @@ export function LeftRail() {
                 type="search"
                 autoFocus
                 placeholder={
-                  isDeveloper
-                    ? "Search tasks, repos, or deliverables..."
-                    : isFinance
+                  (isFinanceUser || isFinance)
                     ? "Search billing accounts, valuations, or invoices..."
+                    : (isDeveloperUser || isDeveloper)
+                    ? "Search tasks, repos, or deliverables..."
                     : isPortal
                     ? "Search project initiatives and deliverables..."
                     : "Search leads, clients, company, or services..."
@@ -406,7 +426,31 @@ export function LeftRail() {
 
             <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
               <span style={{ fontSize: 11, color: "var(--text-muted-crm)", alignSelf: "center" }}>Quick jumps:</span>
-              {isDeveloper ? (
+              {(isFinanceUser || isFinance) ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/finance"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Revenue Pipeline
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/finance/invoices"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Invoices
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/portal/projects"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Client Projects
+                  </button>
+                </>
+              ) : (isDeveloperUser || isDeveloper) ? (
                 <>
                   <button
                     type="button"
@@ -428,23 +472,6 @@ export function LeftRail() {
                     style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
                   >
                     Client Projects
-                  </button>
-                </>
-              ) : isFinance ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => { setSearchOpen(false); router.push("/finance"); }}
-                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
-                  >
-                    Revenue Pipeline
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSearchOpen(false); router.push("/finance/invoices"); }}
-                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
-                  >
-                    Invoices
                   </button>
                 </>
               ) : isPortal ? (

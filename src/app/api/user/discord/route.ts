@@ -42,6 +42,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Discord username must be between 2 and 32 characters." }, { status: 400 });
     }
 
+    const existingUserWithHandle = await prisma.user.findFirst({
+      where: {
+        discordHandle: cleanHandle,
+        id: { not: session.user.id },
+      },
+    });
+    if (existingUserWithHandle) {
+      return NextResponse.json(
+        { error: "This Discord username is already connected to another Nova account." },
+        { status: 400 }
+      );
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -50,6 +63,25 @@ export async function POST(request: Request) {
       },
       select: { discordHandle: true, discordId: true },
     });
+
+    if (discordId) {
+      await prisma.authAccount.upsert({
+        where: {
+          providerId_accountId: {
+            providerId: "discord",
+            accountId: discordId,
+          },
+        },
+        create: {
+          providerId: "discord",
+          accountId: discordId,
+          userId: session.user.id,
+        },
+        update: {
+          userId: session.user.id,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -78,6 +110,13 @@ export async function DELETE() {
       data: {
         discordHandle: null,
         discordId: null,
+      },
+    });
+
+    await prisma.authAccount.deleteMany({
+      where: {
+        userId: session.user.id,
+        providerId: "discord",
       },
     });
 

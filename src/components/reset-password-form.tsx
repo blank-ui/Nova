@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Camera, CheckCircle2, User as UserIcon } from "lucide-react";
+import { NovaMark } from "@/components/brand";
 import { PasswordInput } from "@/components/password-input";
 import { evaluatePasswordStrength } from "@/lib/password-policy";
 import { authClient } from "@/lib/auth-client";
@@ -132,44 +133,32 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
   }
 
   return (
-    <div className="card auth-reset" style={{ maxWidth: 540, padding: "32px 28px", margin: "0 auto" }}>
-      <div style={{ marginBottom: 20 }}>
-        <h2 style={{ letterSpacing: "-.04em", margin: "0 0 6px", fontSize: 22, fontWeight: 700 }}>
-          {isSetup ? "Complete your profile." : "Choose a new password."}
+    <div className="card auth-reset" style={{ maxWidth: 580, padding: "clamp(24px, 4vw, 36px)", margin: "0 auto" }}>
+      {/* Brand Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div className="eyebrow" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          {isSetup ? "Profile & Account Setup" : "Account Recovery"}
+        </div>
+        <NovaMark size={22} starColor="#6C4CFF" dotColor="#FFB547" />
+      </div>
+
+      <div style={{ marginBottom: 22 }}>
+        <h2 style={{ letterSpacing: "-.04em", margin: "0 0 6px", fontSize: 24, fontWeight: 700, color: "var(--ink)" }}>
+          {isSetup ? "Create your profile & password." : "Choose a new password."}
         </h2>
         <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
           {isSetup
-            ? "Configure your password and personal details to activate your workspace access."
+            ? "Configure your personal details and create a secure password to activate your workspace access."
             : "Enter a fresh, secure password for your account."}
         </p>
-        {email && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              marginTop: 10,
-              padding: "4px 10px",
-              background: "var(--surface-raised)",
-              border: "1px solid var(--border-hairline)",
-              borderRadius: "var(--radius-pill)",
-              fontSize: 12,
-              color: "var(--text-secondary)",
-              fontWeight: 600,
-            }}
-          >
-            <span>Account:</span>
-            <span style={{ color: "var(--text-primary)" }}>{email}</span>
-          </div>
-        )}
       </div>
 
       {done ? (
-        <div style={{ textAlign: "center", padding: "16px 8px" }}>
+        <div style={{ textAlign: "center", padding: "20px 8px" }}>
           <div
             style={{
-              width: 52,
-              height: 52,
+              width: 56,
+              height: 56,
               borderRadius: "50%",
               background: "rgba(16, 185, 129, 0.12)",
               display: "flex",
@@ -179,14 +168,14 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
               color: "#10b981",
             }}
           >
-            <CheckCircle2 size={30} />
+            <CheckCircle2 size={32} />
           </div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px" }}>
+          <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px", color: "var(--ink)" }}>
             {isSetup ? "Profile Initialized & Account Active!" : "Password Successfully Updated!"}
           </h3>
           <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, margin: "0 0 24px" }}>
             {isSetup
-              ? "Your password and profile details have been saved. You can now log into your workspace."
+              ? "Your profile details and password have been saved. You can now log into your workspace."
               : "Your password has been changed and your account is ready for sign in."}
           </p>
           <Link
@@ -205,15 +194,28 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
           </Link>
         </div>
       ) : (
-        <form onSubmit={submit} style={{ display: "grid", gap: 18 }}>
-          {/* Avatar Upload (Setup Mode) */}
+        <form onSubmit={submit} style={{ display: "grid", gap: 20 }}>
+          {/* Centered Avatar Upload (Setup Mode) */}
           {isSetup && (
-            <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 14px", background: "var(--surface-raised)", borderRadius: 16, border: "1px solid var(--border-hairline)" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                padding: "20px 16px",
+                background: "var(--surface-raised)",
+                borderRadius: 18,
+                border: "1px solid var(--border-hairline)",
+              }}
+            >
               <div
                 onClick={() => fileInputRef.current?.click()}
+                className="avatar-circle-btn"
                 style={{
-                  width: 58,
-                  height: 58,
+                  width: 76,
+                  height: 76,
                   borderRadius: "50%",
                   overflow: "hidden",
                   background: "var(--card-bg-crm, #202431)",
@@ -224,6 +226,8 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
                   cursor: "pointer",
                   position: "relative",
                   flexShrink: 0,
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
+                  transition: "transform 0.15s ease, border-color 0.15s ease",
                 }}
                 title="Click to upload profile photo"
               >
@@ -235,13 +239,14 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
-                  <UserIcon size={24} style={{ color: "var(--muted)" }} />
+                  <UserIcon size={32} style={{ color: "var(--muted)" }} />
                 )}
                 <div
+                  className="avatar-hover-overlay"
                   style={{
                     position: "absolute",
                     inset: 0,
-                    background: "rgba(0,0,0,0.35)",
+                    background: "rgba(0,0,0,0.45)",
                     opacity: 0,
                     display: "flex",
                     alignItems: "center",
@@ -249,69 +254,115 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
                     color: "#fff",
                     transition: "opacity 0.15s ease",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
                 >
-                  <Camera size={18} />
+                  <Camera size={20} />
                 </div>
               </div>
 
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ marginTop: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-                  Profile Picture
+                  Profile Photo
                 </div>
-                <div style={{ fontSize: 11, color: "var(--muted)", margin: "2px 0 6px" }}>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
                   JPEG, PNG, or WebP up to 2MB (Optional)
                 </div>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "4px 10px",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    borderRadius: "var(--radius-pill)",
-                    background: "transparent",
-                    color: "var(--blue)",
-                    border: "1px solid var(--border-hairline)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Camera size={12} />
-                  {avatarPreview ? "Change photo" : "Upload photo"}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  style={{ display: "none" }}
-                  onChange={handleAvatarChange}
-                />
               </div>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginTop: 8,
+                  padding: "5px 14px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  borderRadius: "var(--radius-pill)",
+                  background: "transparent",
+                  color: "var(--blue)",
+                  border: "1px solid var(--border-hairline)",
+                  cursor: "pointer",
+                }}
+              >
+                <Camera size={12} />
+                {avatarPreview ? "Change photo" : "Upload photo"}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: "none" }}
+                onChange={handleAvatarChange}
+              />
             </div>
           )}
 
-          {/* Profile Name & Phone */}
+          {/* Symmetrical 2x2 Fields Grid (Setup Mode) */}
           {isSetup && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 210px), 1fr))", gap: 14 }}>
+            <div
+              className="setup-fields-grid"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+              }}
+            >
+              {/* Full Name */}
               <div>
                 <label className="auth-label">
-                  Full Name
+                  Full Name *
                   <input
                     className="field"
                     type="text"
+                    required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Alex Morgan"
                     maxLength={100}
-                    style={{ width: "100%", boxSizing: "border-box" }}
                   />
                 </label>
               </div>
 
+              {/* Email Address (Pre-configured & Verified) */}
+              <div>
+                <label className="auth-label">
+                  Email Address
+                  <div style={{ position: "relative" }}>
+                    <input
+                      className="field"
+                      type="email"
+                      disabled
+                      value={email || "Loading..."}
+                      style={{
+                        paddingRight: 74,
+                        opacity: 0.85,
+                        cursor: "not-allowed",
+                        background: "var(--surface-raised)",
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "absolute",
+                        right: 12,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#10b981",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      Verified
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Phone Number */}
               <div>
                 <label className="auth-label">
                   Phone Number <span style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</span>
@@ -322,38 +373,36 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 98765 43210"
                     maxLength={30}
-                    style={{ width: "100%", boxSizing: "border-box" }}
+                  />
+                </label>
+              </div>
+
+              {/* Date of Birth */}
+              <div>
+                <label className="auth-label">
+                  Date of Birth <span style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</span>
+                  <input
+                    className="field"
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
                   />
                 </label>
               </div>
             </div>
           )}
 
-          {/* Date of Birth */}
-          {isSetup && (
-            <div>
-              <label className="auth-label">
-                Date of Birth <span style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</span>
-                <input
-                  className="field"
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                />
-              </label>
-            </div>
-          )}
-
-          {/* Password Input */}
-          <PasswordInput
-            value={password}
-            onChange={setPassword}
-            label={isSetup ? "Create secure password" : "New password"}
-            autoComplete="new-password"
-            showStrengthMeter={true}
-            placeholder="6-12 chars with Aa#"
-          />
+          {/* Password Section (Full Width, Centered) */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <PasswordInput
+              value={password}
+              onChange={setPassword}
+              label={isSetup ? "Create secure password" : "New password"}
+              autoComplete="new-password"
+              showStrengthMeter={true}
+              placeholder="6-12 chars with Aa#"
+            />
+          </div>
 
           {error && (
             <p role="alert" style={{ color: "#ef4444", fontSize: 12, margin: 0 }}>
@@ -365,7 +414,7 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
             type="submit"
             className="button"
             disabled={busy}
-            style={{ width: "100%", justifyContent: "center", padding: "12px 16px", marginTop: 4 }}
+            style={{ width: "100%", justifyContent: "center", padding: "13px 18px", marginTop: 4, fontWeight: 700 }}
           >
             {busy ? (isSetup ? "Activating account…" : "Updating…") : isSetup ? "Save Profile & Activate" : "Update password"}
             <ArrowUpRight size={15} />
@@ -373,7 +422,7 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
         </form>
       )}
 
-      <div style={{ marginTop: 20, textAlign: "center" }}>
+      <div style={{ marginTop: 22, textAlign: "center" }}>
         <Link
           href="/login"
           style={{
@@ -382,6 +431,7 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
             gap: 6,
             color: "var(--blue)",
             fontSize: 12,
+            fontWeight: 600,
             textDecoration: "none",
           }}
         >
@@ -398,16 +448,32 @@ export function ResetPasswordForm({ token, mode }: { token: string; mode?: strin
           color: var(--text-secondary);
         }
         .auth-reset .field {
-          padding: 10px 12px;
+          width: 100%;
+          box-sizing: border-box;
+          padding: 11px 14px;
           border-radius: 12px;
           border: 1px solid var(--border-hairline);
           background: var(--surface-raised);
           color: var(--text-primary);
           font-size: 13px;
           outline: none;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
         .auth-reset .field:focus {
           border-color: var(--blue);
+          box-shadow: 0 0 0 3px rgba(108, 76, 255, 0.15);
+        }
+        .avatar-circle-btn:hover {
+          transform: scale(1.03);
+          border-color: var(--blue) !important;
+        }
+        .avatar-circle-btn:hover .avatar-hover-overlay {
+          opacity: 1 !important;
+        }
+        @media (max-width: 520px) {
+          .setup-fields-grid {
+            grid-template-columns: 1fr !important;
+          }
         }
       `}</style>
     </div>

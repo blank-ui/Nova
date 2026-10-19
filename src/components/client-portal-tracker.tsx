@@ -235,7 +235,15 @@ export function ClientPortalTracker({
               border: "none",
             }}
           >
-            <span>+ Request New Scope</span>
+            <span>
+              {userRole === "FINANCE"
+                ? "+ Request Financial Scope"
+                : userRole === "DEVELOPER"
+                ? "+ Take Engineering Scope"
+                : userRole === "ADMIN"
+                ? "+ Provision Project Scope"
+                : "+ Request New Scope"}
+            </span>
             <ArrowUpRight size={14} />
           </button>
           <Link

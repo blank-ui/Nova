@@ -57,7 +57,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
           }}
         >
           {/* Floating Dark Left Rail */}
-          <LeftRail />
+          <LeftRail user={user} />
 
           {/* Main Page Area */}
           <main style={{ flex: 1, minWidth: 0, width: "100%", display: "flex", flexDirection: "column" }}>

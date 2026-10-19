@@ -278,8 +278,10 @@ export async function PATCH(request: Request) {
     }
 
     if (action === "reset-password") {
+      const mode = typeof body.mode === "string" ? body.mode : undefined;
+      const isSetup = mode === "setup";
       const token = randomBytes(32).toString("hex");
-      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
+      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 48); // 48 hours
 
       // Better Auth's resetPassword handler expects verification.value to be the raw user.id string
       await prisma.authVerification.create({
@@ -291,18 +293,26 @@ export async function PATCH(request: Request) {
       });
 
       const appUrl = getAppBaseUrl(request);
-      const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+      const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}${isSetup ? "&mode=setup" : ""}`;
 
       let emailSent = false;
       try {
-        await sendAdminPasswordResetNotificationEmail({
-          to: user.email,
-          name: user.name,
-          resetUrl,
-        });
+        if (isSetup) {
+          await sendAccountInitiationEmail({
+            to: user.email,
+            name: user.name,
+            setupUrl: resetUrl,
+          });
+        } else {
+          await sendAdminPasswordResetNotificationEmail({
+            to: user.email,
+            name: user.name,
+            resetUrl,
+          });
+        }
         emailSent = true;
       } catch (mailErr) {
-        console.warn("[Admin Users] Could not send password reset email via SMTP:", mailErr);
+        console.warn("[Admin Users] Could not send password reset/setup email via SMTP:", mailErr);
       }
 
       await prisma.auditLog.create({
@@ -311,7 +321,7 @@ export async function PATCH(request: Request) {
           action: "UPDATE",
           entityType: "User",
           entityId: id,
-          metadata: { action: "ADMIN_TRIGGERED_PASSWORD_RESET", emailSent },
+          metadata: { action: isSetup ? "ADMIN_TRIGGERED_ACCOUNT_SETUP" : "ADMIN_TRIGGERED_PASSWORD_RESET", emailSent },
         },
       });
 
@@ -319,7 +329,9 @@ export async function PATCH(request: Request) {
         success: true,
         resetUrl,
         emailSent,
-        message: "Password reset link generated and dispatched to user email.",
+        message: isSetup
+          ? "Account setup and profile activation link generated and dispatched to user email."
+          : "Password reset link generated and dispatched to user email.",
       });
     }
 

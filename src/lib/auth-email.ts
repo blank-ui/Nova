@@ -313,11 +313,11 @@ export async function sendAccountInitiationEmail({
   name: string;
   setupUrl: string;
 }) {
-  const subject = "Welcome to Nova — Set up your account";
+  const subject = "Welcome to Nova — Create your profile & access your workspace";
   const heading = `Welcome to Nova, ${name || "there"}`;
   const bodyText =
-    "An account has been created for you on the Nova platform by the studio administrator. Click below to choose your password and activate your workspace.";
-  const actionText = "Set Up Your Password";
+    "An account has been created for you on the Nova platform by the studio administrator. Click below to create your profile, choose your password, and activate your workspace.";
+  const actionText = "Create Profile & Set Password";
   const subtext =
     "This invitation link is intended for you. For security, do not forward this email. If you were not expecting this, please contact support.";
 
@@ -333,7 +333,7 @@ export async function sendAccountInitiationEmail({
   return sendSmtpEmail({
     to,
     subject,
-    text: `${subject}\n\nHi ${name},\n\nAn account has been created for you on Nova. Set up your password here:\n${setupUrl}`,
+    text: `${subject}\n\nHi ${name},\n\nAn account has been created for you on Nova. Create your profile and set up your password here:\n${setupUrl}`,
     html,
   });
 }

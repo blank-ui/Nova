@@ -11,11 +11,11 @@ export default async function ResetPassword({
 
   return (
     <PublicPage
-      eyebrow={isSetup ? "Account activation" : "Account recovery"}
-      title={isSetup ? "Welcome to Nova." : "A fresh start."}
+      eyebrow={isSetup ? "Profile & Account Setup" : "Account Recovery"}
+      title={isSetup ? "Create your profile." : "A fresh start."}
       subtitle={
         isSetup
-          ? "Set up your secure password to activate your account and enter your workspace."
+          ? "Complete your profile details and set a secure password to activate your workspace."
           : "Choose a new password. The link can only be used once and expires automatically."
       }
     >

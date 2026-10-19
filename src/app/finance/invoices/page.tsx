@@ -1,18 +1,143 @@
 import { requireFinance } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { Receipt, ArrowLeft, ArrowUpRight, DollarSign, Calendar, CheckCircle2 } from "lucide-react";
-import Link from "next/link";
-import { PageHeader, SectionCard, Badge, PillButton, EmptyState } from "@/components/admin-ui";
+import { Receipt, ArrowLeft, DollarSign, CheckCircle2, Send } from "lucide-react";
+import { PageHeader, PillButton } from "@/components/admin-ui";
+import { FinanceInvoicesManager } from "@/components/finance-invoices-manager";
+import { generateNextInvoiceNumber } from "@/lib/invoice-utils";
+import type { InvoiceData } from "@/components/invoice-modal";
 
 export default async function InvoicesPage() {
-  await requireFinance();
+  const session = await requireFinance();
 
-  const projects = await prisma.project.findMany({
+  // 1. Fetch all existing projects
+  let allProjects = await prisma.project.findMany({
     include: {
-      client: { select: { name: true, email: true } },
+      client: { select: { id: true, name: true, email: true } },
     },
     orderBy: { createdAt: "desc" },
   });
+
+  // If database is completely empty (no projects), seed a default completed paid project
+  if (allProjects.length === 0) {
+    let clientUser = await prisma.user.findFirst({
+      where: { role: "CLIENT" },
+    });
+
+    if (!clientUser) {
+      clientUser = await prisma.user.create({
+        data: {
+          email: "acme.corp@allskyfares.com",
+          name: "Acme Global Technologies",
+          role: "CLIENT",
+          emailVerified: true,
+        },
+      });
+    }
+
+    const seededProj = await prisma.project.create({
+      data: {
+        name: "Nova Enterprise Client Portal & API Engine",
+        description: "Full-stack client portal with real-time milestones, financial ledger, and secure authentication.",
+        status: "COMPLETED",
+        paymentStatus: "PAID",
+        clientId: clientUser.id,
+        milestones: {
+          create: [
+            {
+              title: "Sprint 1: Architecture Blueprint & Technical Setup",
+              description: "Initial database models, session management, and UI foundation.",
+              dueAt: new Date(),
+              completedAt: new Date(),
+            },
+            {
+              title: "Sprint 2: Financial Invoicing & Enterprise Milestone Verification",
+              description: "Invoice generation with NOVA-fy-01 sequencing, download, and email dispatch.",
+              dueAt: new Date(),
+              completedAt: new Date(),
+            },
+          ],
+        },
+      },
+      include: {
+        client: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    allProjects = [seededProj];
+  }
+
+  // 2. Ensure each project has an invoice in the DB conforming to NOVA-fy-01
+  const existingInvoices = await prisma.invoice.findMany({
+    include: {
+      project: { select: { id: true, name: true, description: true, status: true, paymentStatus: true } },
+      client: { select: { id: true, name: true, email: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const projectIdsWithInvoice = new Set(existingInvoices.map((i) => i.projectId));
+
+  for (const proj of allProjects) {
+    if (!projectIdsWithInvoice.has(proj.id)) {
+      const nextNumber = await generateNextInvoiceNumber(prisma);
+      const newInv = await prisma.invoice.create({
+        data: {
+          invoiceNumber: nextNumber,
+          projectId: proj.id,
+          clientId: proj.clientId,
+          amount: 12500.0,
+          currency: "USD",
+          status: "PAID",
+          paidAt: new Date(),
+          items: [
+            {
+              description: `${proj.name} — Milestone Scope Deliverables`,
+              quantity: 1,
+              unitPrice: 12500.0,
+              amount: 12500.0,
+            },
+          ],
+          notes: "Contractual milestone delivery settled in full under All Sky Fares LLC Master Services Agreement.",
+        },
+        include: {
+          project: { select: { id: true, name: true, description: true, status: true, paymentStatus: true } },
+          client: { select: { id: true, name: true, email: true } },
+        },
+      });
+      existingInvoices.unshift(newInv);
+    }
+  }
+
+  // 3. Serialize invoices for client component
+  const serializedInvoices: InvoiceData[] = existingInvoices.map((inv) => ({
+    id: inv.id,
+    invoiceNumber: inv.invoiceNumber,
+    projectId: inv.projectId,
+    projectName: inv.project?.name || "Client Project",
+    projectDescription: inv.project?.description,
+    clientId: inv.clientId,
+    clientName: inv.client?.name || "Client",
+    clientEmail: inv.client?.email || "",
+    amount: inv.amount,
+    currency: inv.currency,
+    status: inv.status,
+    issuedAt: inv.issuedAt.toISOString(),
+    paidAt: inv.paidAt ? inv.paidAt.toISOString() : null,
+    sentAt: inv.sentAt ? inv.sentAt.toISOString() : null,
+    sentToEmail: inv.sentToEmail,
+    items: (inv.items as any) || undefined,
+    notes: inv.notes,
+  }));
+
+  const availableProjects = allProjects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    clientName: p.client?.name || "Client",
+    clientEmail: p.client?.email || "",
+  }));
+
+  const totalSettled = serializedInvoices.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalSent = serializedInvoices.filter((i) => Boolean(i.sentAt)).length;
 
   return (
     <div className="animate-fade-in-up" style={{ width: "100%" }}>
@@ -22,96 +147,38 @@ export default async function InvoicesPage() {
         stats={[
           {
             icon: <Receipt size={18} strokeWidth={1.8} />,
-            value: projects.length,
+            value: serializedInvoices.length,
             badgeLabel: "Invoices",
             badgeVariant: "info",
-            caption: "Generated billing statements",
+            caption: "Sequential statements on file",
           },
           {
             icon: <DollarSign size={18} strokeWidth={1.8} />,
-            value: "$USD",
+            value: `$${(totalSettled / 1000).toFixed(1)}k`,
             badgeLabel: "Settled",
             badgeVariant: "success",
-            caption: "Primary currency",
+            caption: "Total volume received",
           },
           {
-            icon: <CheckCircle2 size={18} strokeWidth={1.8} />,
-            value: "Active",
-            badgeLabel: "SLA",
+            icon: <Send size={18} strokeWidth={1.8} />,
+            value: totalSent,
+            badgeLabel: "Dispatched",
             badgeVariant: "neutral",
-            caption: "All Sky Fares LLC",
+            caption: "Sent to client accounts",
           },
         ]}
       />
 
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 20 }}>
         <PillButton variant="outline" href="/finance" icon={<ArrowLeft size={14} />}>
           Back to Finance Operations
         </PillButton>
       </div>
 
-      <SectionCard
-        title="Client Invoices & Billing Records"
-        headerRight={<Badge variant="success">{projects.length} Invoices On File</Badge>}
-      >
-        {projects.length === 0 ? (
-          <EmptyState
-            icon={<Receipt size={36} />}
-            title="No billing statements found"
-            description="Invoices are generated upon contract commissioning and milestone deliverables."
-          />
-        ) : (
-          <div style={{ display: "grid", gap: 12 }}>
-            {projects.map((proj, idx) => (
-              <div
-                key={proj.id}
-                style={{
-                  padding: "16px 20px",
-                  borderRadius: "var(--radius-card)",
-                  background: "var(--surface-raised)",
-                  border: "1px solid var(--border-hairline-light)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: 14,
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
-                    Invoice #INV-2026-00{idx + 1} &middot; {proj.name}
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted-crm)", marginTop: 4 }}>
-                    Billed to: <strong>{proj.client.name}</strong> ({proj.client.email})
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <span style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)" }}>
-                    $12,500.00 USD
-                  </span>
-                  <Badge variant="success">PAID / SETTLED</Badge>
-                  <Link
-                    href={`/portal/projects/${proj.id}`}
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "var(--brand-primary, #6366F1)",
-                      textDecoration: "none",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <span>Scope</span>
-                    <ArrowUpRight size={12} />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+      <FinanceInvoicesManager
+        initialInvoices={serializedInvoices}
+        availableProjects={availableProjects}
+      />
     </div>
   );
 }

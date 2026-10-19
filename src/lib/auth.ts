@@ -88,6 +88,92 @@ export const auth = betterAuth({
       discord: {
         clientId: discordClientId,
         clientSecret: discordClientSecret,
+        mapProfileToUser: async (profile: Record<string, unknown>) => {
+          const rawId =
+            typeof profile.id === "string"
+              ? profile.id.trim()
+              : typeof profile.id === "number" || typeof profile.id === "bigint"
+                ? String(profile.id).trim()
+                : null;
+          const rawUsername = typeof profile.username === "string" ? profile.username.trim() : null;
+          const cleanUsername = rawUsername ? rawUsername.replace(/^@+/, "").toLowerCase() : null;
+          const rawEmail = typeof profile.email === "string" ? profile.email.trim().toLowerCase() : null;
+
+          // Find existing user by discordId, discordHandle, or email
+          let matchingUser = null;
+          if (rawId) {
+            matchingUser = await prisma.user.findFirst({
+              where: { discordId: rawId },
+            });
+          }
+
+          if (!matchingUser && cleanUsername) {
+            const allUsersWithHandle = await prisma.user.findMany({
+              where: { discordHandle: { not: null } },
+            });
+            matchingUser =
+              allUsersWithHandle.find(
+                (u) => u.discordHandle?.trim().replace(/^@+/, "").toLowerCase() === cleanUsername
+              ) ?? null;
+          }
+
+          if (!matchingUser && rawEmail) {
+            matchingUser = await prisma.user.findUnique({
+              where: { email: rawEmail },
+            });
+          }
+
+          if (matchingUser) {
+            // Backfill discordId and discordHandle
+            const updateData: { discordId?: string; discordHandle?: string } = {};
+            if (rawId && matchingUser.discordId !== rawId) {
+              updateData.discordId = rawId;
+            }
+            if (rawUsername && matchingUser.discordHandle !== rawUsername) {
+              updateData.discordHandle = rawUsername;
+            }
+            if (Object.keys(updateData).length > 0) {
+              await prisma.user.update({
+                where: { id: matchingUser.id },
+                data: updateData,
+              });
+            }
+
+            // Proactively upsert AuthAccount record so Better Auth recognizes the user
+            if (rawId) {
+              const existingAccount = await prisma.authAccount.findUnique({
+                where: {
+                  providerId_accountId: {
+                    providerId: "discord",
+                    accountId: rawId,
+                  },
+                },
+              });
+              if (!existingAccount) {
+                await prisma.authAccount.create({
+                  data: {
+                    providerId: "discord",
+                    accountId: rawId,
+                    userId: matchingUser.id,
+                  },
+                });
+              } else if (existingAccount.userId !== matchingUser.id) {
+                await prisma.authAccount.update({
+                  where: { id: existingAccount.id },
+                  data: { userId: matchingUser.id },
+                });
+              }
+            }
+
+            return {
+              email: matchingUser.email,
+              name: matchingUser.name || (profile.global_name as string) || (profile.username as string) || undefined,
+              emailVerified: true,
+            };
+          }
+
+          return {};
+        },
       },
     } : {}),
   },
@@ -162,15 +248,17 @@ export const auth = betterAuth({
         after: async (account) => {
           if (account.providerId === "discord" && account.userId && account.accountId) {
             try {
-              await prisma.user.update({
-                where: { id: account.userId },
-                data: {
-                  discordId: account.accountId,
-                  discordHandle: "superr_nova_",
-                },
-              });
+              const existingUser = await prisma.user.findUnique({ where: { id: account.userId } });
+              if (existingUser && !existingUser.discordId) {
+                await prisma.user.update({
+                  where: { id: account.userId },
+                  data: {
+                    discordId: account.accountId,
+                  },
+                });
+              }
             } catch (err) {
-              console.error("Failed to sync discordHandle on account creation:", err);
+              console.error("Failed to sync discordId on account creation:", err);
             }
           }
         },

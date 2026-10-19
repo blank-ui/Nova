@@ -51,6 +51,7 @@ model User {
   bootstrapClaim        BootstrapClaim?
   appointmentsRequested Appointment[] @relation("AppointmentsRequested")
   appointmentsAssigned  Appointment[] @relation("AppointmentsAssigned")
+  invoices              Invoice[]
   @@index([role, createdAt])
   @@index([discordId])
 }
@@ -160,6 +161,7 @@ model Project {
   description String?       @db.Text
   status      ProjectStatus @default(PLANNING)
   clientId    String
+  paymentStatus String        @default("PAID")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   client      User          @relation(fields: [clientId], references: [id])
@@ -167,9 +169,11 @@ model Project {
   tasks       Task[]
   messages    Message[]
   files       ProjectFile[]
+  invoices    Invoice[]
   @@index([clientId, status])
   @@index([updatedAt])
   @@index([status])
+  @@index([paymentStatus])
 }
 
 model Milestone {
@@ -271,3 +275,30 @@ model Appointment {
   @@index([requestedById])
   @@index([assignedStaffId])
 }
+
+model Invoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId      String
+  client        User      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  amount        Float     @default(12500.00)
+  currency      String    @default("USD")
+  status        String    @default("PAID") // PAID, PENDING, DRAFT, SENT
+  dueDate       DateTime?
+  issuedAt      DateTime  @default(now())
+  paidAt        DateTime?
+  sentAt        DateTime?
+  sentToEmail   String?
+  items         Json?
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([clientId])
+  @@index([status])
+  @@index([invoiceNumber])
+}
+
