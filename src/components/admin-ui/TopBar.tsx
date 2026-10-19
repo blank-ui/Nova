@@ -250,26 +250,70 @@ export function TopBar({ user, defaultNotificationsOpen = false }: TopBarProps) 
     }
   };
 
-  const navLinks = isPortal
-    ? [
-        { label: "Overview", href: "/portal", matchExact: true },
-        { label: "Projects", href: "/portal/projects", matchExact: false },
-        { label: "Appointments", href: "/portal/appointments", matchExact: false },
-        { label: "Profile & Security", href: "/portal/security", matchExact: false },
-        ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
-      ]
-    : [
-        { label: "Overview", href: "/admin", matchExact: true },
-        { label: "Inquiries", href: "/admin/inquiry", matchExact: false },
-        { label: "Projects", href: "/admin/projects", matchExact: false },
-        { label: "Appointments", href: "/admin/appointments", matchExact: false },
-        { label: "Users & Accounts", href: "/admin/users", matchExact: false },
-        { label: "GitHub & Gallery", href: "/admin/showcase", matchExact: false },
-        { label: "Security", href: "/admin/security", matchExact: false },
-        { label: "Client Portal", href: "/portal", matchExact: false },
-      ];
+  const isDeveloper = pathname?.startsWith("/developer");
+  const isFinance = pathname?.startsWith("/finance");
 
-  const profileHref = isPortal ? "/portal/security" : "/admin/security";
+  let navLinks;
+  if (isDeveloper || (user.role === "DEVELOPER" && isPortal)) {
+    navLinks = [
+      { label: "Console", href: "/developer", matchExact: true },
+      { label: "Repositories", href: "/developer/repos", matchExact: false },
+      { label: "Client Projects", href: "/portal/projects", matchExact: false },
+      { label: "Appointments", href: "/portal/appointments", matchExact: false },
+      { label: "Profile & Security", href: "/portal/security", matchExact: false },
+      ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
+    ];
+  } else if (isFinance || (user.role === "FINANCE" && isPortal)) {
+    navLinks = [
+      { label: "Finance", href: "/finance", matchExact: true },
+      { label: "Invoices & Billing", href: "/finance/invoices", matchExact: false },
+      { label: "Client Projects", href: "/portal/projects", matchExact: false },
+      { label: "Appointments", href: "/portal/appointments", matchExact: false },
+      { label: "Profile & Security", href: "/portal/security", matchExact: false },
+      ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
+    ];
+  } else if (isPortal) {
+    navLinks = [
+      { label: "Overview", href: "/portal", matchExact: true },
+      { label: "Projects", href: "/portal/projects", matchExact: false },
+      { label: "Appointments", href: "/portal/appointments", matchExact: false },
+      { label: "Profile & Security", href: "/portal/security", matchExact: false },
+      ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
+    ];
+  } else {
+    navLinks = [
+      { label: "Overview", href: "/admin", matchExact: true },
+      { label: "Inquiries", href: "/admin/inquiry", matchExact: false },
+      { label: "Projects", href: "/admin/projects", matchExact: false },
+      { label: "Appointments", href: "/admin/appointments", matchExact: false },
+      { label: "Users & Accounts", href: "/admin/users", matchExact: false },
+      { label: "GitHub & Gallery", href: "/admin/showcase", matchExact: false },
+      { label: "Security", href: "/admin/security", matchExact: false },
+      { label: "Client Portal", href: "/portal", matchExact: false },
+    ];
+  }
+
+  const defaultHome =
+    user.role === "DEVELOPER"
+      ? "/developer"
+      : user.role === "FINANCE"
+      ? "/finance"
+      : user.role === "CLIENT"
+      ? "/portal"
+      : "/admin";
+
+  const homeHref = isDeveloper
+    ? "/developer"
+    : isFinance
+    ? "/finance"
+    : isPortal
+    ? (user.role === "DEVELOPER" ? "/developer" : user.role === "FINANCE" ? "/finance" : "/portal")
+    : defaultHome;
+
+  const profileHref =
+    isDeveloper || isFinance || isPortal || user.role !== "ADMIN"
+      ? "/portal/security"
+      : "/admin/security";
 
   return (
     <header
@@ -285,7 +329,7 @@ export function TopBar({ user, defaultNotificationsOpen = false }: TopBarProps) 
     >
       {/* Left: Nova Logo */}
       <Link
-        href={isPortal ? "/portal" : "/admin"}
+        href={homeHref}
         style={{
           display: "flex",
           alignItems: "center",

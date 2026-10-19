@@ -1,5 +1,7 @@
 import { requireDeveloper } from "@/lib/auth-guards";
-import { GitBranch, ExternalLink } from "lucide-react";
+import { GitBranch, ExternalLink, ArrowLeft, FolderGit2, ShieldCheck, Terminal } from "lucide-react";
+import Link from "next/link";
+import { PageHeader, SectionCard, Badge, PillButton } from "@/components/admin-ui";
 
 export default async function DeveloperReposPage() {
   await requireDeveloper();
@@ -12,65 +14,119 @@ export default async function DeveloperReposPage() {
       url: "https://github.com/blank-ui/Nova",
       language: "TypeScript",
       status: "Production Ready",
+      isPrimary: true,
     },
     {
       name: "allskyfares-core",
-      desc: "Enterprise core services, transactional mail handlers, DNS, and hosting configs.",
+      desc: "Enterprise core services, transactional mail handlers, DNS, and hosting configs under All Sky Fares LLC.",
       branch: "main",
       url: "https://github.com/blank-ui",
       language: "Node / Cloud",
       status: "Active",
+      isPrimary: false,
     },
   ];
 
   return (
-    <main className="shell" style={{ padding: "40px 0 80px" }}>
-      <div style={{ marginBottom: 28 }}>
-        <div className="eyebrow" style={{ color: "#10b981", display: "flex", alignItems: "center", gap: 6 }}>
-          <GitBranch size={14} /> Source Code & CI/CD
-        </div>
-        <h1 style={{ fontSize: 28, letterSpacing: "-.04em", margin: "6px 0", color: "var(--ink)" }}>
-          Studio Code Repositories
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-          Centralized git repository directory and deployment targets for the engineering team.
-        </p>
+    <div className="animate-fade-in-up" style={{ width: "100%" }}>
+      <PageHeader
+        titleLine1="Studio"
+        titleLine2="Repositories"
+        stats={[
+          {
+            icon: <GitBranch size={18} strokeWidth={1.8} />,
+            value: repos.length,
+            badgeLabel: "Git",
+            badgeVariant: "info",
+            caption: "Active repositories",
+          },
+          {
+            icon: <Terminal size={18} strokeWidth={1.8} />,
+            value: "main",
+            badgeLabel: "Target",
+            badgeVariant: "success",
+            caption: "Primary deploy branch",
+          },
+          {
+            icon: <ShieldCheck size={18} strokeWidth={1.8} />,
+            value: "CI/CD",
+            badgeLabel: "Verified",
+            badgeVariant: "neutral",
+            caption: "Build pipelines",
+          },
+        ]}
+      />
+
+      <div style={{ marginBottom: 24 }}>
+        <PillButton variant="outline" href="/developer" icon={<ArrowLeft size={14} />}>
+          Back to Sprint Console
+        </PillButton>
       </div>
 
-      <div style={{ display: "grid", gap: 16, maxWidth: 840 }}>
-        {repos.map((repo) => (
-          <div key={repo.name} className="card" style={{ padding: "clamp(16px, 3.5vw, 20px) clamp(16px, 3.5vw, 24px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
-                  {repo.name}
-                </h3>
-                <span style={{ fontSize: 11, background: "rgba(16,185,129,0.1)", color: "#059669", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>
-                  {repo.status}
-                </span>
-              </div>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "6px 0 10px", lineHeight: 1.5 }}>
-                {repo.desc}
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 11, color: "var(--muted)" }}>
-                <span>Default Branch: <strong>{repo.branch}</strong></span>
-                <span>Language: <strong>{repo.language}</strong></span>
-              </div>
-            </div>
-
-            <a
-              href={repo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="button button-outline"
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", fontSize: 12 }}
+      <SectionCard
+        title="Connected Code Repositories & CI/CD Targets"
+        headerRight={<Badge variant="info">{repos.length} Repositories</Badge>}
+      >
+        <div style={{ display: "grid", gap: 14 }}>
+          {repos.map((repo) => (
+            <div
+              key={repo.name}
+              style={{
+                padding: "20px 22px",
+                borderRadius: "var(--radius-card)",
+                background: "var(--surface-raised)",
+                border: "1px solid var(--border-hairline-light)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
             >
-              <span>GitHub</span>
-              <ExternalLink size={13} />
-            </a>
-          </div>
-        ))}
-      </div>
-    </main>
+              <div style={{ minWidth: 0, maxWidth: 640 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+                  <FolderGit2 size={18} color="var(--brand-primary, #6366F1)" />
+                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
+                    {repo.name}
+                  </h3>
+                  <Badge variant={repo.isPrimary ? "success" : "neutral"}>
+                    {repo.status}
+                  </Badge>
+                </div>
+                <p style={{ fontSize: 13, color: "var(--text-muted-crm)", margin: "0 0 12px", lineHeight: 1.6 }}>
+                  {repo.desc}
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 12, color: "var(--text-secondary)" }}>
+                  <span>Default Branch: <strong>{repo.branch}</strong></span>
+                  <span>&middot;</span>
+                  <span>Language: <strong>{repo.language}</strong></span>
+                </div>
+              </div>
+
+              <a
+                href={repo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 18px",
+                  borderRadius: "var(--radius-pill)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: "var(--ink-crm)",
+                  color: "var(--ink-crm-text, #FFFFFF)",
+                  textDecoration: "none",
+                }}
+              >
+                <span>GitHub Repo</span>
+                <ExternalLink size={13} />
+              </a>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+    </div>
   );
 }

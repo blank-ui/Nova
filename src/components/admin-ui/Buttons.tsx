@@ -98,6 +98,8 @@ export interface PillButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
   variant?: "primary" | "outline" | "subtle";
   href?: string;
   icon?: React.ReactNode;
+  target?: string;
+  rel?: string;
 }
 
 export function PillButton({
@@ -105,6 +107,8 @@ export function PillButton({
   variant = "outline",
   href,
   icon,
+  target,
+  rel,
   style,
   className = "",
   onClick,
@@ -147,7 +151,13 @@ export function PillButton({
 
   if (href) {
     return (
-      <Link href={href} className={`pill-button-hover ${className}`} style={combinedStyles}>
+      <Link
+        href={href}
+        target={target}
+        rel={rel}
+        className={`pill-button-hover ${className}`}
+        style={combinedStyles}
+      >
         {icon}
         <span>{children}</span>
       </Link>

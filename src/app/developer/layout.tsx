@@ -1,19 +1,28 @@
 import { requireDeveloper } from "@/lib/auth-guards";
-import { DeveloperNav } from "@/components/developer-nav";
-import { Footer } from "@/components/footer";
+import { prisma } from "@/lib/prisma";
+import { AdminShell } from "@/components/admin-ui";
 
 export default async function DeveloperLayout({ children }: { children: React.ReactNode }) {
   const session = await requireDeveloper();
 
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <DeveloperNav
-        userName={session.user.name || "Developer"}
-        userEmail={session.user.email || ""}
-        userRole={session.user.role || "DEVELOPER"}
-      />
-      <div style={{ flex: 1 }}>{children}</div>
-      <Footer />
-    </div>
-  );
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      image: true,
+    },
+  });
+
+  const user = {
+    id: session.user.id,
+    name: dbUser?.name ?? session.user.name ?? "Developer",
+    email: dbUser?.email ?? session.user.email,
+    role: dbUser?.role ?? session.user.role ?? "DEVELOPER",
+    image: dbUser?.image ?? session.user.image ?? null,
+  };
+
+  return <AdminShell user={user}>{children}</AdminShell>;
 }

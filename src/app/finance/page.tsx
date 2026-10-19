@@ -5,14 +5,30 @@ import {
   DollarSign,
   Receipt,
   Building,
+  Shield,
+  CreditCard,
+  Calendar,
+  FolderKanban,
+  ArrowUpRight,
+  Landmark,
+  Scale,
 } from "lucide-react";
+import {
+  PageHeader,
+  SectionCard,
+  StatTile,
+  ProfileCard,
+  DetailRow,
+  Badge,
+  EmptyState,
+  PillButton,
+} from "@/components/admin-ui";
 
 export default async function FinanceWorkspace() {
   const session = await requireFinance();
-  const firstName = session.user.name ? session.user.name.trim().split(/\s+/)[0] : "Finance";
 
-  // Fetch inquiries with budgets and projects
-  const [inquiries, projects, clients] = await Promise.all([
+  // Fetch inquiries with budgets, projects, clients, and db user
+  const [inquiries, projects, clients, dbUser] = await Promise.all([
     prisma.inquiry.findMany({
       where: { budget: { not: null } },
       orderBy: { createdAt: "desc" },
@@ -28,157 +44,362 @@ export default async function FinanceWorkspace() {
       where: { role: "CLIENT" },
       select: { id: true, name: true, email: true },
     }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        image: true,
+        twoFactorEnabled: true,
+      },
+    }),
   ]);
 
+  const userName = dbUser?.name ?? session.user.name ?? "Finance";
+  const userImage = dbUser?.image ?? session.user.image ?? null;
+
   return (
-    <main className="shell" style={{ padding: "40px 0 80px" }}>
-      {/* Header Banner */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
-        <div>
-          <div className="eyebrow" style={{ color: "#d97706", display: "flex", alignItems: "center", gap: 6 }}>
-            <DollarSign size={14} /> Finance & Revenue Operations
-          </div>
-          <h1 style={{ fontSize: 32, letterSpacing: "-.05em", margin: "8px 0 6px", color: "var(--ink)" }}>
-            Welcome back, {firstName}.
-          </h1>
-          <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, maxWidth: 540 }}>
-            Financial control room: qualified project budgets, active client agreements, revenue pipelines, and billing under <strong>All Sky Fares LLC</strong>.
-          </p>
-        </div>
+    <div className="animate-fade-in-up" style={{ width: "100%" }}>
+      {/* Page Header */}
+      <PageHeader
+        titleLine1="Finance"
+        titleLine2="Operations"
+        stats={[
+          {
+            icon: <DollarSign size={18} strokeWidth={1.8} />,
+            value: clients.length,
+            badgeLabel: "Accounts",
+            badgeVariant: "neutral",
+            caption: "Active billing entities",
+          },
+          {
+            icon: <Receipt size={18} strokeWidth={1.8} />,
+            value: projects.length,
+            badgeLabel: "Contracts",
+            badgeVariant: "success",
+            caption: "Commissioned projects",
+          },
+          {
+            icon: <Building size={18} strokeWidth={1.8} />,
+            value: inquiries.length,
+            badgeLabel: "Pipeline",
+            badgeVariant: "warning",
+            caption: "Qualified budget scopes",
+          },
+        ]}
+      />
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <Link
-            href="/finance/invoices"
-            className="button"
-            style={{ padding: "10px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
-          >
-            <Receipt size={14} /> Billing Records
-          </Link>
-        </div>
-      </div>
-
-      {/* Metrics Row */}
+      {/* Action Strip */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
-          gap: 16,
-          marginBottom: 36,
-        }}
-      >
-        <div className="card" style={{ padding: "20px 22px", borderTop: "3px solid #f59e0b" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-            Active Client Accounts
-          </div>
-          <div style={{ fontSize: 36, fontWeight: 800, color: "var(--ink)", margin: "8px 0 4px", letterSpacing: "-.05em" }}>
-            {clients.length}
-          </div>
-          <div style={{ fontSize: 12, color: "#d97706", fontWeight: 600 }}>Billing entities on file</div>
-        </div>
-
-        <div className="card" style={{ padding: "20px 22px", borderTop: "3px solid #10b981" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-            Commissioned Projects
-          </div>
-          <div style={{ fontSize: 36, fontWeight: 800, color: "var(--ink)", margin: "8px 0 4px", letterSpacing: "-.05em" }}>
-            {projects.length}
-          </div>
-          <div style={{ fontSize: 12, color: "#059669", fontWeight: 600 }}>Contracts in execution</div>
-        </div>
-
-        <div className="card" style={{ padding: "20px 22px", borderTop: "3px solid #6C4CFF" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-            Pipeline Inquiries
-          </div>
-          <div style={{ fontSize: 36, fontWeight: 800, color: "var(--ink)", margin: "8px 0 4px", letterSpacing: "-.05em" }}>
-            {inquiries.length}
-          </div>
-          <div style={{ fontSize: 12, color: "#6C4CFF", fontWeight: 600 }}>With declared budget ranges</div>
-        </div>
-      </div>
-
-      {/* Financial Pipeline Table */}
-      <div className="card" style={{ padding: "clamp(18px, 4vw, 28px)", marginBottom: 28 }}>
-        <h2 style={{ fontSize: 20, letterSpacing: "-.03em", margin: "0 0 16px", color: "var(--ink)" }}>
-          Project Scope & Budget Valuations
-        </h2>
-
-        <div className="data-table-container" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--line)", color: "var(--muted)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".06em" }}>
-                <th style={{ padding: "12px 14px" }}>Client / Lead</th>
-                <th style={{ padding: "12px 14px" }}>Declared Budget</th>
-                <th style={{ padding: "12px 14px" }}>Service Category</th>
-                <th style={{ padding: "12px 14px" }}>Pipeline Status</th>
-                <th style={{ padding: "12px 14px" }}>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inquiries.length === 0 ? (
-                <tr>
-                  <td colSpan={5} style={{ padding: "30px 14px", textAlign: "center", color: "var(--muted)" }}>
-                    No qualified budget inquiries yet.
-                  </td>
-                </tr>
-              ) : (
-                inquiries.map((inq) => (
-                  <tr key={inq.id} style={{ borderBottom: "1px solid var(--line)" }}>
-                    <td style={{ padding: "14px" }}>
-                      <div style={{ fontWeight: 700, color: "var(--ink)" }}>{inq.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--muted)" }}>{inq.company || inq.email}</div>
-                    </td>
-                    <td style={{ padding: "14px", fontWeight: 700, color: "#059669" }}>
-                      {inq.budget || "$5,000 – $15,000"}
-                    </td>
-                    <td style={{ padding: "14px", color: "var(--muted)" }}>
-                      {inq.service}
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(245,158,11,0.1)", color: "#d97706" }}>
-                        {inq.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: "14px", color: "var(--muted)", fontSize: 12 }}>
-                      {new Date(inq.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Corporate Entity Banner */}
-      <div
-        className="card"
-        style={{
-          padding: "20px 24px",
-          background: "var(--paper)",
-          border: "1px solid var(--line)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: 12,
           flexWrap: "wrap",
-          gap: 16,
+          marginBottom: 24,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Building size={24} style={{ color: "var(--muted)" }} />
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>
-              All Sky Fares LLC — Treasury & Merchant Details
-            </div>
-            <div style={{ fontSize: 12, color: "var(--muted)" }}>
-              Official registered operator for Nova. All invoices, wire instructions, and tax filings are recorded under All Sky Fares LLC.
-            </div>
-          </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <PillButton variant="primary" href="/finance/invoices" icon={<Receipt size={14} />}>
+            Billing &amp; Invoices
+          </PillButton>
+          <PillButton variant="outline" href="/portal/projects" icon={<FolderKanban size={14} />}>
+            Client Projects ({projects.length})
+          </PillButton>
+          <PillButton variant="subtle" href="/portal/appointments" icon={<Calendar size={14} />}>
+            Consultations Schedule
+          </PillButton>
         </div>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)" }}>
-          Contact: nova@allskyfares.com
-        </span>
       </div>
-    </main>
+
+      {/* Main Two-Column Grid matching Design Language */}
+      <div
+        className="overview-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.8fr) minmax(320px, 1fr)",
+          gap: 20,
+          alignItems: "start",
+        }}
+      >
+        {/* Left Column (65%) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+          {/* 3 Metric Stat Tiles */}
+          <div
+            className="stat-tiles-row"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 14,
+            }}
+          >
+            <StatTile
+              category="Client Accounts"
+              title="Billing Entities"
+              value={clients.length}
+              caption="Registered enterprise accounts"
+              variant="black"
+              href="/finance"
+              actionIcon="arrow"
+            />
+            <StatTile
+              category="Commercial Execution"
+              title="Active Contracts"
+              value={projects.length}
+              caption="Retainers &amp; milestones"
+              variant="teal"
+              href="/portal/projects"
+              actionIcon="arrow"
+            />
+            <StatTile
+              category="Valuation Pipeline"
+              title="Qualified Scopes"
+              value={inquiries.length}
+              caption="Declared budget ranges"
+              variant="yellow"
+              href="/finance"
+              actionIcon="arrow"
+            />
+          </div>
+
+          {/* Financial Pipeline Table */}
+          <SectionCard
+            title="Project Scope & Budget Valuations"
+            headerRight={
+              <Badge variant="warning">{inquiries.length} Qualified Scopes</Badge>
+            }
+          >
+            {inquiries.length === 0 ? (
+              <EmptyState
+                icon={<DollarSign size={36} />}
+                title="No qualified budget scopes"
+                description="When new client inquiries declare budget ranges, they will automatically appear here for commercial review."
+              />
+            ) : (
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+                  <thead>
+                    <tr
+                      style={{
+                        borderBottom: "1px solid var(--border-hairline-light)",
+                        color: "var(--text-muted-crm)",
+                        fontSize: 11,
+                        textTransform: "uppercase",
+                        letterSpacing: ".06em",
+                      }}
+                    >
+                      <th style={{ padding: "12px 14px", fontWeight: 700 }}>Client / Entity</th>
+                      <th style={{ padding: "12px 14px", fontWeight: 700 }}>Declared Budget</th>
+                      <th style={{ padding: "12px 14px", fontWeight: 700 }}>Service Focus</th>
+                      <th style={{ padding: "12px 14px", fontWeight: 700 }}>Pipeline Status</th>
+                      <th style={{ padding: "12px 14px", fontWeight: 700 }}>Received</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inquiries.map((inq) => (
+                      <tr
+                        key={inq.id}
+                        style={{
+                          borderBottom: "1px solid var(--border-hairline-light)",
+                          transition: "background 0.15s ease",
+                        }}
+                      >
+                        <td style={{ padding: "14px" }}>
+                          <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{inq.name}</div>
+                          <div style={{ fontSize: 12, color: "var(--text-muted-crm)" }}>
+                            {inq.company || inq.email}
+                          </div>
+                        </td>
+                        <td style={{ padding: "14px", fontWeight: 700, color: "var(--accent-teal, #10b981)" }}>
+                          {inq.budget || "$5,000 – $15,000"}
+                        </td>
+                        <td style={{ padding: "14px", color: "var(--text-secondary)" }}>
+                          {inq.service}
+                        </td>
+                        <td style={{ padding: "14px" }}>
+                          <Badge variant={inq.status === "QUALIFIED" ? "info" : "warning"}>
+                            {inq.status}
+                          </Badge>
+                        </td>
+                        <td style={{ padding: "14px", color: "var(--text-muted-crm)", fontSize: 12 }}>
+                          {new Date(inq.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </SectionCard>
+
+          {/* Corporate Entity Banner */}
+          <SectionCard title="Corporate & Commercial Entity">
+            <div
+              style={{
+                display: "flex",
+                gap: 16,
+                alignItems: "flex-start",
+                padding: "4px 0",
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "var(--subtle-fill)",
+                  color: "var(--text-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Landmark size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+                  All Sky Fares LLC &middot; Corporate Invoicing Authority
+                </div>
+                <p style={{ fontSize: 13, color: "var(--text-muted-crm)", margin: 0, lineHeight: 1.6 }}>
+                  All engineering retainers, commercial milestones, and transactional settlements are processed under
+                  All Sky Fares LLC. Client invoices are backed by formalized master services agreements (MSA) and
+                  standard studio statements of work (SOW).
+                </p>
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Right Column (35%) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Finance Profile Card */}
+          <ProfileCard
+            name={userName}
+            role="FINANCE"
+            subtitle="Financial Operations &middot; Nova"
+            image={userImage}
+            openHref="/portal/security"
+            badgeLabel="FINANCE"
+            badgeVariant="info"
+            actions={[
+              {
+                icon: <Shield size={16} strokeWidth={1.8} />,
+                "aria-label": "Security settings",
+                href: "/portal/security",
+                title: "Security & MFA",
+              },
+            ]}
+          />
+
+          {/* Financial Fast Actions */}
+          <SectionCard title="Financial Fast Actions">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <DetailRow
+                icon={<Receipt size={16} />}
+                label="Billing Records"
+                value="Invoices &amp; Receipts"
+                action={
+                  <Link
+                    href="/finance/invoices"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--brand-primary, #6366F1)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    View &rarr;
+                  </Link>
+                }
+              />
+              <DetailRow
+                icon={<FolderKanban size={16} />}
+                label="Commissioned Projects"
+                value={`${projects.length} Active Contracts`}
+                action={
+                  <Link
+                    href="/portal/projects"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--brand-primary, #6366F1)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Manage &rarr;
+                  </Link>
+                }
+              />
+              <DetailRow
+                icon={<Calendar size={16} />}
+                label="Client Consultations"
+                value="Retainer Bookings"
+                action={
+                  <Link
+                    href="/portal/appointments"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--brand-primary, #6366F1)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Schedule &rarr;
+                  </Link>
+                }
+              />
+              <DetailRow
+                icon={<Shield size={16} />}
+                label="MFA & Governance"
+                value={dbUser?.twoFactorEnabled ? "2FA Active" : "Setup 2FA"}
+                action={
+                  <Link
+                    href="/portal/security"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--brand-primary, #6366F1)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Configure &rarr;
+                  </Link>
+                }
+              />
+            </div>
+          </SectionCard>
+
+          {/* Billing & Tax Compliance */}
+          <SectionCard title="Billing &amp; Entity Compliance">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <DetailRow
+                icon={<Landmark size={16} />}
+                label="Corporate Authority"
+                value={<Badge variant="neutral">All Sky Fares LLC</Badge>}
+              />
+              <DetailRow
+                icon={<Scale size={16} />}
+                label="Tax &amp; Legal Registry"
+                value={<Badge variant="success">US Registered</Badge>}
+              />
+              <DetailRow
+                icon={<DollarSign size={16} />}
+                label="Settlement Currency"
+                value={<Badge variant="neutral">USD ($)</Badge>}
+              />
+              <DetailRow
+                icon={<CreditCard size={16} />}
+                label="Payment Rails"
+                value={<Badge variant="info">Wire &middot; Stripe &middot; ACH</Badge>}
+              />
+            </div>
+          </SectionCard>
+        </div>
+      </div>
+    </div>
   );
 }

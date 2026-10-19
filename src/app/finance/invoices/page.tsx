@@ -1,6 +1,8 @@
 import { requireFinance } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { Receipt } from "lucide-react";
+import { Receipt, ArrowLeft, ArrowUpRight, DollarSign, Calendar, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { PageHeader, SectionCard, Badge, PillButton, EmptyState } from "@/components/admin-ui";
 
 export default async function InvoicesPage() {
   await requireFinance();
@@ -13,36 +15,61 @@ export default async function InvoicesPage() {
   });
 
   return (
-    <main className="shell" style={{ padding: "40px 0 80px" }}>
-      <div style={{ marginBottom: 28 }}>
-        <div className="eyebrow" style={{ color: "#d97706", display: "flex", alignItems: "center", gap: 6 }}>
-          <Receipt size={14} /> Client Invoicing
-        </div>
-        <h1 style={{ fontSize: 28, letterSpacing: "-.04em", margin: "6px 0", color: "var(--ink)" }}>
-          Invoices & Billing History
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-          Manage client invoices, billing retainers, milestone payments, and receipts.
-        </p>
+    <div className="animate-fade-in-up" style={{ width: "100%" }}>
+      <PageHeader
+        titleLine1="Client"
+        titleLine2="Invoicing"
+        stats={[
+          {
+            icon: <Receipt size={18} strokeWidth={1.8} />,
+            value: projects.length,
+            badgeLabel: "Invoices",
+            badgeVariant: "info",
+            caption: "Generated billing statements",
+          },
+          {
+            icon: <DollarSign size={18} strokeWidth={1.8} />,
+            value: "$USD",
+            badgeLabel: "Settled",
+            badgeVariant: "success",
+            caption: "Primary currency",
+          },
+          {
+            icon: <CheckCircle2 size={18} strokeWidth={1.8} />,
+            value: "Active",
+            badgeLabel: "SLA",
+            badgeVariant: "neutral",
+            caption: "All Sky Fares LLC",
+          },
+        ]}
+      />
+
+      <div style={{ marginBottom: 24 }}>
+        <PillButton variant="outline" href="/finance" icon={<ArrowLeft size={14} />}>
+          Back to Finance Operations
+        </PillButton>
       </div>
 
-      <div className="card" style={{ padding: "clamp(16px, 4vw, 28px)" }}>
+      <SectionCard
+        title="Client Invoices & Billing Records"
+        headerRight={<Badge variant="success">{projects.length} Invoices On File</Badge>}
+      >
         {projects.length === 0 ? (
-          <div style={{ padding: "40px 0", textAlign: "center", color: "var(--muted)" }}>
-            <Receipt size={32} style={{ color: "var(--muted)", margin: "0 auto 10px" }} />
-            <p style={{ margin: 0, fontWeight: 600, color: "var(--ink)" }}>No active invoices found.</p>
-            <p style={{ fontSize: 12, margin: "4px 0 0" }}>Invoices are generated upon project commissioning.</p>
-          </div>
+          <EmptyState
+            icon={<Receipt size={36} />}
+            title="No billing statements found"
+            description="Invoices are generated upon contract commissioning and milestone deliverables."
+          />
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
             {projects.map((proj, idx) => (
               <div
                 key={proj.id}
                 style={{
-                  padding: "clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px)",
-                  borderRadius: 12,
-                  background: "var(--paper)",
-                  border: "1px solid var(--line)",
+                  padding: "16px 20px",
+                  borderRadius: "var(--radius-card)",
+                  background: "var(--surface-raised)",
+                  border: "1px solid var(--border-hairline-light)",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
@@ -51,27 +78,40 @@ export default async function InvoicesPage() {
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)" }}>
-                    Invoice #INV-2026-00{idx + 1} — {proj.name}
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                    Invoice #INV-2026-00{idx + 1} &middot; {proj.name}
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: "var(--text-muted-crm)", marginTop: 4 }}>
                     Billed to: <strong>{proj.client.name}</strong> ({proj.client.email})
                   </div>
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)" }}>
                     $12,500.00 USD
                   </span>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(16,185,129,0.1)", color: "#059669" }}>
-                    PAID / SETTLED
-                  </span>
+                  <Badge variant="success">PAID / SETTLED</Badge>
+                  <Link
+                    href={`/portal/projects/${proj.id}`}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--brand-primary, #6366F1)",
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <span>Scope</span>
+                    <ArrowUpRight size={12} />
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
-    </main>
+      </SectionCard>
+    </div>
   );
 }
