@@ -9,8 +9,7 @@ const rawAppUrl = process.env.APP_URL || process.env.BETTER_AUTH_URL;
 const appUrl =
   rawAppUrl &&
   !rawAppUrl.includes("0.0.0.0") &&
-  !rawAppUrl.includes("127.0.0.1") &&
-  (process.env.NODE_ENV === "production" ? !rawAppUrl.includes("localhost") : true)
+  (process.env.NODE_ENV === "production" ? !rawAppUrl.includes("localhost") && !rawAppUrl.includes("127.0.0.1") : true)
     ? rawAppUrl
     : process.env.NODE_ENV === "production"
       ? defaultAppUrl
@@ -32,7 +31,7 @@ export const auth = betterAuth({
   appName: "Nova",
   baseURL: appUrl,
   secret,
-  trustedOrigins: Array.from(new Set([defaultAppUrl, appUrl, "http://localhost:3000"])),
+  trustedOrigins: Array.from(new Set([defaultAppUrl, appUrl, "http://localhost:3000", "http://127.0.0.1:3000"])),
   database: prismaAdapter(prisma, { provider: "mysql" }),
   rateLimit: { enabled: true, storage: "database", window: 60, max: 60, modelName: "AuthRateLimit" },
   emailAndPassword: {

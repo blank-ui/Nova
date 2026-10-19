@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { NovaLogo } from "@/components/brand";
 import { useLanguage } from "@/components/language-provider";
-import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -146,7 +145,6 @@ export function Footer() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <span>© {currentYear} All Sky Fares LLC. {t("footer.rights", "All rights reserved.")}</span>
-            <LanguageSwitcher compact />
           </div>
 
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>

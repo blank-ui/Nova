@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { safeInternalPath, getAppBaseUrl } from "@/lib/safe-redirect";
 
@@ -7,7 +8,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const baseUrl = getAppBaseUrl(request);
   const url = new URL(request.url);
-  const session = await auth.api.getSession({ headers: request.headers });
+  const reqHeaders = await headers();
+  const session =
+    (await auth.api.getSession({ headers: reqHeaders })) ||
+    (await auth.api.getSession({ headers: request.headers }));
 
   if (!session) {
     return NextResponse.redirect(new URL("/login?error=signin", baseUrl));

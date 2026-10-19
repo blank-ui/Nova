@@ -11,13 +11,29 @@ export function getAppBaseUrl(request?: Request): string {
   if (request) {
     const forwardedHost = request.headers.get("x-forwarded-host");
     const host = request.headers.get("host");
-    const proto = request.headers.get("x-forwarded-proto") || "https";
     const resolvedHost = forwardedHost || host;
+    const isLocal =
+      resolvedHost?.includes("localhost") ||
+      resolvedHost?.includes("127.0.0.1") ||
+      resolvedHost?.startsWith("192.168.") ||
+      resolvedHost?.startsWith("10.");
+
+    let proto = request.headers.get("x-forwarded-proto");
+    if (!proto) {
+      try {
+        proto = new URL(request.url).protocol.replace(":", "");
+      } catch {
+        proto = isLocal ? "http" : "https";
+      }
+    }
+    if (isLocal) {
+      proto = "http";
+    }
+
     if (
       resolvedHost &&
       !resolvedHost.includes("0.0.0.0") &&
-      !resolvedHost.includes("127.0.0.1") &&
-      (process.env.NODE_ENV === "production" ? !resolvedHost.includes("localhost") : true)
+      (process.env.NODE_ENV === "production" ? !isLocal : true)
     ) {
       return `${proto}://${resolvedHost}`;
     }
@@ -27,8 +43,7 @@ export function getAppBaseUrl(request?: Request): string {
   if (
     raw &&
     !raw.includes("0.0.0.0") &&
-    !raw.includes("127.0.0.1") &&
-    (process.env.NODE_ENV === "production" ? !raw.includes("localhost") : true)
+    (process.env.NODE_ENV === "production" ? !raw.includes("localhost") && !raw.includes("127.0.0.1") : true)
   ) {
     return raw.replace(/\/+$/, "");
   }
