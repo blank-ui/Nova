@@ -12,6 +12,7 @@ interface ProjectMessagesProps {
   currentUserId: string;
   initialMessages?: EnrichedMessage[];
   initialNextCursor?: string | null;
+  style?: React.CSSProperties;
 }
 
 export function ProjectMessages({
@@ -19,6 +20,7 @@ export function ProjectMessages({
   currentUserId,
   initialMessages = [],
   initialNextCursor = null,
+  style,
 }: ProjectMessagesProps) {
   const [messages, setMessages] = useState<EnrichedMessage[]>(initialMessages);
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
@@ -132,6 +134,7 @@ export function ProjectMessages({
         borderRadius: 16,
         border: "1px solid var(--line, #e5e7eb)",
         overflow: "hidden",
+        ...style,
       }}
     >
       {/* Header bar */}

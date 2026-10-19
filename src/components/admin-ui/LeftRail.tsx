@@ -19,6 +19,7 @@ import {
   GitBranch,
   DollarSign,
   Receipt,
+  MessagesSquare,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 
@@ -73,6 +74,12 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       label: "Client Projects & Workspaces",
       href: "/admin/projects",
       icon: <Folder size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "discussions",
+      label: "Team Discussions",
+      href: "/admin/discussions",
+      icon: <MessagesSquare size={18} strokeWidth={1.8} />,
     },
     {
       id: "quick-create",
@@ -140,6 +147,12 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       icon: <Folder size={18} strokeWidth={1.8} />,
     },
     {
+      id: "discussions",
+      label: "Team Discussion",
+      href: "/portal/discussions",
+      icon: <MessagesSquare size={18} strokeWidth={1.8} />,
+    },
+    {
       id: "appointments",
       label: "Schedule Consultation",
       href: "/portal/appointments",
@@ -180,6 +193,12 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       icon: <Folder size={18} strokeWidth={1.8} />,
     },
     {
+      id: "discussions",
+      label: "Team Discussion",
+      href: "/portal/discussions",
+      icon: <MessagesSquare size={18} strokeWidth={1.8} />,
+    },
+    {
       id: "appointments",
       label: "Appointments & Schedule",
       href: "/portal/appointments",
@@ -218,6 +237,12 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       label: "Client Projects",
       href: "/portal/projects",
       icon: <Folder size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "discussions",
+      label: "Team Discussion",
+      href: "/portal/discussions",
+      icon: <MessagesSquare size={18} strokeWidth={1.8} />,
     },
     {
       id: "appointments",
@@ -325,7 +350,14 @@ export function LeftRail({ user }: LeftRailProps = {}) {
             );
           }
 
-          const isActive = pathname === item.href || (item.href !== "/admin" && item.href !== "/portal" && item.href !== "/developer" && item.href !== "/finance" && pathname?.startsWith(item.href!));
+          const isActive =
+            pathname === item.href ||
+            (item.id === "discussions" && (pathname?.includes("/discussions") || pathname?.includes("/messages"))) ||
+            (item.href !== "/admin" &&
+              item.href !== "/portal" &&
+              item.href !== "/developer" &&
+              item.href !== "/finance" &&
+              Boolean(item.href && pathname?.startsWith(item.href)));
 
           return (
             <Link
@@ -449,6 +481,13 @@ export function LeftRail({ user }: LeftRailProps = {}) {
                   >
                     Client Projects
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/portal/discussions"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Team Discussion
+                  </button>
                 </>
               ) : (isDeveloperUser || isDeveloper) ? (
                 <>
@@ -473,6 +512,13 @@ export function LeftRail({ user }: LeftRailProps = {}) {
                   >
                     Client Projects
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/portal/discussions"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Team Discussion
+                  </button>
                 </>
               ) : isPortal ? (
                 <>
@@ -482,6 +528,13 @@ export function LeftRail({ user }: LeftRailProps = {}) {
                     style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
                   >
                     My Projects
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/portal/discussions"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Team Discussion
                   </button>
                   <button
                     type="button"
@@ -499,6 +552,13 @@ export function LeftRail({ user }: LeftRailProps = {}) {
                     style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
                   >
                     New Inquiries
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); router.push("/admin/discussions"); }}
+                    style={{ fontSize: 11, padding: "4px 10px", borderRadius: 99, border: "1px solid var(--border-hairline)", background: "transparent", cursor: "pointer" }}
+                  >
+                    Team Discussions
                   </button>
                   <button
                     type="button"
