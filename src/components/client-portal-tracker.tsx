@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   FolderKanban,
@@ -80,6 +80,15 @@ export function ClientPortalTracker({
   const [activeInquiryDetail, setActiveInquiryDetail] = useState<PortalInquiry | null>(null);
   const [isScopeModalOpen, setIsScopeModalOpen] = useState(false);
   const isStaff = userRole === "DEVELOPER" || userRole === "ADMIN" || userRole === "FINANCE";
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "scope" || params.get("create") === "scope") {
+        setIsScopeModalOpen(true);
+      }
+    }
+  }, []);
 
   const activeProjects = projects.filter(
     (p) => p.status === "IN_PROGRESS" || p.status === "PLANNING" || p.status === "REVIEW"

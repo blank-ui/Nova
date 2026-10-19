@@ -18,6 +18,8 @@ import {
   Clock,
   Layers,
   Building,
+  DollarSign,
+  Receipt,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import type { PortalProject, PortalInquiry } from "./client-portal-tracker";
@@ -50,7 +52,16 @@ export function ScopeActionsModal({
   const router = useRouter();
   const toast = useToast();
 
-  const isStaff = userRole === "DEVELOPER" || userRole === "ADMIN" || userRole === "FINANCE";
+  const isFinance = userRole === "FINANCE";
+  const isDeveloper = userRole === "DEVELOPER";
+  const isAdmin = userRole === "ADMIN";
+  const isStaff = isDeveloper || isAdmin || isFinance;
+
+  // Financial Scope Form States
+  const [financeScopeType, setFinanceScopeType] = useState<string>("Milestone-Based Commercial Contract");
+  const [financeBudget, setFinanceBudget] = useState<string>("$12,500");
+  const [financePaymentTerms, setFinancePaymentTerms] = useState<string>("50% Advance Deposit / 50% Milestone Sign-off");
+  const [financeAutoInvoice, setFinanceAutoInvoice] = useState<boolean>(true);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"take-scope" | "update-project" | "send-invite">(
@@ -59,7 +70,9 @@ export function ScopeActionsModal({
 
   // Tab 1: Take Scope Form
   const [selectedInquiryId, setSelectedInquiryId] = useState<string>("");
-  const [scopeName, setScopeName] = useState<string>("");
+  const [scopeName, setScopeName] = useState<string>(
+    isFinance ? "FY26 Commercial Retainer & Milestone Scope" : ""
+  );
   const [scopeDescription, setScopeDescription] = useState<string>("");
   const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
   const [selectedClientId, setSelectedClientId] = useState<string>(
@@ -137,8 +150,14 @@ export function ScopeActionsModal({
           clientEmail: clientMode === "new" ? newClientEmail.trim() : undefined,
           clientName: clientMode === "new" ? newClientName.trim() : undefined,
           inquiryId: selectedInquiryId || undefined,
-          initialMilestone: initialMilestone.trim() || undefined,
+          initialMilestone:
+            initialMilestone.trim() ||
+            (isFinance ? "Milestone 1: Commercial Deposit & Scope Validation (50%)" : undefined),
           status: scopeStatus,
+          scopeCategory: isFinance ? "FINANCE" : "ENGINEERING",
+          budget: isFinance ? financeBudget : undefined,
+          paymentTerms: isFinance ? financePaymentTerms : undefined,
+          autoInvoice: isFinance ? financeAutoInvoice : false,
         }),
       });
 
@@ -334,14 +353,21 @@ export function ScopeActionsModal({
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: ".06em",
-                color: "var(--brand-primary, #6366F1)",
+                color: isFinance ? "#d97706" : "var(--brand-primary, #6366F1)",
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
                 marginBottom: 2,
               }}
             >
-              <Sparkles size={13} /> {isStaff ? "Engineering Operations" : "Client Portal"}
+              <Sparkles size={13} />{" "}
+              {isFinance
+                ? "Finance Operations & Billing"
+                : isDeveloper
+                ? "Engineering Operations"
+                : isAdmin
+                ? "Studio Administration"
+                : "Client Portal"}
             </div>
             <h2
               style={{
@@ -352,7 +378,13 @@ export function ScopeActionsModal({
                 letterSpacing: "-0.03em",
               }}
             >
-              {isStaff ? "Project Scope & Studio Actions" : "Request New Project Scope"}
+              {isFinance
+                ? "Commission Commercial Scope & Billing Terms"
+                : isDeveloper
+                ? "Project Scope & Studio Actions"
+                : isAdmin
+                ? "Project Scope & Commercial Actions"
+                : "Request New Project Scope"}
             </h2>
           </div>
 
@@ -413,8 +445,8 @@ export function ScopeActionsModal({
                 whiteSpace: "nowrap",
               }}
             >
-              <FolderPlus size={14} />
-              <span>1. Take / Provision Scope</span>
+              {isFinance ? <DollarSign size={14} /> : <FolderPlus size={14} />}
+              <span>{isFinance ? "1. Financial Scope Intake" : "1. Take / Provision Scope"}</span>
             </button>
 
             <button
@@ -441,8 +473,8 @@ export function ScopeActionsModal({
                 whiteSpace: "nowrap",
               }}
             >
-              <Edit3 size={14} />
-              <span>2. Update Project</span>
+              {isFinance ? <Receipt size={14} /> : <Edit3 size={14} />}
+              <span>{isFinance ? "2. Billing & Milestone Progress" : "2. Update Project"}</span>
             </button>
 
             <button
@@ -470,7 +502,7 @@ export function ScopeActionsModal({
               }}
             >
               <Send size={14} />
-              <span>3. Email Scope Link</span>
+              <span>{isFinance ? "3. Send Commercial Proposal Link" : "3. Email Scope Link"}</span>
             </button>
           </div>
         )}
@@ -534,15 +566,51 @@ export function ScopeActionsModal({
                 </div>
               )}
 
+              {/* Financial Scope Category (When Finance) */}
+              {isFinance && (
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
+                    Financial Scope Category *
+                  </label>
+                  <select
+                    value={financeScopeType}
+                    onChange={(e) => {
+                      setFinanceScopeType(e.target.value);
+                      setScopeName(`FY26 ${e.target.value}`);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      fontSize: 13,
+                      color: "var(--text-primary)",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="Milestone-Based Commercial Contract">Milestone-Based Commercial Contract</option>
+                    <option value="Enterprise Monthly Retainer Scope">Enterprise Monthly Retainer Scope</option>
+                    <option value="Financial Audit & Compliance Assessment">Financial Audit & Compliance Assessment</option>
+                    <option value="Commercial Budget Expansion & Valuation">Commercial Budget Expansion & Valuation</option>
+                    <option value="Tax Structure & Corporate Advisory Scope">Tax Structure & Corporate Advisory Scope</option>
+                  </select>
+                </div>
+              )}
+
               {/* Scope Title */}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                  Project Scope Title *
+                  {isFinance ? "Commercial Scope & Contract Title *" : "Project Scope Title *"}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Next.js 16 Web Application & Core APIs"
+                  placeholder={
+                    isFinance
+                      ? "e.g. FY26 Retainer & Milestone Escrow Scope"
+                      : "e.g. Next.js 16 Web Application & Core APIs"
+                  }
                   value={scopeName}
                   onChange={(e) => setScopeName(e.target.value)}
                   style={{
@@ -652,14 +720,103 @@ export function ScopeActionsModal({
                 )}
               </div>
 
+              {/* Financial Budget Valuation & Payment Terms (When Finance) */}
+              {isFinance && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
+                      Contract Valuation / Budget Tier *
+                    </label>
+                    <select
+                      value={financeBudget}
+                      onChange={(e) => setFinanceBudget(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--surface-raised)",
+                        fontSize: 13,
+                        color: "var(--text-primary)",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="$12,500">$12,500.00 USD (Fixed Milestone)</option>
+                      <option value="$25,000">$25,000.00 USD (Multi-Sprint Retainer)</option>
+                      <option value="$50,000">$50,000.00 USD (Enterprise Core Agreement)</option>
+                      <option value="$75,000">$75,000.00 USD (Strategic Solution)</option>
+                      <option value="Custom Valuation">Custom Valuation</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
+                      Commercial Payment Terms *
+                    </label>
+                    <select
+                      value={financePaymentTerms}
+                      onChange={(e) => setFinancePaymentTerms(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        border: "1px solid var(--border-hairline)",
+                        background: "var(--surface-raised)",
+                        fontSize: 13,
+                        color: "var(--text-primary)",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="50% Advance Deposit / 50% Milestone Sign-off">50% Advance Deposit / 50% Milestone Sign-off</option>
+                      <option value="100% Upfront Retainer Settlement">100% Upfront Retainer Settlement</option>
+                      <option value="Net 15 Milestone Terms">Net 15 Milestone Terms</option>
+                      <option value="Net 30 Enterprise Corporate Terms">Net 30 Enterprise Corporate Terms</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Auto-generate Invoice Checkbox for Finance */}
+              {isFinance && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    background: "rgba(16, 185, 129, 0.08)",
+                    border: "1px solid rgba(16, 185, 129, 0.2)",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    id="auto-invoice-checkbox"
+                    checked={financeAutoInvoice}
+                    onChange={(e) => setFinanceAutoInvoice(e.target.checked)}
+                    style={{ width: 16, height: 16, accentColor: "#10B981", cursor: "pointer" }}
+                  />
+                  <label
+                    htmlFor="auto-invoice-checkbox"
+                    style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", cursor: "pointer" }}
+                  >
+                    Auto-issue official paid invoice (NOVA-fy-01) for this commercial scope upon creation
+                  </label>
+                </div>
+              )}
+
               {/* Scope Description */}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                  Technical Scope & Deliverables Details:
+                  {isFinance ? "Commercial Scope & Billing Notes:" : "Technical Scope & Deliverables Details:"}
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Outline key deliverables, tech stack requirements, integration endpoints, and timeline targets..."
+                  placeholder={
+                    isFinance
+                      ? "Detail commercial deliverables, payment milestones, VAT/tax handling, and billing terms..."
+                      : "Outline key deliverables, tech stack requirements, integration endpoints, and timeline targets..."
+                  }
                   value={scopeDescription}
                   onChange={(e) => setScopeDescription(e.target.value)}
                   style={{
@@ -703,11 +860,15 @@ export function ScopeActionsModal({
 
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                    Initial Milestone (Optional)
+                    {isFinance ? "Commercial Milestone (Optional)" : "Initial Milestone (Optional)"}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Sprint 1: Prototype Deliverable"
+                    placeholder={
+                      isFinance
+                        ? "e.g. Milestone 1: Commercial Deposit & Scope Validation (50%)"
+                        : "e.g. Sprint 1: Prototype Deliverable"
+                    }
                     value={initialMilestone}
                     onChange={(e) => setInitialMilestone(e.target.value)}
                     style={{
@@ -759,7 +920,8 @@ export function ScopeActionsModal({
                   }}
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Provision Project Scope &rarr;</span>
+                  {isFinance ? <DollarSign size={14} /> : null}
+                  <span>{isFinance ? "Commission Commercial Scope &rarr;" : "Provision Project Scope &rarr;"}</span>
                 </button>
               </div>
             </form>
@@ -806,11 +968,15 @@ export function ScopeActionsModal({
               {/* Progress Update Message */}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                  Engineering Progress Note / Update Message:
+                  {isFinance ? "Commercial / Billing Update Note:" : "Engineering Progress Note / Update Message:"}
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Detail sprint progress, code updates, staging links, or completed deliverables..."
+                  placeholder={
+                    isFinance
+                      ? "Detail payment receipt, milestone sign-off, invoice status, or commercial adjustments..."
+                      : "Detail sprint progress, code updates, staging links, or completed deliverables..."
+                  }
                   value={updateMessage}
                   onChange={(e) => setUpdateMessage(e.target.value)}
                   style={{
@@ -831,7 +997,7 @@ export function ScopeActionsModal({
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                    Advance Lifecycle Status
+                    {isFinance ? "Commercial Lifecycle Status" : "Advance Lifecycle Status"}
                   </label>
                   <select
                     value={newProjectStatus}
@@ -848,9 +1014,9 @@ export function ScopeActionsModal({
                   >
                     <option value="">Keep Current Status ({selectedProjectObj?.status || "Current"})</option>
                     <option value="PLANNING">PLANNING</option>
-                    <option value="IN_PROGRESS">IN_PROGRESS</option>
-                    <option value="REVIEW">REVIEW (Staging Ready)</option>
-                    <option value="COMPLETED">COMPLETED (Passed QA)</option>
+                    <option value="IN_PROGRESS">IN_PROGRESS (Active Commercial Scope)</option>
+                    <option value="REVIEW">REVIEW (Pending Milestone Sign-off)</option>
+                    <option value="COMPLETED">COMPLETED (Settled &amp; Delivered)</option>
                     <option value="ON_HOLD">ON_HOLD</option>
                   </select>
                 </div>
@@ -865,7 +1031,7 @@ export function ScopeActionsModal({
                     onChange={(e) => setTargetDueDate(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "9px 12px",
+                      padding: "10px 12px",
                       borderRadius: 12,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--surface-raised)",
@@ -879,11 +1045,11 @@ export function ScopeActionsModal({
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                    + Add New Task (Optional)
+                    {isFinance ? "+ Add Billing Task (Optional)" : "+ Add New Task (Optional)"}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Implement webhook handlers"
+                    placeholder={isFinance ? "e.g. Issue Milestone 2 invoice" : "e.g. Implement webhook handlers"}
                     value={newTaskTitle}
                     onChange={(e) => setNewTaskTitle(e.target.value)}
                     style={{
@@ -900,11 +1066,11 @@ export function ScopeActionsModal({
 
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                    + Add Milestone (Optional)
+                    {isFinance ? "+ Add Commercial Milestone (Optional)" : "+ Add Milestone (Optional)"}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Milestone 2: Beta Launch"
+                    placeholder={isFinance ? "e.g. Milestone 2: 50% Settlement Sign-off" : "e.g. Milestone 2: Beta Launch"}
                     value={newMilestoneTitle}
                     onChange={(e) => setNewMilestoneTitle(e.target.value)}
                     style={{
@@ -937,10 +1103,12 @@ export function ScopeActionsModal({
                   id="notifyClient"
                   checked={notifyClient}
                   onChange={(e) => setNotifyClient(e.target.checked)}
-                  style={{ width: 16, height: 16, accentColor: "var(--brand-primary, #6366F1)" }}
+                  style={{ width: 16, height: 16, accentColor: isFinance ? "#d97706" : "var(--brand-primary, #6366F1)" }}
                 />
                 <label htmlFor="notifyClient" style={{ fontSize: 13, color: "var(--text-primary)", cursor: "pointer" }}>
-                  Notify client via transactional email with this progress update
+                  {isFinance
+                    ? "Notify client billing contact with this commercial update"
+                    : "Notify client via transactional email with this progress update"}
                   {selectedProjectObj?.client?.email ? ` (${selectedProjectObj.client.email})` : ""}
                 </label>
               </div>
@@ -981,7 +1149,8 @@ export function ScopeActionsModal({
                   }}
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Post Project Update &rarr;</span>
+                  {isFinance ? <Receipt size={14} /> : null}
+                  <span>{isFinance ? "Post Commercial Billing Update &rarr;" : "Post Project Update &rarr;"}</span>
                 </button>
               </div>
             </form>
@@ -996,14 +1165,16 @@ export function ScopeActionsModal({
                 style={{
                   padding: "12px 16px",
                   borderRadius: 14,
-                  background: "rgba(99, 102, 241, 0.08)",
-                  border: "1px solid rgba(99, 102, 241, 0.2)",
+                  background: isFinance ? "rgba(245, 158, 11, 0.08)" : "rgba(99, 102, 241, 0.08)",
+                  border: isFinance ? "1px solid rgba(245, 158, 11, 0.2)" : "1px solid rgba(99, 102, 241, 0.2)",
                   fontSize: 13,
                   color: "var(--text-secondary)",
                   lineHeight: 1.6,
                 }}
               >
-                Send an official Nova invitation email containing a secure scope definition link. When the recipient submits their requirements, their scope will automatically surface in your pipeline.
+                {isFinance
+                  ? "Send an official Nova commercial scope proposal containing a secure link to approve terms and schedule billing milestones. When accepted, commercial accounts are initialized automatically."
+                  : "Send an official Nova invitation email containing a secure scope definition link. When the recipient submits their requirements, their scope will automatically surface in your pipeline."}
               </div>
 
               <div>
@@ -1053,11 +1224,11 @@ export function ScopeActionsModal({
 
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                    Scope Title / Focus (Optional)
+                    {isFinance ? "Commercial Scope Title / Terms (Optional)" : "Scope Title / Focus (Optional)"}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. E-Commerce Redesign"
+                    placeholder={isFinance ? "e.g. FY26 Retainer Contract" : "e.g. E-Commerce Redesign"}
                     value={inviteProjectTitle}
                     onChange={(e) => setInviteProjectTitle(e.target.value)}
                     style={{
@@ -1075,11 +1246,15 @@ export function ScopeActionsModal({
 
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                  Personal Note from Engineer (Optional):
+                  {isFinance ? "Note from Finance Administration (Optional):" : "Personal Note from Engineer (Optional):"}
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Hi Sarah, excited to collaborate! Please use this link to define your technical deliverables, target launch date, and integrations."
+                  placeholder={
+                    isFinance
+                      ? "e.g. Please review the attached milestone commercial proposal and terms for the upcoming sprint deliverables..."
+                      : "e.g. Hi Sarah, excited to collaborate! Please use this link to define your technical deliverables, target launch date, and integrations."
+                  }
                   value={inviteCustomNote}
                   onChange={(e) => setInviteCustomNote(e.target.value)}
                   style={{
@@ -1146,7 +1321,8 @@ export function ScopeActionsModal({
                   }}
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Dispatch Scope Email &rarr;</span>
+                  <Send size={14} />
+                  <span>{isFinance ? "Dispatch Commercial Scope Email &rarr;" : "Dispatch Scope Email &rarr;"}</span>
                 </button>
               </div>
             </form>

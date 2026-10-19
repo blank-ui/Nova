@@ -138,8 +138,10 @@ export async function POST(request: Request) {
       if (body.autoInvoice || session.user.role === "FINANCE") {
         try {
           const nextInvoiceNumber = await generateNextInvoiceNumber(prisma);
-          const rawAmount = body.amount ?? (body.budget ? parseFloat(String(body.budget).replace(/[^0-9.]/g, "")) : 12500);
-          const invAmount = isNaN(rawAmount) || rawAmount <= 0 ? 12500 : rawAmount;
+          const parsedNum = typeof body.amount === "number" ? body.amount : typeof body.budget === "string" ? parseFloat(body.budget.replace(/[^0-9.]/g, "")) : 12500;
+          const invAmount: number = isNaN(parsedNum) || parsedNum <= 0 ? 12500 : parsedNum;
+          const currencyStr: string = typeof body.currency === "string" ? body.currency : "USD";
+          const notesStr: string = typeof body.notes === "string" ? body.notes : "Commercial scope milestone settled in full under All Sky Fares LLC Master Services Agreement.";
 
           createdInvoice = await prisma.invoice.create({
             data: {
@@ -147,7 +149,7 @@ export async function POST(request: Request) {
               projectId: project.id,
               clientId: targetUser.id,
               amount: invAmount,
-              currency: body.currency || "USD",
+              currency: currencyStr,
               status: "PAID",
               paidAt: new Date(),
               items: [
@@ -158,7 +160,7 @@ export async function POST(request: Request) {
                   amount: invAmount,
                 },
               ],
-              notes: body.notes || "Commercial scope milestone settled in full under All Sky Fares LLC Master Services Agreement.",
+              notes: notesStr,
             },
           });
         } catch (invErr) {

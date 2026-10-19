@@ -11,7 +11,7 @@
  *      2027 -> "27"
  */
 export function getFiscalYear(date: Date = new Date()): string {
-  return date.getFullYear().toString().slice(-2);
+  return date.getUTCFullYear().toString().slice(-2);
 }
 
 /**
