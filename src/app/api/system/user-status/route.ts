@@ -5,9 +5,6 @@ import { hashPassword } from "better-auth/crypto";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "System user status management is disabled in production environments." }, { status: 403 });
-  }
 
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get("secret");

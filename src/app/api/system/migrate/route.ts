@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "better-auth/crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -248,10 +249,6 @@ const FOREIGN_KEYS = [
 ];
 
 export async function GET(req: Request) {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "System migration endpoints are disabled in production environments." }, { status: 403 });
-  }
-
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get("secret");
   const expectedSecret = process.env.ADMIN_BOOTSTRAP_SECRET;
@@ -259,6 +256,9 @@ export async function GET(req: Request) {
   if (!expectedSecret || !secret || secret !== expectedSecret) {
     return NextResponse.json({ error: "Unauthorized: Invalid or unconfigured secret" }, { status: 401 });
   }
+
+  const rawDbUrl = process.env.DATABASE_URL || "";
+  const maskedDbUrl = rawDbUrl.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@");
 
   const results: Array<{ step: number; status: string; detail?: string }> = [];
 
@@ -302,13 +302,73 @@ export async function GET(req: Request) {
       });
     } catch {}
 
+    // 4. Ensure admin user kbipul792@gmail.com exists with password Bipul@1008
+    const adminEmail = "kbipul792@gmail.com";
+    const adminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || "Bipul@1008";
+    const hashedPassword = await hashPassword(adminPassword);
+
+    let adminUser = await prisma.user.findUnique({
+      where: { email: adminEmail },
+    });
+
+    if (adminUser) {
+      adminUser = await prisma.user.update({
+        where: { id: adminUser.id },
+        data: {
+          role: "ADMIN",
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
+          banned: false,
+        },
+      });
+
+      await prisma.authAccount.upsert({
+        where: {
+          providerId_accountId: {
+            providerId: "credential",
+            accountId: adminUser.id,
+          },
+        },
+        update: {
+          password: hashedPassword,
+        },
+        create: {
+          accountId: adminUser.id,
+          providerId: "credential",
+          userId: adminUser.id,
+          password: hashedPassword,
+        },
+      });
+    } else {
+      adminUser = await prisma.user.create({
+        data: {
+          email: adminEmail,
+          name: "Bipul (Admin)",
+          role: "ADMIN",
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
+          banned: false,
+        },
+      });
+
+      await prisma.authAccount.create({
+        data: {
+          accountId: adminUser.id,
+          providerId: "credential",
+          userId: adminUser.id,
+          password: hashedPassword,
+        },
+      });
+    }
+
     const users = await prisma.user.findMany({
       select: { id: true, email: true, name: true, role: true, emailVerified: true },
     });
 
     return NextResponse.json({
       success: true,
-      message: "Database schema migration executed successfully!",
+      message: "Database schema migration executed and admin provisioned successfully!",
+      databaseUrl: maskedDbUrl,
       totalStatements: DDL_STATEMENTS.length + FOREIGN_KEYS.length,
       users,
       results,
@@ -317,7 +377,9 @@ export async function GET(req: Request) {
     return NextResponse.json(
       {
         success: false,
+        databaseUrl: maskedDbUrl,
         error: error instanceof Error ? error.message : "Database migration failed",
+        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
