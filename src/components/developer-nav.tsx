@@ -66,7 +66,7 @@ export function DeveloperNav({ userName, userEmail, userRole }: { userName: stri
                 href="/admin"
                 style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, color: "var(--blue)", padding: "6px 0" }}
               >
-                &rarr; Admin Console
+                → Admin Console
               </Link>
             )}
           </nav>

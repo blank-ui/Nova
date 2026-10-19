@@ -315,7 +315,7 @@ export default async function FinanceWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    View &rarr;
+                    View →
                   </Link>
                 }
               />
@@ -333,7 +333,7 @@ export default async function FinanceWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    Manage &rarr;
+                    Manage →
                   </Link>
                 }
               />
@@ -351,7 +351,7 @@ export default async function FinanceWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    Schedule &rarr;
+                    Schedule →
                   </Link>
                 }
               />
@@ -369,7 +369,7 @@ export default async function FinanceWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    Configure &rarr;
+                    Configure →
                   </Link>
                 }
               />

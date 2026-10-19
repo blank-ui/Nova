@@ -8,6 +8,7 @@ import { NovaLogo } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useLanguage } from "@/components/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { CurrencySwitcher } from "@/components/currency-switcher";
 import { authClient } from "@/lib/auth-client";
 
 export function Navigation() {
@@ -82,6 +83,7 @@ export function Navigation() {
 
         {/* Navigation actions */}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <CurrencySwitcher compact className="nav-currency-switcher" />
           <LanguageSwitcher compact className="nav-lang-switcher" />
           <ThemeToggle />
           {session?.user ? (
@@ -214,6 +216,11 @@ export function Navigation() {
             </Link>
           )}
           
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
+            <span style={{ fontSize: 14, color: "var(--muted)" }}>Currency / मुद्रा</span>
+            <CurrencySwitcher />
+          </div>
+
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
             <span style={{ fontSize: 14, color: "var(--muted)" }}>Language / भाषा</span>
             <LanguageSwitcher />

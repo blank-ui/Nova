@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   X,
@@ -68,10 +68,12 @@ export function ScopeActionsModal({
     "take-scope"
   );
 
+  const currentFY = new Date().getFullYear().toString().slice(-2);
+
   // Tab 1: Take Scope Form
   const [selectedInquiryId, setSelectedInquiryId] = useState<string>("");
   const [scopeName, setScopeName] = useState<string>(
-    isFinance ? "FY26 Commercial Retainer & Milestone Scope" : ""
+    isFinance ? `FY${currentFY} Commercial Retainer & Milestone Scope` : ""
   );
   const [scopeDescription, setScopeDescription] = useState<string>("");
   const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
@@ -109,6 +111,18 @@ export function ScopeActionsModal({
   // Loading & Error States
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Keyboard shortcut: Escape closes modal
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -576,7 +590,7 @@ export function ScopeActionsModal({
                     value={financeScopeType}
                     onChange={(e) => {
                       setFinanceScopeType(e.target.value);
-                      setScopeName(`FY26 ${e.target.value}`);
+                      setScopeName(`FY${currentFY} ${e.target.value}`);
                     }}
                     style={{
                       width: "100%",
@@ -800,7 +814,7 @@ export function ScopeActionsModal({
                     htmlFor="auto-invoice-checkbox"
                     style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", cursor: "pointer" }}
                   >
-                    Auto-issue official paid invoice (NOVA-fy-01) for this commercial scope upon creation
+                    Auto-issue official paid invoice (NOVA-FYYYMM-01) for this commercial scope upon creation
                   </label>
                 </div>
               )}
@@ -921,7 +935,8 @@ export function ScopeActionsModal({
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   {isFinance ? <DollarSign size={14} /> : null}
-                  <span>{isFinance ? "Commission Commercial Scope &rarr;" : "Provision Project Scope &rarr;"}</span>
+                  <span>{isFinance ? "Commission Commercial Scope" : "Provision Project Scope"}</span>
+                  <ArrowRight size={14} />
                 </button>
               </div>
             </form>
@@ -1150,7 +1165,8 @@ export function ScopeActionsModal({
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   {isFinance ? <Receipt size={14} /> : null}
-                  <span>{isFinance ? "Post Commercial Billing Update &rarr;" : "Post Project Update &rarr;"}</span>
+                  <span>{isFinance ? "Post Commercial Billing Update" : "Post Project Update"}</span>
+                  <ArrowRight size={14} />
                 </button>
               </div>
             </form>
@@ -1322,7 +1338,8 @@ export function ScopeActionsModal({
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <Send size={14} />
-                  <span>{isFinance ? "Dispatch Commercial Scope Email &rarr;" : "Dispatch Scope Email &rarr;"}</span>
+                  <span>{isFinance ? "Dispatch Commercial Scope Email" : "Dispatch Scope Email"}</span>
+                  <ArrowRight size={14} />
                 </button>
               </div>
             </form>
@@ -1465,7 +1482,8 @@ export function ScopeActionsModal({
                   }}
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Submit Project Scope &rarr;</span>
+                  <span>Submit Project Scope</span>
+                  <ArrowRight size={14} />
                 </button>
               </div>
             </form>

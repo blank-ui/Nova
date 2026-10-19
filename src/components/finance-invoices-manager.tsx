@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Receipt,
@@ -21,6 +21,7 @@ import {
 import { Badge, EmptyState, SectionCard } from "@/components/admin-ui";
 import { InvoiceModal, type InvoiceData } from "./invoice-modal";
 import { useToast } from "@/components/toast";
+import { useCurrency } from "@/components/currency-provider";
 
 export interface FinanceInvoicesManagerProps {
   initialInvoices: InvoiceData[];
@@ -32,6 +33,7 @@ export function FinanceInvoicesManager({
   availableProjects,
 }: FinanceInvoicesManagerProps) {
   const toast = useToast();
+  const { formatMoney, currency: currentSelectedCurrency } = useCurrency();
   const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "SENT">("ALL");
@@ -39,6 +41,18 @@ export function FinanceInvoicesManager({
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
+
+  // Keyboard shortcut: Escape closes create modal
+  useEffect(() => {
+    if (!isCreateModalOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setIsCreateModalOpen(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isCreateModalOpen]);
 
   // New Invoice Form State
   const [createProjectId, setCreateProjectId] = useState(availableProjects[0]?.id || "");
@@ -374,11 +388,15 @@ export function FinanceInvoicesManager({
                 <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: 16, fontWeight: 900, color: "var(--text-primary)" }}>
-                      ${Number(inv.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}{" "}
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted-crm)" }}>
-                        {inv.currency}
-                      </span>
+                      {currentSelectedCurrency !== "USD"
+                        ? formatMoney(inv.amount)
+                        : `$${Number(inv.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })} USD`}
                     </div>
+                    {currentSelectedCurrency !== "USD" && (
+                      <div style={{ fontSize: 10, color: "var(--text-muted-crm)" }}>
+                        Base: ${Number(inv.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })} USD
+                      </div>
+                    )}
                     <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginTop: 2 }}>
                       PAID / SETTLED
                     </div>

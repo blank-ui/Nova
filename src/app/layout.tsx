@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast";
 import { LanguageProvider } from "@/components/language-provider";
+import { CurrencyProvider } from "@/components/currency-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body suppressHydrationWarning>
         <ThemeProvider>
           <LanguageProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <CurrencyProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </CurrencyProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>

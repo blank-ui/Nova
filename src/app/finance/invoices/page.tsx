@@ -51,7 +51,7 @@ export default async function InvoicesPage() {
             },
             {
               title: "Sprint 2: Financial Invoicing & Enterprise Milestone Verification",
-              description: "Invoice generation with NOVA-fy-01 sequencing, download, and email dispatch.",
+              description: "Invoice generation with NOVA-FYYYMM-01 sequencing, download, and email dispatch.",
               dueAt: new Date(),
               completedAt: new Date(),
             },
@@ -66,7 +66,7 @@ export default async function InvoicesPage() {
     allProjects = [seededProj];
   }
 
-  // 2. Ensure each project has an invoice in the DB conforming to NOVA-fy-01
+  // 2. Ensure each project has an invoice in the DB conforming to NOVA-FYYYMM-01
   const existingInvoices = await prisma.invoice.findMany({
     include: {
       project: { select: { id: true, name: true, description: true, status: true, paymentStatus: true } },

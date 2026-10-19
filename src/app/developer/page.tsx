@@ -456,7 +456,7 @@ export default async function DeveloperWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    View &rarr;
+                    View →
                   </Link>
                 }
               />
@@ -474,7 +474,7 @@ export default async function DeveloperWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    Manage &rarr;
+                    Manage →
                   </Link>
                 }
               />
@@ -492,7 +492,7 @@ export default async function DeveloperWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    Schedule &rarr;
+                    Schedule →
                   </Link>
                 }
               />
@@ -510,7 +510,7 @@ export default async function DeveloperWorkspace() {
                       textDecoration: "none",
                     }}
                   >
-                    Configure &rarr;
+                    Configure →
                   </Link>
                 }
               />

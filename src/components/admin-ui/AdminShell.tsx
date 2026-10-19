@@ -16,6 +16,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   return (
     <div
       className="admin-page-wrapper"
+      suppressHydrationWarning
       style={{
         minHeight: "100vh",
         background: "var(--page-bg)",
@@ -28,6 +29,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
     >
       <div
         className="admin-app-shell"
+        suppressHydrationWarning
         style={{
           width: "100%",
           minHeight: "calc(100vh - 32px)",

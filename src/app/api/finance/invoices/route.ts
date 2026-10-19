@@ -6,7 +6,7 @@ import { sendInvoiceEmail } from "@/lib/invoice-email";
 
 /**
  * GET /api/finance/invoices
- * Returns all invoices and ensures paid projects have sequential NOVA-fy-01 invoices.
+ * Returns all invoices and ensures paid projects have sequential NOVA-FYYYMM-01 invoices.
  */
 export async function GET() {
   const session = await getCurrentSession();
@@ -217,7 +217,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Project not found." }, { status: 404 });
       }
 
-      // Generate invoice number conforming to NOVA-fy-01 format
+      // Generate invoice number conforming to NOVA-FYYYMM-01 format
       const nextNumber = await generateNextInvoiceNumber(prisma);
 
       const newInvoice = await prisma.invoice.create({
@@ -294,7 +294,7 @@ export async function POST(request: Request) {
               },
               {
                 title: "Sprint 2: Financial Invoicing & Milestone Verification",
-                description: "Invoice generation with NOVA-fy-01 sequencing, download, and email dispatch.",
+                description: "Invoice generation with NOVA-FYYYMM-01 sequencing, download, and email dispatch.",
                 dueAt: new Date(),
                 completedAt: new Date(),
               },

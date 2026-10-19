@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Printer,
@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Calendar,
   DollarSign,
+  ArrowLeft,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 
@@ -58,6 +59,22 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
   const [customNote, setCustomNote] = useState("");
+
+  // Keyboard shortcut: Escape closes dispatch submodal or primary invoice modal
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (sendModalOpen) {
+          setSendModalOpen(false);
+        } else {
+          onClose();
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, sendModalOpen]);
 
   if (!isOpen || !invoice) return null;
 
@@ -234,79 +251,101 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
 
   return (
     <>
-      {/* Primary Invoice Modal Overlay */}
+      {/* Primary Invoice Modal Overlay / Total Space Canvas */}
       <div
         className="invoice-modal-overlay"
         style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(10, 12, 22, 0.72)",
-          backdropFilter: "blur(8px)",
+          background: "var(--surface-primary, #FFFFFF)",
           zIndex: 9999,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 16,
-          overflowY: "auto",
-        }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
+          flexDirection: "column",
+          width: "100vw",
+          height: "100vh",
+          overflow: "hidden",
         }}
       >
         <div
           className="invoice-modal-dialog"
           style={{
             width: "100%",
-            maxWidth: 820,
-            maxHeight: "92vh",
+            height: "100%",
+            maxWidth: "100%",
+            maxHeight: "100vh",
             background: "var(--surface-primary, #FFFFFF)",
             color: "var(--text-primary, #101322)",
-            borderRadius: 24,
-            boxShadow: "0 24px 64px rgba(0,0,0,0.22)",
+            borderRadius: 0,
+            boxShadow: "none",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
             position: "relative",
           }}
         >
-          {/* Top Floating Control Bar (Hidden during print) */}
+          {/* Top Floating Control Bar (Full-width, hidden during print) */}
           <div
             className="invoice-control-bar no-print"
             style={{
-              padding: "16px 24px",
+              padding: "14px clamp(16px, 3vw, 36px)",
               background: "var(--surface-raised, #F6F4EE)",
               borderBottom: "1px solid var(--border-hairline, rgba(0,0,0,0.08))",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: 12,
+              gap: 16,
+              flexShrink: 0,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <button
+                type="button"
+                onClick={onClose}
+                className="button button-outline"
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  background: "var(--ink-crm, #101322)",
-                  color: "#FFFFFF",
-                  display: "flex",
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: "inline-flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 8,
+                  cursor: "pointer",
+                  borderRadius: 10,
                 }}
+                title="Back to Invoices (Esc)"
               >
-                <Receipt size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800 }}>Invoice {invoice.invoiceNumber}</div>
-                <div style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)" }}>
-                  {invoice.projectName} &middot; Status: {invoice.status}
+                <ArrowLeft size={15} />
+                <span>Back to Invoices</span>
+              </button>
+
+              <div style={{ height: 24, width: 1, background: "var(--border-hairline, rgba(0,0,0,0.12))" }} />
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 10,
+                    background: "var(--ink-crm, #101322)",
+                    color: "#FFFFFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Receipt size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800 }}>Invoice {invoice.invoiceNumber}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)" }}>
+                    {invoice.projectName} &middot; Status: <strong style={{ color: "#059669" }}>{invoice.status}</strong>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <button
                 type="button"
                 onClick={handlePrint}
@@ -319,6 +358,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   alignItems: "center",
                   gap: 6,
                   cursor: "pointer",
+                  borderRadius: 10,
                 }}
                 title="Print or Save as PDF"
               >
@@ -338,6 +378,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   alignItems: "center",
                   gap: 6,
                   cursor: "pointer",
+                  borderRadius: 10,
                 }}
                 title="Download HTML Document"
               >
@@ -362,6 +403,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   cursor: "pointer",
                   background: "var(--ink-crm, #101322)",
                   color: "#FFFFFF",
+                  borderRadius: 10,
                 }}
               >
                 <Send size={14} />
@@ -376,13 +418,14 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   width: 32,
                   height: 32,
                   borderRadius: "50%",
-                  background: "transparent",
+                  background: "rgba(0,0,0,0.05)",
                   border: "none",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
                   color: "var(--text-muted-crm, #6B7280)",
+                  marginLeft: 4,
                 }}
               >
                 <X size={18} />
@@ -390,16 +433,19 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
             </div>
           </div>
 
-          {/* Printable Invoice Sheet Body */}
+          {/* Printable Invoice Sheet Body (Utilizes total space) */}
           <div
             className="invoice-printable-sheet"
             style={{
-              padding: "40px 48px",
+              padding: "clamp(24px, 4vw, 48px) clamp(24px, 5vw, 64px)",
               overflowY: "auto",
               flex: 1,
               background: "#FFFFFF",
               color: "#101322",
               fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              width: "100%",
+              maxWidth: "100%",
+              boxSizing: "border-box",
             }}
           >
             {/* Invoice Top Header */}

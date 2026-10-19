@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CurrencySwitcher } from "@/components/currency-switcher";
 import { LogoutButton } from "@/components/logout-button";
 import {
   EMPTY_NOTIFICATION_STATE,
@@ -414,6 +415,8 @@ export function TopBar({ user, defaultNotificationsOpen = false }: TopBarProps) 
 
       {/* Right: Circular Buttons & Avatar */}
       <div className="topbar-actions" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, position: "relative" }}>
+        <CurrencySwitcher compact />
+
         <ThemeToggle
           style={{
             width: 44,
