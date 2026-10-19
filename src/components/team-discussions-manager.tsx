@@ -283,7 +283,8 @@ export function TeamDiscussionsManager({
 
   const [activeChannelSlug, setActiveChannelSlug] = useState<string>(() => {
     if (initialChannel) return initialChannel;
-    return "";
+    if (channels && channels.length > 0) return channels[0].slug;
+    return "general";
   });
 
   const [activeRecipientId, setActiveRecipientId] = useState<string>(() => {
@@ -1123,6 +1124,9 @@ export function TeamDiscussionsManager({
               aria-selected={activeMode === "project"}
               onClick={() => {
                 setActiveMode("project");
+                if (!activeProjectId && projects.length > 0) {
+                  setActiveProjectId(projects[0].id);
+                }
                 setSelectedMessageForPreview(null);
               }}
               style={{
@@ -1151,6 +1155,9 @@ export function TeamDiscussionsManager({
               aria-selected={activeMode === "channel"}
               onClick={() => {
                 setActiveMode("channel");
+                if (!activeChannelSlug && channels.length > 0) {
+                  setActiveChannelSlug(channels[0].slug);
+                }
                 setSelectedMessageForPreview(null);
               }}
               style={{

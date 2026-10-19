@@ -143,6 +143,7 @@ const DDL_STATEMENTS = [
     \`description\` TEXT NULL,
     \`status\` ENUM('PLANNING', 'IN_PROGRESS', 'REVIEW', 'COMPLETED', 'ON_HOLD') NOT NULL DEFAULT 'PLANNING',
     \`clientId\` VARCHAR(191) NOT NULL,
+    \`paymentStatus\` VARCHAR(191) NOT NULL DEFAULT 'PAID',
     \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     \`updatedAt\` DATETIME(3) NOT NULL,
     INDEX \`Project_clientId_status_idx\`(\`clientId\`, \`status\`),
@@ -383,6 +384,22 @@ const COLUMN_MIGRATIONS = [
   "ALTER TABLE `Appointment` ADD COLUMN `meetingLink` VARCHAR(191) NULL",
   "ALTER TABLE `Appointment` ADD COLUMN `notes` TEXT NULL",
   "ALTER TABLE `Appointment` ADD COLUMN `assignedStaffId` VARCHAR(191) NULL",
+
+  // Project columns
+  "ALTER TABLE `Project` ADD COLUMN `paymentStatus` VARCHAR(191) NOT NULL DEFAULT 'PAID'",
+  "ALTER TABLE `Project` ADD COLUMN `description` TEXT NULL",
+
+  // Invoice columns
+  "ALTER TABLE `Invoice` ADD COLUMN `notes` TEXT NULL",
+  "ALTER TABLE `Invoice` ADD COLUMN `items` JSON NULL",
+  "ALTER TABLE `Invoice` ADD COLUMN `sentToEmail` VARCHAR(191) NULL",
+  "ALTER TABLE `Invoice` ADD COLUMN `sentAt` DATETIME(3) NULL",
+  "ALTER TABLE `Invoice` ADD COLUMN `paidAt` DATETIME(3) NULL",
+  "ALTER TABLE `Invoice` ADD COLUMN `dueDate` DATETIME(3) NULL",
+
+  // TeamMessage columns
+  "ALTER TABLE `TeamMessage` ADD COLUMN `channel` VARCHAR(191) NULL DEFAULT 'general'",
+  "ALTER TABLE `TeamMessage` ADD COLUMN `recipientId` VARCHAR(191) NULL",
 ];
 
 export async function GET(req: Request) {
@@ -514,9 +531,40 @@ export async function GET(req: Request) {
       });
     }
 
+    // 5. Ensure default Studio Channels exist
+    try {
+      await prisma.$executeRawUnsafe(`
+        INSERT IGNORE INTO StudioChannel (id, slug, name, description, icon) VALUES
+        ('sc-gen', 'general', 'general-studio', 'Studio-wide announcements, syncs, and team collaboration', 'Hash'),
+        ('sc-eng', 'engineering', 'engineering-sprint', 'Technical architecture, sprint tasks, code reviews, and deployments', 'Terminal'),
+        ('sc-fin', 'finance', 'finance-billing', 'Commercial scopes, invoicing, milestone valuations, and client budgets', 'DollarSign')
+      `);
+    } catch {}
+
+    // 6. Ensure initial welcome message in general channel
+    try {
+      const msgCount = await prisma.teamMessage.count({
+        where: { channel: "general" },
+      });
+      if (msgCount === 0 && adminUser) {
+        await prisma.teamMessage.create({
+          data: {
+            senderId: adminUser.id,
+            channel: "general",
+            body: "Welcome to Nova Studio Discussions! Collaborate on engineering sprints, commercial scopes, and announcements here.",
+          },
+        });
+      }
+    } catch {}
+
     const users = await prisma.user.findMany({
       select: { id: true, email: true, name: true, role: true, emailVerified: true },
     });
+
+    let projectColumns: any[] = [];
+    try {
+      projectColumns = await prisma.$queryRawUnsafe(`DESCRIBE \`Project\``);
+    } catch {}
 
     return NextResponse.json({
       success: true,
@@ -524,6 +572,7 @@ export async function GET(req: Request) {
       databaseUrl: maskedDbUrl,
       totalStatements: DDL_STATEMENTS.length + FOREIGN_KEYS.length,
       users,
+      projectColumns,
       results,
     });
   } catch (error) {

@@ -86,8 +86,14 @@ export default async function PortalDiscussionsPage({
       : resolvedParams.channel
       ? "channel"
       : isInternal
-      ? "project"
+      ? "channel"
       : "project");
+
+  const initialProjectId =
+    resolvedParams.projectId ||
+    (initialMode === "project" && projects.length > 0 ? projects[0].id : undefined);
+
+  const initialChannel = resolvedParams.channel || (isInternal ? "general" : undefined);
 
   return (
     <TeamDiscussionsManager
@@ -96,9 +102,9 @@ export default async function PortalDiscussionsPage({
       teamMembers={teamMembers}
       projects={projects}
       channels={channels}
-      initialProjectId={resolvedParams.projectId}
+      initialProjectId={initialProjectId}
       initialRecipientId={resolvedParams.recipientId}
-      initialChannel={resolvedParams.channel}
+      initialChannel={initialChannel}
       initialMode={initialMode}
     />
   );

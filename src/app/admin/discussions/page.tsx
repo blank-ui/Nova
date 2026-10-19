@@ -80,7 +80,13 @@ export default async function AdminDiscussionsPage({
       ? "direct"
       : resolvedParams.channel
       ? "channel"
-      : "project");
+      : "channel");
+
+  const initialProjectId =
+    resolvedParams.projectId ||
+    (initialMode === "project" && projects.length > 0 ? projects[0].id : undefined);
+
+  const initialChannel = resolvedParams.channel || "general";
 
   return (
     <TeamDiscussionsManager
@@ -89,9 +95,9 @@ export default async function AdminDiscussionsPage({
       teamMembers={teamMembers}
       projects={projects}
       channels={channels}
-      initialProjectId={resolvedParams.projectId}
+      initialProjectId={initialProjectId}
       initialRecipientId={resolvedParams.recipientId}
-      initialChannel={resolvedParams.channel}
+      initialChannel={initialChannel}
       initialMode={initialMode}
     />
   );
