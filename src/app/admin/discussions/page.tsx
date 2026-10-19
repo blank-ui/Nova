@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { getStudioChannels } from "@/lib/studio-channels";
 import {
   TeamDiscussionsManager,
   TeamMember,
@@ -19,8 +20,8 @@ export default async function AdminDiscussionsPage({
   const session = await requireAdmin();
   const resolvedParams = searchParams ? await searchParams : {};
 
-  // Fetch all projects and team members
-  const [projectsRaw, teamMembers]: [any[], TeamMember[]] = await Promise.all([
+  // Fetch all projects, team members, and studio channels
+  const [projectsRaw, teamMembers, channels] = await Promise.all([
     prisma.project.findMany({
       select: {
         id: true,
@@ -57,6 +58,7 @@ export default async function AdminDiscussionsPage({
       },
       orderBy: { name: "asc" },
     }),
+    getStudioChannels(),
   ]);
 
   const projects: ProjectItem[] = projectsRaw.map((p) => ({
@@ -78,7 +80,7 @@ export default async function AdminDiscussionsPage({
       ? "direct"
       : resolvedParams.channel
       ? "channel"
-      : "channel");
+      : "project");
 
   return (
     <TeamDiscussionsManager
@@ -86,6 +88,7 @@ export default async function AdminDiscussionsPage({
       currentUserRole={session.user.role ?? "ADMIN"}
       teamMembers={teamMembers}
       projects={projects}
+      channels={channels}
       initialProjectId={resolvedParams.projectId}
       initialRecipientId={resolvedParams.recipientId}
       initialChannel={resolvedParams.channel}

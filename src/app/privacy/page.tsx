@@ -40,7 +40,7 @@ export default function Privacy() {
                   <strong>Client Portal Accounts:</strong> When an account is created for client collaboration, we collect your name, email address, password hash, and optional multi-factor authentication (TOTP) credentials.
                 </li>
                 <li>
-                  <strong>Project Communications & Files:</strong> When authorized clients and studio administrators collaborate, we store project messages, discussion timestamps, and administrative audit trails.
+                  <strong>Project Communications & Files:</strong> When authorized clients and studio administrators collaborate, we store project messages, discussion timestamps, administrative audit trails, and client-uploaded project attachments (such as UI mockups, reference images, and PDF project briefs).
                 </li>
                 <li>
                   <strong>Technical & Operational Logs:</strong> For system security, rate limiting, and fraud prevention, our servers record IP addresses, user agent headers, and request timestamps.

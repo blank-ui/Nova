@@ -1,5 +1,6 @@
 import { requireClient } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { getStudioChannels } from "@/lib/studio-channels";
 import {
   TeamDiscussionsManager,
   TeamMember,
@@ -23,8 +24,8 @@ export default async function PortalDiscussionsPage({
     session.user.role === "DEVELOPER" ||
     session.user.role === "FINANCE";
 
-  // Fetch projects: internal staff sees all studio projects; clients see only their owned projects
-  const [projectsRaw, teamMembers]: [any[], TeamMember[]] = await Promise.all([
+  // Fetch projects, team members, and studio channels in parallel
+  const [projectsRaw, teamMembers, channels] = await Promise.all([
     prisma.project.findMany({
       where: isInternal ? {} : { clientId: session.user.id },
       select: {
@@ -62,6 +63,7 @@ export default async function PortalDiscussionsPage({
       },
       orderBy: { name: "asc" },
     }),
+    isInternal ? getStudioChannels() : Promise.resolve([]),
   ]);
 
   const projects: ProjectItem[] = projectsRaw.map((p) => ({
@@ -93,6 +95,7 @@ export default async function PortalDiscussionsPage({
       currentUserRole={session.user.role ?? (isInternal ? "DEVELOPER" : "CLIENT")}
       teamMembers={teamMembers}
       projects={projects}
+      channels={channels}
       initialProjectId={resolvedParams.projectId}
       initialRecipientId={resolvedParams.recipientId}
       initialChannel={resolvedParams.channel}
