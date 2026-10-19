@@ -70,6 +70,9 @@ export default function Terms() {
                 <li>Provide accurate source materials, copy, assets, credentials, and specifications required for project execution.</li>
                 <li>Ensure that all materials, trademarks, software, and data supplied to Nova are lawfully owned or appropriately licensed, and do not infringe any third-party intellectual property rights.</li>
                 <li>Provide prompt written feedback, sign-offs, and deliverable approvals according to the schedules established in the applicable SOW.</li>
+                <li>
+                  <strong>Uploaded Files & Attachments:</strong> When uploading documents, images, or PDF files to project threads and team discussions (up to 10MB per file), you represent and warrant that you hold all required rights and authorizations to share such assets, and that uploaded materials do not contain malicious code, trojans, or unauthorized third-party confidential information.
+                </li>
               </ul>
             </>
           ),
@@ -97,7 +100,8 @@ export default function Terms() {
               <p>You agree not to use the Nova website or client portal to:</p>
               <ul style={{ margin: "10px 0 10px 20px", display: "grid", gap: 6 }}>
                 <li>Violate any local, national, or international statute, regulation, or data protection law.</li>
-                <li>Transmit malicious code, viruses, automated bots, scrapers, or attempt denial-of-service attacks against our infrastructure.</li>
+                <li>Transmit malicious code, viruses, automated bots, scrapers, trojans, ransomware, or attempt denial-of-service attacks against our infrastructure.</li>
+                <li>Upload executable binary payloads, forged files, or corrupted archives designed to compromise server or client security.</li>
                 <li>Bypass authentication mechanisms, probe or scan system vulnerabilities without written authorization.</li>
                 <li>Transmit unlawful, defamatory, infringing, or harassing materials through project messaging.</li>
               </ul>

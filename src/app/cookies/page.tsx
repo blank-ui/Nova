@@ -75,6 +75,12 @@ export default function Cookies() {
                       <td style={{ padding: "10px 12px" }}>Stores your selected language preference across page navigations and sessions without tracking your identity.</td>
                       <td style={{ padding: "10px 12px" }}>1 year</td>
                     </tr>
+                    <tr style={{ borderBottom: "1px solid var(--line, #e2e5ec)" }}>
+                      <td style={{ padding: "10px 12px", fontFamily: "monospace" }}>nova-currency</td>
+                      <td style={{ padding: "10px 12px" }}>Functionality / Preference</td>
+                      <td style={{ padding: "10px 12px" }}>Stores your chosen currency preference (USD, EUR, GBP, INR, etc.) for localized price formatting.</td>
+                      <td style={{ padding: "10px 12px" }}>1 year</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
