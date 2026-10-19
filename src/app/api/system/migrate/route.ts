@@ -232,6 +232,99 @@ const DDL_STATEMENTS = [
     INDEX \`GalleryItem_category_createdAt_idx\`(\`category\`, \`createdAt\`),
     PRIMARY KEY (\`id\`)
   ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 18. Appointment
+  `CREATE TABLE IF NOT EXISTS \`Appointment\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`title\` VARCHAR(191) NOT NULL,
+    \`description\` TEXT NULL,
+    \`date\` DATETIME(3) NOT NULL,
+    \`duration\` INTEGER NOT NULL DEFAULT 30,
+    \`status\` VARCHAR(191) NOT NULL DEFAULT 'REQUESTED',
+    \`meetingLink\` VARCHAR(191) NULL,
+    \`notes\` TEXT NULL,
+    \`requestedById\` VARCHAR(191) NOT NULL,
+    \`assignedStaffId\` VARCHAR(191) NULL,
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    \`updatedAt\` DATETIME(3) NOT NULL,
+    INDEX \`Appointment_status_date_idx\`(\`status\`, \`date\`),
+    INDEX \`Appointment_requestedById_idx\`(\`requestedById\`),
+    INDEX \`Appointment_assignedStaffId_idx\`(\`assignedStaffId\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 19. Invoice
+  `CREATE TABLE IF NOT EXISTS \`Invoice\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`invoiceNumber\` VARCHAR(191) NOT NULL,
+    \`projectId\` VARCHAR(191) NOT NULL,
+    \`clientId\` VARCHAR(191) NOT NULL,
+    \`amount\` DOUBLE NOT NULL DEFAULT 12500.00,
+    \`currency\` VARCHAR(191) NOT NULL DEFAULT 'USD',
+    \`status\` VARCHAR(191) NOT NULL DEFAULT 'PAID',
+    \`dueDate\` DATETIME(3) NULL,
+    \`issuedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    \`paidAt\` DATETIME(3) NULL,
+    \`sentAt\` DATETIME(3) NULL,
+    \`sentToEmail\` VARCHAR(191) NULL,
+    \`items\` JSON NULL,
+    \`notes\` TEXT NULL,
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    \`updatedAt\` DATETIME(3) NOT NULL,
+    UNIQUE INDEX \`Invoice_invoiceNumber_key\`(\`invoiceNumber\`),
+    INDEX \`Invoice_projectId_idx\`(\`projectId\`),
+    INDEX \`Invoice_clientId_idx\`(\`clientId\`),
+    INDEX \`Invoice_status_idx\`(\`status\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 20. TeamMessage
+  `CREATE TABLE IF NOT EXISTS \`TeamMessage\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`senderId\` VARCHAR(191) NOT NULL,
+    \`recipientId\` VARCHAR(191) NULL,
+    \`channel\` VARCHAR(191) NULL DEFAULT 'general',
+    \`body\` TEXT NOT NULL,
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    INDEX \`TeamMessage_senderId_recipientId_createdAt_idx\`(\`senderId\`, \`recipientId\`, \`createdAt\`),
+    INDEX \`TeamMessage_channel_createdAt_idx\`(\`channel\`, \`createdAt\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 21. StudioChannel
+  `CREATE TABLE IF NOT EXISTS \`StudioChannel\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`slug\` VARCHAR(191) NOT NULL,
+    \`name\` VARCHAR(191) NOT NULL,
+    \`description\` TEXT NULL,
+    \`icon\` VARCHAR(50) NULL DEFAULT 'Hash',
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    UNIQUE INDEX \`StudioChannel_slug_key\`(\`slug\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 22. ChannelMember
+  `CREATE TABLE IF NOT EXISTS \`ChannelMember\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`channelId\` VARCHAR(191) NOT NULL,
+    \`userId\` VARCHAR(191) NOT NULL,
+    \`role\` VARCHAR(50) NULL DEFAULT 'MEMBER',
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    UNIQUE INDEX \`ChannelMember_channelId_userId_key\`(\`channelId\`, \`userId\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 23. ProjectMember
+  `CREATE TABLE IF NOT EXISTS \`ProjectMember\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`projectId\` VARCHAR(191) NOT NULL,
+    \`userId\` VARCHAR(191) NOT NULL,
+    \`role\` VARCHAR(50) NULL DEFAULT 'COLLABORATOR',
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    UNIQUE INDEX \`ProjectMember_projectId_userId_key\`(\`projectId\`, \`userId\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
 ];
 
 const FOREIGN_KEYS = [

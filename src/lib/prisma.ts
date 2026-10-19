@@ -17,3 +17,16 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
+// Auto-heal schema guard: ensure critical User columns exist across all deployment environments
+if (typeof window === "undefined") {
+  (async () => {
+    try {
+      await prisma.$executeRawUnsafe("ALTER TABLE `User` ADD COLUMN `phone` VARCHAR(191) NULL;");
+    } catch {}
+    try {
+      await prisma.$executeRawUnsafe("ALTER TABLE `User` ADD COLUMN `dateOfBirth` VARCHAR(191) NULL;");
+    } catch {}
+  })();
+}
+
+
