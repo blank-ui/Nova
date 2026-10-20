@@ -47,7 +47,7 @@ export default async function AdminDiscussionsPage({
     }),
     prisma.user.findMany({
       where: {
-        role: { in: ["ADMIN", "DEVELOPER", "FINANCE"] },
+        role: { in: ["ADMIN", "DEVELOPER", "FINANCE", "CLIENT"] },
       },
       select: {
         id: true,

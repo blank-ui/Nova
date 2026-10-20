@@ -1186,6 +1186,9 @@ export function TeamDiscussionsManager({
               aria-selected={activeMode === "direct"}
               onClick={() => {
                 setActiveMode("direct");
+                if (!activeRecipientId && otherMembers.length === 1) {
+                  setActiveRecipientId(otherMembers[0].id);
+                }
                 setSelectedMessageForPreview(null);
               }}
               style={{
@@ -1242,7 +1245,7 @@ export function TeamDiscussionsManager({
 
       {/* Main Discussions Layout Shell (Fills Remaining Viewport - Zero Page Overflow) */}
       <div
-        className="discussions-app-shell"
+        className={`discussions-app-shell ${isThreadOpen ? "mobile-view-thread" : "mobile-view-list"}`}
         style={{
           display: "grid",
           gridTemplateColumns: selectedMessageForPreview
@@ -1284,21 +1287,23 @@ export function TeamDiscussionsManager({
             }}
           >
             <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)" }}>
-              Select Conversation
+              {activeMode === "direct" ? "Direct Messages" : activeMode === "channel" ? "Channels" : "Projects"}
             </span>
-            <button
-              type="button"
-              onClick={() => setMobileDrawerOpen(false)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 4,
-                color: "var(--text-muted-crm)",
-              }}
-            >
-              <X size={18} />
-            </button>
+            {isThreadOpen && (
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 4,
+                  color: "var(--text-muted-crm)",
+                }}
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
 
           {/* Search Box */}
@@ -1651,6 +1656,7 @@ export function TeamDiscussionsManager({
 
         {/* Right Chat Canvas: FIXED DISPLAY, ONLY MESSAGES SCROLL */}
         <main
+          className="discussions-chat-canvas"
           style={{
             background: "var(--card-bg-crm)",
             border: "1px solid var(--border-hairline)",
@@ -1764,24 +1770,27 @@ export function TeamDiscussionsManager({
                 <div className="chat-canvas-title-group" style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                   <button
                     type="button"
-                    className="discussions-mobile-drawer-btn"
-                    onClick={() => setMobileDrawerOpen(true)}
-                    title="Open conversation list"
+                    className="discussions-mobile-back-btn"
+                    onClick={handleCloseThread}
+                    title="Back to conversation list"
                     style={{
                       display: "none",
                       alignItems: "center",
                       justifyContent: "center",
-                      width: 32,
-                      height: 32,
+                      gap: 4,
+                      padding: "6px 11px",
                       borderRadius: 8,
                       border: "1px solid var(--border-hairline)",
                       background: "var(--surface-raised)",
                       color: "var(--text-primary)",
                       cursor: "pointer",
                       flexShrink: 0,
+                      fontSize: 12,
+                      fontWeight: 700,
                     }}
                   >
-                    <Menu size={16} />
+                    <ArrowLeft size={14} />
+                    <span>Back</span>
                   </button>
                   <div
                     style={{
@@ -4235,8 +4244,9 @@ export function TeamDiscussionsManager({
           .client-portal-wrapper:has(.discussions-viewport-container) {
             height: 100dvh !important;
             max-height: 100dvh !important;
-            padding: 4px 4px 0 !important;
+            padding: 4px 4px 74px !important;
             overflow: hidden !important;
+            box-sizing: border-box !important;
           }
           .admin-app-shell:has(.discussions-viewport-container) {
             height: 100% !important;
@@ -4244,38 +4254,35 @@ export function TeamDiscussionsManager({
             padding: 8px 8px 0 !important;
             border-radius: 14px !important;
             overflow: hidden !important;
+            box-sizing: border-box !important;
           }
           .admin-body-layout:has(.discussions-viewport-container) {
-            height: calc(100dvh - 105px) !important;
-            max-height: calc(100dvh - 105px) !important;
+            height: calc(100% - 92px) !important;
+            max-height: calc(100% - 92px) !important;
             overflow: hidden !important;
             gap: 0 !important;
+            box-sizing: border-box !important;
           }
           .discussions-viewport-container {
             height: 100% !important;
           }
-          .discussions-mobile-drawer-btn {
+          .discussions-mobile-back-btn {
             display: flex !important;
           }
           .chat-canvas-header {
-            padding: 10px 12px !important;
+            padding: 8px 12px !important;
             gap: 8px !important;
-            flex-wrap: wrap !important;
+            flex-wrap: nowrap !important;
           }
           .chat-canvas-title-group {
-            width: 100% !important;
-            flex: 0 0 100% !important;
+            flex: 1 !important;
+            min-width: 0 !important;
           }
           .chat-canvas-actions-track {
-            width: 100% !important;
-            flex: 0 0 100% !important;
-            flex-wrap: nowrap !important;
-            overflow-x: auto !important;
-            gap: 6px !important;
-            padding-bottom: 2px !important;
-            scrollbar-width: none !important;
-            -ms-overflow-style: none !important;
-            -webkit-overflow-scrolling: touch !important;
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
           }
           .chat-canvas-actions-track::-webkit-scrollbar {
             display: none !important;
@@ -4295,14 +4302,36 @@ export function TeamDiscussionsManager({
             display: none !important;
           }
           .discussions-composer-card {
-            padding: 8px 10px 76px !important;
+            padding: 8px 10px 20px !important;
           }
           .discussions-app-shell {
             grid-template-columns: 1fr !important;
           }
-          .discussions-sidebar {
+          
+          /* When NO thread is active on mobile: Sidebar takes 100% space so profiles/channels/projects are immediately selectable! */
+          .discussions-app-shell.mobile-view-list .discussions-sidebar {
+            display: flex !important;
+            width: 100% !important;
+            position: static !important;
+            border-radius: 14px !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            box-shadow: none !important;
+          }
+          .discussions-app-shell.mobile-view-list .discussions-chat-canvas {
             display: none !important;
           }
+
+          /* When a thread IS active on mobile: Canvas takes 100% space */
+          .discussions-app-shell.mobile-view-thread .discussions-sidebar {
+            display: none !important;
+          }
+          .discussions-app-shell.mobile-view-thread .discussions-chat-canvas {
+            display: flex !important;
+            width: 100% !important;
+            height: 100% !important;
+          }
+
           .discussions-sidebar.mobile-open {
             display: flex !important;
             position: fixed !important;
