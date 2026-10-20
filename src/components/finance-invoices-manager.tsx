@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Receipt,
@@ -38,6 +39,8 @@ export function FinanceInvoicesManager({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "SENT">("ALL");
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
@@ -486,7 +489,7 @@ export function FinanceInvoicesManager({
       />
 
       {/* Modal to Issue New Invoice for Existing Project */}
-      {isCreateModalOpen && (
+      {isCreateModalOpen && mounted && createPortal(
         <div
           style={{
             position: "fixed",
@@ -631,7 +634,8 @@ export function FinanceInvoicesManager({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

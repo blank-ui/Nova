@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle, HelpCircle, X } from "lucide-react";
 
 export interface ConfirmModalProps {
@@ -29,6 +30,11 @@ export function ConfirmModal({
   onCancel,
 }: ConfirmModalProps) {
   const isModalOpen = isOpen ?? open ?? false;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -41,7 +47,7 @@ export function ConfirmModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isModalOpen, onCancel]);
 
-  if (!isModalOpen) return null;
+  if (!isModalOpen || !mounted) return null;
 
   const confirmBg =
     variant === "danger"
@@ -50,20 +56,24 @@ export function ConfirmModal({
       ? "#D97706"
       : "var(--accent-blue, #2F54EB)";
 
-  return (
+  const content = (
     <div
       role="dialog"
       aria-modal="true"
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 9999,
-        background: "rgba(12, 13, 16, 0.65)",
-        backdropFilter: "blur(6px)",
+        zIndex: 999999,
+        background: "rgba(10, 12, 19, 0.72)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 20,
+        padding: "clamp(16px, 4vw, 24px)",
+        margin: 0,
+        boxSizing: "border-box",
+        overflowY: "auto",
       }}
       onClick={onCancel}
     >
@@ -72,15 +82,17 @@ export function ConfirmModal({
         style={{
           width: "100%",
           maxWidth: 440,
-          background: "var(--card-bg-crm, #E3E7EC)",
-          border: "1px solid var(--border-hairline, #C8CED7)",
+          margin: "auto",
+          background: "var(--card-bg-crm, var(--surface-raised, #ffffff))",
+          border: "1px solid var(--border-hairline, rgba(0, 0, 0, 0.12))",
           borderRadius: 24,
-          padding: 24,
-          boxShadow: "0 20px 48px rgba(0,0,0,0.2)",
+          padding: "clamp(20px, 4vw, 28px)",
+          boxShadow: "0 24px 60px rgba(0, 0, 0, 0.35)",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
-          animation: "fadeInUp 0.18s ease-out",
+          gap: 18,
+          animation: "fadeInUp 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
+          boxSizing: "border-box",
         }}
       >
         <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
@@ -201,4 +213,6 @@ export function ConfirmModal({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(content, document.body) : null;
 }

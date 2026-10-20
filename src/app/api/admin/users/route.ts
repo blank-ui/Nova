@@ -421,21 +421,70 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    // Permanently remove user and cascade relations
-    await prisma.$transaction([
-      prisma.user.delete({
-        where: { id },
-      }),
-      prisma.auditLog.create({
+    // Find all projects belonging to the client
+    const userProjects = await prisma.project.findMany({
+      where: { clientId: id },
+      select: { id: true },
+    });
+    const projectIds = userProjects.map((p) => p.id);
+
+    // Permanently remove user and cascade dependent relations safely
+    await prisma.$transaction(async (tx) => {
+      // 1. Remove project dependent records
+      if (projectIds.length > 0) {
+        await tx.milestone.deleteMany({ where: { projectId: { in: projectIds } } });
+        await tx.task.deleteMany({ where: { projectId: { in: projectIds } } });
+        await tx.message.deleteMany({ where: { projectId: { in: projectIds } } });
+        await tx.projectFile.deleteMany({ where: { projectId: { in: projectIds } } });
+        await tx.invoice.deleteMany({ where: { projectId: { in: projectIds } } });
+        await tx.project.deleteMany({ where: { id: { in: projectIds } } });
+      }
+
+      // 2. Remove standalone user relations
+      await tx.invoice.deleteMany({ where: { clientId: id } });
+      await tx.bootstrapClaim.deleteMany({ where: { userId: id } });
+      await tx.userLoginHistory.deleteMany({ where: { userId: id } });
+      await tx.clientNote.deleteMany({
+        where: { OR: [{ clientId: id }, { authorId: id }] },
+      });
+      await tx.teamMessage.deleteMany({
+        where: { OR: [{ senderId: id }, { recipientId: id }] },
+      });
+      await tx.appointment.deleteMany({
+        where: { requestedById: id },
+      });
+      await tx.appointment.updateMany({
+        where: { assignedStaffId: id },
+        data: { assignedStaffId: null },
+      });
+      await tx.authTwoFactor.deleteMany({ where: { userId: id } });
+      await tx.authAccount.deleteMany({ where: { userId: id } });
+      await tx.authSession.deleteMany({ where: { userId: id } });
+      await tx.session.deleteMany({ where: { userId: id } });
+      await tx.auditLog.updateMany({
+        where: { actorId: id },
+        data: { actorId: null },
+      });
+
+      // 3. Delete the user
+      await tx.user.delete({ where: { id } });
+
+      // 4. Record audit log
+      await tx.auditLog.create({
         data: {
           actorId: session.user.id,
           action: "DELETE",
           entityType: "User",
           entityId: id,
-          metadata: { email: user.email, name: user.name, role: user.role },
+          metadata: {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            projectsRemoved: projectIds.length,
+          },
         },
-      }),
-    ]);
+      });
+    });
 
     return NextResponse.json({
       success: true,
@@ -443,6 +492,7 @@ export async function DELETE(request: Request) {
     });
   } catch (error) {
     console.error("[Admin Users API] Error deleting user:", error);
-    return NextResponse.json({ error: "Failed to delete user." }, { status: 500 });
+    const detail = error instanceof Error ? error.message : "Failed to delete user.";
+    return NextResponse.json({ error: detail }, { status: 500 });
   }
 }

@@ -64,6 +64,7 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
   const [isSending, setIsSending] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [ccEmail, setCcEmail] = useState("");
   const [customNote, setCustomNote] = useState("");
   const [zoom, setZoom] = useState(1);
   const [isFitWidth, setIsFitWidth] = useState(false);
@@ -269,6 +270,11 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
 
   const handleSendInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
+    const finalTo = recipientEmail.trim() || invoice.clientEmail?.trim();
+    if (!finalTo) {
+      toast.error("Please specify a valid recipient email.");
+      return;
+    }
     setIsSending(true);
 
     try {
@@ -278,7 +284,8 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
         body: JSON.stringify({
           action: "send",
           invoiceId: invoice.id,
-          to: recipientEmail.trim() || invoice.clientEmail,
+          to: finalTo,
+          cc: ccEmail.trim() || undefined,
           customNote: customNote.trim() || undefined,
         }),
       });
@@ -620,7 +627,9 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
               <button
                 type="button"
                 onClick={() => {
-                  setRecipientEmail(invoice.clientEmail);
+                  setRecipientEmail(invoice.clientEmail || "");
+                  setCcEmail("");
+                  setCustomNote("");
                   setSendModalOpen(true);
                 }}
                 className="button"
@@ -947,101 +956,423 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
       {/* Nested Dispatch Modal */}
       {sendModalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
-            zIndex: 10000,
+            background: "rgba(10, 12, 19, 0.72)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            zIndex: 100000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 16,
+            padding: "clamp(16px, 4vw, 24px)",
+            boxSizing: "border-box",
+            overflowY: "auto",
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setSendModalOpen(false);
           }}
         >
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
               width: "100%",
-              maxWidth: 460,
-              background: "var(--card-bg, #FFFFFF)",
-              color: "var(--ink, #101322)",
-              borderRadius: 20,
-              padding: 24,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
-              border: "1px solid var(--border-hairline, rgba(0,0,0,0.12))",
+              maxWidth: 520,
+              margin: "auto",
+              background: "var(--card-bg-crm, var(--surface-raised, #FFFFFF))",
+              color: "var(--text-primary, #101322)",
+              borderRadius: 24,
+              padding: "clamp(20px, 4vw, 28px)",
+              boxShadow: "0 24px 60px rgba(0, 0, 0, 0.35)",
+              border: "1px solid var(--border-hairline, rgba(0, 0, 0, 0.12))",
+              animation: "fadeInUp 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 18,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", gap: 8, color: "var(--ink, #101322)" }}>
-                <Mail size={18} color="#2563EB" /> Send Invoice to Client
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 14,
+                    background: "rgba(37, 99, 235, 0.1)",
+                    color: "#2563EB",
+                    display: "grid",
+                    placeItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Mail size={22} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text-primary, #101322)", letterSpacing: "-0.02em" }}>
+                    Send Invoice by Email
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted-crm, #6B7280)", marginTop: 2 }}>
+                    Official settlement statement for <strong>{invoice.invoiceNumber}</strong> &middot; {formattedAmount}
+                  </div>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSendModalOpen(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted-crm, #6B7280)" }}
+                aria-label="Close"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-muted-crm, #6B7280)",
+                  padding: 6,
+                  borderRadius: 8,
+                  display: "grid",
+                  placeItems: "center",
+                }}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSendInvoice} style={{ display: "grid", gap: 14 }}>
+            {/* Quick Context Card */}
+            <div
+              style={{
+                background: "var(--surface-raised, #F9FAFB)",
+                border: "1px solid var(--border-hairline, #E5E7EB)",
+                borderRadius: 14,
+                padding: "10px 14px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: 12,
+              }}
+            >
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4, color: "var(--ink, #101322)" }}>
-                  Recipient Client Email *
+                <span style={{ color: "var(--text-muted-crm, #6B7280)" }}>Project: </span>
+                <strong style={{ color: "var(--text-primary, #101322)" }}>{invoice.projectName}</strong>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: "var(--text-muted-crm, #6B7280)" }}>Total: </span>
+                <span
+                  style={{
+                    background: "rgba(16, 185, 129, 0.12)",
+                    color: "#059669",
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: 99,
+                    fontSize: 12,
+                  }}
+                >
+                  {formattedAmount}
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSendInvoice} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Pre-registered Emails Selector */}
+              <div>
+                <label
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    display: "block",
+                    marginBottom: 6,
+                    color: "var(--text-primary, #101322)",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  Pre-Registered Contact Emails (Click to select)
+                </label>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {invoice.clientEmail && (
+                    <button
+                      type="button"
+                      onClick={() => setRecipientEmail(invoice.clientEmail)}
+                      style={{
+                        textAlign: "left",
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        cursor: "pointer",
+                        border:
+                          recipientEmail.toLowerCase() === invoice.clientEmail.toLowerCase()
+                            ? "2px solid #2563EB"
+                            : "1px solid var(--border-hairline, #E5E7EB)",
+                        background:
+                          recipientEmail.toLowerCase() === invoice.clientEmail.toLowerCase()
+                            ? "rgba(37, 99, 235, 0.06)"
+                            : "var(--surface-raised, #F9FAFB)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                        <div
+                          style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: "50%",
+                            border:
+                              recipientEmail.toLowerCase() === invoice.clientEmail.toLowerCase()
+                                ? "5px solid #2563EB"
+                                : "2px solid #9CA3AF",
+                            background: "#FFFFFF",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary, #101322)" }}>
+                            {invoice.clientEmail}
+                          </div>
+                          <div style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)", marginTop: 1 }}>
+                            {invoice.clientName} &middot; Primary Client Account
+                          </div>
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
+                          background: "#2563EB",
+                          color: "#FFFFFF",
+                          padding: "2px 7px",
+                          borderRadius: 99,
+                          flexShrink: 0,
+                        }}
+                      >
+                        Registered
+                      </span>
+                    </button>
+                  )}
+
+                  {invoice.sentToEmail &&
+                    invoice.sentToEmail.toLowerCase() !== invoice.clientEmail?.toLowerCase() && (
+                      <button
+                        type="button"
+                        onClick={() => setRecipientEmail(invoice.sentToEmail!)}
+                        style={{
+                          textAlign: "left",
+                          padding: "10px 12px",
+                          borderRadius: 12,
+                          cursor: "pointer",
+                          border:
+                            recipientEmail.toLowerCase() === invoice.sentToEmail.toLowerCase()
+                              ? "2px solid #2563EB"
+                              : "1px solid var(--border-hairline, #E5E7EB)",
+                          background:
+                            recipientEmail.toLowerCase() === invoice.sentToEmail.toLowerCase()
+                              ? "rgba(37, 99, 235, 0.06)"
+                              : "var(--surface-raised, #F9FAFB)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: "50%",
+                              border:
+                                recipientEmail.toLowerCase() === invoice.sentToEmail.toLowerCase()
+                                ? "5px solid #2563EB"
+                                : "2px solid #9CA3AF",
+                              background: "#FFFFFF",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary, #101322)" }}>
+                              {invoice.sentToEmail}
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)", marginTop: 1 }}>
+                              Previous Invoice Recipient
+                            </div>
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.04em",
+                            background: "#6B7280",
+                            color: "#FFFFFF",
+                            padding: "2px 7px",
+                            borderRadius: 99,
+                            flexShrink: 0,
+                          }}
+                        >
+                          Last Sent
+                        </span>
+                      </button>
+                    )}
+                </div>
+              </div>
+
+              {/* To Email Input */}
+              <div>
+                <label
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    display: "block",
+                    marginBottom: 5,
+                    color: "var(--text-primary, #101322)",
+                  }}
+                >
+                  Send To Email *
                 </label>
                 <input
                   type="email"
                   required
                   value={recipientEmail}
                   onChange={(e) => setRecipientEmail(e.target.value)}
+                  placeholder="client@company.com"
                   style={{
                     width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: 10,
+                    padding: "10px 14px",
+                    borderRadius: 12,
                     border: "1px solid var(--border-hairline, #D1D5DB)",
                     background: "var(--surface-raised, #F9FAFB)",
-                    color: "var(--ink, #101322)",
+                    color: "var(--text-primary, #101322)",
                     fontSize: 13,
                     outline: "none",
+                    boxSizing: "border-box",
                   }}
                 />
               </div>
 
+              {/* CC Input & Quick Chips */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4, color: "var(--ink, #101322)" }}>
-                  Commercial Message Note (Optional)
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                  <label
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--text-primary, #101322)",
+                    }}
+                  >
+                    CC Email(s) (Optional)
+                  </label>
+                  <span style={{ fontSize: 11, color: "var(--text-muted-crm, #6B7280)" }}>
+                    Separate multiple with commas
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={ccEmail}
+                  onChange={(e) => setCcEmail(e.target.value)}
+                  placeholder="e.g. billing@allskyfares.com, accountant@client.com"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--border-hairline, #D1D5DB)",
+                    background: "var(--surface-raised, #F9FAFB)",
+                    color: "var(--text-primary, #101322)",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                {/* CC Quick Chips */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                  {["billing@allskyfares.com", "contact@allskyfares.com"].map((emailChip) => (
+                    <button
+                      key={emailChip}
+                      type="button"
+                      onClick={() => {
+                        const trimmed = ccEmail.trim();
+                        if (!trimmed) {
+                          setCcEmail(emailChip);
+                        } else if (!trimmed.toLowerCase().includes(emailChip.toLowerCase())) {
+                          setCcEmail(`${trimmed}, ${emailChip}`);
+                        }
+                      }}
+                      style={{
+                        padding: "3px 9px",
+                        borderRadius: 99,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        border: "1px solid var(--border-hairline, #E5E7EB)",
+                        background: "var(--surface-raised, #F3F4F6)",
+                        color: "var(--text-muted-crm, #4B5563)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      + {emailChip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Commercial Cover Note */}
+              <div>
+                <label
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    display: "block",
+                    marginBottom: 5,
+                    color: "var(--text-primary, #101322)",
+                  }}
+                >
+                  Commercial Cover Note (Optional)
                 </label>
                 <textarea
-                  rows={3}
-                  placeholder="e.g. Please find your settled milestone statement attached for Sprint 1 deliverables..."
+                  rows={2}
+                  placeholder="e.g. Please find attached the settled milestone billing statement for your recent project sprint..."
                   value={customNote}
                   onChange={(e) => setCustomNote(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: 10,
+                    padding: "10px 14px",
+                    borderRadius: 12,
                     border: "1px solid var(--border-hairline, #D1D5DB)",
                     background: "var(--surface-raised, #F9FAFB)",
-                    color: "var(--ink, #101322)",
+                    color: "var(--text-primary, #101322)",
                     fontSize: 13,
                     outline: "none",
+                    boxSizing: "border-box",
+                    fontFamily: "inherit",
+                    resize: "vertical",
                   }}
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+              {/* Footer Actions */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  gap: 10,
+                  marginTop: 6,
+                  paddingTop: 12,
+                  borderTop: "1px solid var(--border-hairline, rgba(0,0,0,0.08))",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setSendModalOpen(false)}
+                  disabled={isSending}
                   style={{
-                    padding: "8px 16px",
-                    borderRadius: 10,
+                    padding: "10px 18px",
+                    borderRadius: 12,
                     border: "1px solid var(--border-hairline, #D1D5DB)",
                     background: "transparent",
-                    color: "var(--ink, #101322)",
+                    color: "var(--text-primary, #101322)",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -1053,20 +1384,21 @@ export function InvoiceModal({ isOpen, onClose, invoice, onInvoiceSent }: Invoic
                   type="submit"
                   disabled={isSending}
                   style={{
-                    padding: "8px 18px",
-                    borderRadius: 10,
+                    padding: "10px 22px",
+                    borderRadius: 12,
                     border: "none",
-                    background: "var(--ink-crm, #101322)",
+                    background: "#2563EB",
                     color: "#FFFFFF",
                     fontSize: 13,
                     fontWeight: 700,
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 6,
+                    gap: 8,
+                    boxShadow: "0 4px 14px rgba(37, 99, 235, 0.35)",
                   }}
                 >
-                  {isSending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                  {isSending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                   <span>{isSending ? "Dispatching..." : "Send Invoice Email"}</span>
                 </button>
               </div>

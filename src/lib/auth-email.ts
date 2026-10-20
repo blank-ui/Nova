@@ -1,7 +1,8 @@
 import tls from "node:tls";
 
 export interface TransactionalEmailOptions {
-  to: string;
+  to: string | string[];
+  cc?: string | string[];
   subject: string;
   text: string;
   html?: string;
@@ -16,6 +17,14 @@ export interface AuthEmailInput {
 /**
  * Clean & secure email escaping to prevent header injection
  */
+function parseEmailList(input?: string | string[]): string[] {
+  if (!input) return [];
+  const rawList = Array.isArray(input) ? input : String(input).split(/[,;]/);
+  return rawList
+    .map((e) => e.replace(/[\r\n]+/g, " ").trim())
+    .filter((e) => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+}
+
 function sanitizeHeader(value: string): string {
   return value.replace(/[\r\n]+/g, " ").trim();
 }
@@ -128,6 +137,7 @@ export function buildNovaEmailHtml({
  */
 export async function sendSmtpEmail({
   to,
+  cc,
   subject,
   text,
   html,
@@ -138,15 +148,26 @@ export async function sendSmtpEmail({
   const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
   const fromHeader = process.env.EMAIL_FROM || "Nova <nova@allskyfares.com>";
 
+  const toList = parseEmailList(to);
+  const ccList = parseEmailList(cc);
+  const allEnvelopeRecipients = Array.from(new Set([...toList, ...ccList]));
+
   if (!user || !pass) {
     if (process.env.NODE_ENV !== "production") {
-      console.info(`[Nova Dev Email fallback] To: ${to} | Subject: ${subject}\n${text}`);
+      console.info(
+        `[Nova Dev Email fallback] To: ${toList.join(", ")}${ccList.length ? ` | Cc: ${ccList.join(", ")}` : ""} | Subject: ${subject}\n${text}`
+      );
       return;
     }
     throw new Error("SMTP credentials are not configured");
   }
 
-  const cleanTo = sanitizeHeader(to);
+  if (allEnvelopeRecipients.length === 0) {
+    throw new Error("No valid recipient email address provided.");
+  }
+
+  const cleanTo = toList.join(", ");
+  const cleanCc = ccList.join(", ");
   const cleanSubject = sanitizeHeader(subject);
   const messageId = `<nova.${Date.now()}.${Math.random().toString(36).slice(2)}@allskyfares.com>`;
   const dateStr = new Date().toUTCString();
@@ -181,22 +202,25 @@ export async function sendSmtpEmail({
     ].join("\r\n");
   }
 
-  const fullMessage = [
+  const headerLines = [
     `From: ${fromHeader}`,
     `To: ${cleanTo}`,
+    ...(cleanCc ? [`Cc: ${cleanCc}`] : []),
     `Subject: ${cleanSubject}`,
     `Date: ${dateStr}`,
     `Message-ID: ${messageId}`,
     "MIME-Version: 1.0",
     mimeBody,
     ".",
-  ].join("\r\n");
+  ];
+  const fullMessage = headerLines.join("\r\n");
 
   return new Promise((resolve, reject) => {
     let resolved = false;
     const socket = tls.connect(port, host, { minVersion: "TLSv1.2" }, () => {});
 
     let step = 0;
+    let recipientIndex = 0;
     const userB64 = Buffer.from(user).toString("base64");
     const passB64 = Buffer.from(pass).toString("base64");
 
@@ -244,10 +268,16 @@ export async function sendSmtpEmail({
         socket.write(`MAIL FROM:<${user}>\r\n`);
       } else if (msg.startsWith("250") && step === 6) {
         step = 7;
-        socket.write(`RCPT TO:<${cleanTo}>\r\n`);
+        recipientIndex = 0;
+        socket.write(`RCPT TO:<${allEnvelopeRecipients[0]}>\r\n`);
       } else if (msg.startsWith("250") && step === 7) {
-        step = 8;
-        socket.write("DATA\r\n");
+        recipientIndex++;
+        if (recipientIndex < allEnvelopeRecipients.length) {
+          socket.write(`RCPT TO:<${allEnvelopeRecipients[recipientIndex]}>\r\n`);
+        } else {
+          step = 8;
+          socket.write("DATA\r\n");
+        }
       } else if (msg.startsWith("354") && step === 8) {
         step = 9;
         socket.write(`${fullMessage}\r\n`);

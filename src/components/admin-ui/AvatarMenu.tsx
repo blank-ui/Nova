@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Camera, Upload, Trash2, Loader2, X, AlertTriangle } from "lucide-react";
 import { AvatarCropModal } from "./AvatarCropModal";
 import { useToast } from "@/components/toast";
@@ -26,6 +27,8 @@ export function AvatarMenu({
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Close menu on click outside or escape
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -228,7 +231,7 @@ export function AvatarMenu({
       </div>
 
       {/* Confirmation Modal for Removing Photo */}
-      {confirmRemoveOpen && (
+      {confirmRemoveOpen && mounted && createPortal(
         <div
           style={{
             position: "fixed",
@@ -319,7 +322,8 @@ export function AvatarMenu({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Crop Modal */}

@@ -1,7 +1,8 @@
 import { sendSmtpEmail, buildNovaEmailHtml } from "./auth-email";
 
 export interface SendInvoiceEmailParams {
-  to: string;
+  to: string | string[];
+  cc?: string | string[];
   clientName: string;
   projectName: string;
   invoiceNumber: string;
@@ -14,6 +15,7 @@ export interface SendInvoiceEmailParams {
 
 export async function sendInvoiceEmail({
   to,
+  cc,
   clientName,
   projectName,
   invoiceNumber,
@@ -62,6 +64,7 @@ export async function sendInvoiceEmail({
   try {
     await sendSmtpEmail({
       to,
+      cc,
       subject,
       text: bodyParagraphs,
       html: emailHtml,

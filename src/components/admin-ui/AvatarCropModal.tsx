@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, ZoomIn, ZoomOut, Move, X, Check } from "lucide-react";
 import { useToast } from "@/components/toast";
 
@@ -25,6 +26,8 @@ export function AvatarCropModal({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -197,7 +200,8 @@ export function AvatarCropModal({
     }
   }
 
-  return (
+  if (!mounted) return null;
+  return createPortal(
     <div
       style={{
         position: "fixed",
@@ -411,6 +415,7 @@ export function AvatarCropModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
