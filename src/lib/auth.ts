@@ -313,9 +313,7 @@ export const auth = betterAuth({
       },
     },
   },
-  onAPIError: {
-    errorURL: `${appUrl}/admin/security`,
-  },
+  
   plugins: [
     admin({ defaultRole: "CLIENT", adminRoles: ["ADMIN"] }),
     twoFactor({ issuer: process.env.ADMIN_MFA_ISSUER ?? "Nova", skipVerificationOnEnable: false, accountLockout: { enabled: true, maxFailedAttempts: 5, durationSeconds: 900 }, schema: { twoFactor: { modelName: "AuthTwoFactor" } } }),

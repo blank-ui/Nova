@@ -39,9 +39,9 @@ const nextConfig: NextConfig = {
               process.env.NODE_ENV === "development"
                 ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
                 : "script-src 'self' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https:",
-              "font-src 'self' data:",
+              "font-src 'self' data: https://fonts.gstatic.com",
               "connect-src 'self' https://accounts.google.com https://api.resend.com https://discord.com",
               "frame-src 'self' https://accounts.google.com",
               "frame-ancestors 'none'",
