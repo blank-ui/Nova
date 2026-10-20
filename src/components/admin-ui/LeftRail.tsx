@@ -82,49 +82,10 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       icon: <MessagesSquare size={18} strokeWidth={1.8} />,
     },
     {
-      id: "quick-create",
-      label: "Provision Workspace Project (+)",
-      isAction: true,
-      onClick: () => {
-        router.push("/portal/scope");
-      },
-      icon: <Plus size={18} strokeWidth={1.8} />,
-    },
-    {
-      id: "appointments",
-      label: "Appointments & Schedule",
-      href: "/admin/appointments",
-      icon: <Calendar size={18} strokeWidth={1.8} />,
-    },
-    {
       id: "users",
       label: "Users & Accounts",
       href: "/admin/users",
       icon: <Users size={18} strokeWidth={1.8} />,
-    },
-    {
-      id: "showcase",
-      label: "GitHub & Gallery Showcase",
-      href: "/admin/showcase",
-      icon: <ImageIcon size={18} strokeWidth={1.8} />,
-    },
-    {
-      id: "security",
-      label: "Security & MFA Governance",
-      href: "/admin/security",
-      icon: <Shield size={18} strokeWidth={1.8} />,
-    },
-    {
-      id: "finance",
-      label: "Finance & Operations",
-      href: "/finance",
-      icon: <DollarSign size={18} strokeWidth={1.8} />,
-    },
-    {
-      id: "developer",
-      label: "Developer Console",
-      href: "/developer",
-      icon: <Terminal size={18} strokeWidth={1.8} />,
     },
     {
       id: "portal",
@@ -309,14 +270,14 @@ export function LeftRail({ user }: LeftRailProps = {}) {
         aria-label="Quick Navigation"
         className="left-rail-container"
         style={{
-          width: 58,
+          width: 56,
           background: "var(--left-rail-bg)",
           borderRadius: 999,
-          padding: "16px 7px",
+          padding: "14px 6px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 12,
+          gap: 8,
           boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
           flexShrink: 0,
         }}
