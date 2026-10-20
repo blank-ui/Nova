@@ -7,14 +7,19 @@ import { recordUserLogin } from "@/lib/geo-ip";
 
 const defaultAppUrl = "https://nova.allskyfares.com";
 const rawAppUrl = process.env.APP_URL || process.env.BETTER_AUTH_URL;
-const appUrl =
+let cleanAppUrl =
   rawAppUrl &&
   !rawAppUrl.includes("0.0.0.0") &&
   (process.env.NODE_ENV === "production" ? !rawAppUrl.includes("localhost") && !rawAppUrl.includes("127.0.0.1") : true)
-    ? rawAppUrl
+    ? rawAppUrl.replace(/\/+$/, "")
     : process.env.NODE_ENV === "production"
       ? defaultAppUrl
       : "http://localhost:3000";
+
+if (process.env.NODE_ENV === "production" && !cleanAppUrl.includes("localhost") && !cleanAppUrl.includes("127.0.0.1") && cleanAppUrl.startsWith("http://")) {
+  cleanAppUrl = cleanAppUrl.replace("http://", "https://");
+}
+const appUrl = cleanAppUrl;
 
 const isProd = process.env.NODE_ENV === "production";
 const secret = process.env.AUTH_SECRET || (!isProd ? "rljd-lQGEUNMH93ERQ9mJz9uWd0y9HWUsBgsfeRUuMs" : "");
@@ -32,10 +37,27 @@ export const auth = betterAuth({
   appName: "Nova",
   baseURL: appUrl,
   secret,
-  trustedOrigins: Array.from(new Set([defaultAppUrl, appUrl, "http://localhost:3000", "http://127.0.0.1:3000"])),
+  trustedOrigins: Array.from(
+    new Set([
+      defaultAppUrl,
+      "https://nova.allskyfares.com",
+      "https://www.nova.allskyfares.com",
+      "http://nova.allskyfares.com",
+      "http://www.nova.allskyfares.com",
+      appUrl,
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ])
+  ),
   database: prismaAdapter(prisma, { provider: "mysql" }),
   rateLimit: { enabled: true, storage: "database", window: 60, max: 60, modelName: "AuthRateLimit" },
   advanced: {
+    useSecureCookies: isProd,
+    defaultCookieAttributes: {
+      sameSite: "lax",
+      secure: isProd,
+      httpOnly: true,
+    },
     ipAddress: {
       ipAddressHeaders: ["x-forwarded-for", "x-real-ip", "cf-connecting-ip"],
       trustedProxies: ["127.0.0.1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],

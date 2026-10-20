@@ -459,3 +459,56 @@
     transform: none !important;
   }
 }
+
+
+/* ==========================================================================
+   LEGAL PAGES & COOKIE INVENTORY RESPONSIVENESS
+   ========================================================================== */
+
+.nova-legal-container {
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.nova-legal-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.nova-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nova-cookie-cards {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.nova-cookie-table-view {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .nova-cookie-table-view {
+    display: none;
+  }
+  .nova-cookie-cards {
+    display: flex;
+  }
+}

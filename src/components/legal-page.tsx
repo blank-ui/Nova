@@ -93,15 +93,15 @@ export default function LegalPage({
 
   return (
     <PublicPage eyebrow={`Nova · ${translatedKind}`} title={translatedTitle} subtitle={translatedSubtitle}>
-      <div style={{ maxWidth: 840, margin: "0 auto" }}>
+      <div className="nova-legal-container">
         <p className="eyebrow" style={{ color: "var(--muted)" }}>
           {t("legal.last_updated", "Operated by All Sky Fares LLC · Last updated: October 2026")}
         </p>
 
         <div
-          className="card"
+          className="card nova-legal-card"
           style={{
-            padding: "20px 24px",
+            padding: "clamp(16px, 4vw, 20px) clamp(16px, 4vw, 24px)",
             background: "rgba(255, 181, 71, 0.08)",
             border: "1px solid rgba(255, 181, 71, 0.25)",
             borderRadius: 16,
@@ -112,10 +112,11 @@ export default function LegalPage({
             display: "flex",
             alignItems: "flex-start",
             gap: 12,
+            boxSizing: "border-box",
           }}
         >
           <Info size={18} style={{ color: "#f59e0b", flexShrink: 0, marginTop: 2 }} />
-          <div>
+          <div style={{ minWidth: 0 }}>
             <strong>{t("legal.notice_label", "Notice:")}</strong>{" "}
             {t(
               "legal.notice_body",
@@ -124,7 +125,7 @@ export default function LegalPage({
           </div>
         </div>
 
-        <div style={{ display: "grid", gap: 32 }}>
+        <div style={{ display: "grid", gap: 32, width: "100%", minWidth: 0 }}>
           {sections.map((s) => {
             const mappedKey = SECTION_KEY_MAP[s.title];
             const sectionHeading = mappedKey ? t(mappedKey, s.title) : s.title;
@@ -132,12 +133,13 @@ export default function LegalPage({
             return (
               <section
                 key={s.title}
-                className="card"
+                className="card nova-legal-card"
                 style={{
                   padding: "clamp(18px, 4vw, 28px) clamp(16px, 4vw, 32px)",
                   borderRadius: 18,
                   background: "var(--paper)",
                   border: "1px solid var(--line)",
+                  boxSizing: "border-box",
                 }}
               >
                 <h2
@@ -147,6 +149,7 @@ export default function LegalPage({
                     color: "var(--ink)",
                     fontWeight: 700,
                     margin: "0 0 14px",
+                    wordBreak: "break-word",
                   }}
                 >
                   {sectionHeading}
@@ -156,6 +159,9 @@ export default function LegalPage({
                     fontSize: 14,
                     lineHeight: 1.85,
                     color: "var(--muted)",
+                    minWidth: 0,
+                    maxWidth: "100%",
+                    overflowWrap: "anywhere",
                   }}
                 >
                   {s.body}

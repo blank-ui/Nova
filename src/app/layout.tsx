@@ -19,6 +19,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script
           dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(location.protocol==='http:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1'&&!location.hostname.startsWith('192.168.')&&!location.hostname.startsWith('10.')){location.replace('https://'+location.host+location.pathname+location.search+location.hash);}}catch(e){}})();`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("nova-theme-preference");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var r=(t==="dark"||(!t&&d)||(t==="system"&&d))?"dark":"light";document.documentElement.setAttribute("data-theme",r);if(r==="dark"){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();`,
           }}
         />
@@ -35,5 +40,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
-
-

@@ -6,7 +6,15 @@ import { safeInternalPath, getAppBaseUrl } from "@/lib/safe-redirect";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const baseUrl = getAppBaseUrl(request);
+  const rawBase = getAppBaseUrl(request);
+  const baseUrl =
+    process.env.NODE_ENV === "production" &&
+    !rawBase.includes("localhost") &&
+    !rawBase.includes("127.0.0.1") &&
+    rawBase.startsWith("http://")
+      ? rawBase.replace("http://", "https://")
+      : rawBase;
+
   const url = new URL(request.url);
   const reqHeaders = await headers();
   const session =

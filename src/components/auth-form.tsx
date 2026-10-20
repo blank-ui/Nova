@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -18,12 +18,31 @@ export function AuthForm({ mode, googleAvailable, discordAvailable = false, call
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const target = safeInternalPath(callbackURL, "/portal");
-  const origin =
+  const rawOrigin =
     typeof window !== "undefined" && window.location.origin && !window.location.origin.includes("0.0.0.0")
       ? window.location.origin
       : "https://nova.allskyfares.com";
+  const isLocalOrigin =
+    rawOrigin.includes("localhost") ||
+    rawOrigin.includes("127.0.0.1") ||
+    rawOrigin.includes("192.168.") ||
+    rawOrigin.includes("10.");
+  const origin = !isLocalOrigin && rawOrigin.startsWith("http://")
+    ? rawOrigin.replace("http://", "https://")
+    : rawOrigin;
   const completeUrl = `${origin}/auth/continue?next=${encodeURIComponent(target)}`;
   const errorCallbackUrl = `${origin}/login?callbackURL=${encodeURIComponent(target)}`;
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.location.protocol === "http:" &&
+      !window.location.hostname.includes("localhost") &&
+      !window.location.hostname.includes("127.0.0.1")
+    ) {
+      window.location.replace(`https://${window.location.host}${window.location.pathname}${window.location.search}${window.location.hash}`);
+    }
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

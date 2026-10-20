@@ -18,17 +18,8 @@ export function getAppBaseUrl(request?: Request): string {
       resolvedHost?.startsWith("192.168.") ||
       resolvedHost?.startsWith("10.");
 
-    let proto = request.headers.get("x-forwarded-proto");
-    if (!proto) {
-      try {
-        proto = new URL(request.url).protocol.replace(":", "");
-      } catch {
-        proto = isLocal ? "http" : "https";
-      }
-    }
-    if (isLocal) {
-      proto = "http";
-    }
+    // Remote hosts in production must strictly use HTTPS so browsers send Secure session cookies
+    const proto = isLocal ? "http" : "https";
 
     if (
       resolvedHost &&
@@ -45,9 +36,12 @@ export function getAppBaseUrl(request?: Request): string {
     !raw.includes("0.0.0.0") &&
     (process.env.NODE_ENV === "production" ? !raw.includes("localhost") && !raw.includes("127.0.0.1") : true)
   ) {
-    return raw.replace(/\/+$/, "");
+    let clean = raw.replace(/\/+$/, "");
+    if (!clean.includes("localhost") && !clean.includes("127.0.0.1") && clean.startsWith("http://")) {
+      clean = clean.replace("http://", "https://");
+    }
+    return clean;
   }
 
   return process.env.NODE_ENV === "production" ? "https://nova.allskyfares.com" : "http://localhost:3000";
 }
-
