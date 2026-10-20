@@ -353,6 +353,7 @@ export function AdminInquiriesCRM({
               minWidth={740}
               onRowClick={(row) => setSelectedInquiryId(row.id)}
               onRowDoubleClick={(row) => router.push(`/admin/inquiry/${row.id}`)}
+              isRowSelected={(row) => row.id === selectedInquiryId}
               emptyState={
                 <EmptyState
                   icon={<MessageSquare size={24} />}

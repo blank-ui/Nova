@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   UserPlus,
   KeyRound,
@@ -77,6 +78,7 @@ export function AdminUsersManager({
   initialUsers: UserItem[];
   currentAdminId: string;
 }) {
+  const router = useRouter();
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
@@ -1084,6 +1086,8 @@ export function AdminUsersManager({
               keyExtractor={(u) => u.id}
               minWidth={720}
               onRowClick={(u) => setSelectedUserId(u.id)}
+              onRowDoubleClick={(u) => router.push(`/admin/users/${u.id}`)}
+              isRowSelected={(u) => u.id === selectedUserId}
               emptyState={
                 <EmptyState
                   icon={<UserIcon size={24} />}
