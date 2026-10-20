@@ -13,11 +13,20 @@ export default async function AdminUsersPage() {
       email: true,
       role: true,
       image: true,
+      phone: true,
+      dateOfBirth: true,
       emailVerified: true,
       twoFactorEnabled: true,
       banned: true,
       banReason: true,
       discordHandle: true,
+      invitationSentAt: true,
+      invitationSeenAt: true,
+      passwordCreatedAt: true,
+      lastLoginAt: true,
+      lastLoginIp: true,
+      lastLoginCity: true,
+      lastLoginCountry: true,
       createdAt: true,
       _count: {
         select: {
@@ -31,6 +40,10 @@ export default async function AdminUsersPage() {
   const serializedUsers = users.map((u) => ({
     ...u,
     createdAt: u.createdAt.toISOString(),
+    invitationSentAt: u.invitationSentAt ? u.invitationSentAt.toISOString() : null,
+    invitationSeenAt: u.invitationSeenAt ? u.invitationSeenAt.toISOString() : null,
+    passwordCreatedAt: u.passwordCreatedAt ? u.passwordCreatedAt.toISOString() : null,
+    lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toISOString() : null,
   }));
 
   return (

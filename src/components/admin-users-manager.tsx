@@ -24,6 +24,9 @@ import {
   Phone,
   Calendar,
   ArrowLeft,
+  MapPin,
+  Globe,
+  Eye,
 } from "lucide-react";
 import {
   PageHeader,
@@ -53,6 +56,13 @@ export interface UserItem {
   banned: boolean;
   banReason?: string | null;
   discordHandle?: string | null;
+  invitationSentAt?: string | null;
+  invitationSeenAt?: string | null;
+  passwordCreatedAt?: string | null;
+  lastLoginAt?: string | null;
+  lastLoginIp?: string | null;
+  lastLoginCity?: string | null;
+  lastLoginCountry?: string | null;
   createdAt: string;
   _count: {
     projects: number;
@@ -393,6 +403,29 @@ export function AdminUsersManager({
         ) : (
           <Badge variant="success">Active</Badge>
         ),
+    },
+    {
+      key: "onboarding",
+      header: "Onboarding State",
+      width: "140px",
+      render: (u: UserItem) => {
+        if (u.banned) return <Badge variant="warning">Suspended</Badge>;
+        if (u.lastLoginAt) return <Badge variant="success">Logged In</Badge>;
+        if (u.passwordCreatedAt) return <Badge variant="brand">Password Set</Badge>;
+        if (u.invitationSeenAt) return <Badge variant="info">Invite Opened</Badge>;
+        if (u.invitationSentAt) return <Badge variant="neutral">Invite Sent</Badge>;
+        return <Badge variant="neutral">Pending</Badge>;
+      },
+    },
+    {
+      key: "location",
+      header: "Last Location",
+      width: "140px",
+      render: (u: UserItem) => (
+        <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+          {u.lastLoginCity ? `${u.lastLoginCity}${u.lastLoginCountry ? `, ${u.lastLoginCountry}` : ""}` : "No sign-ins"}
+        </span>
+      ),
     },
     {
       key: "projects",
@@ -1161,6 +1194,33 @@ export function AdminUsersManager({
                         {selectedUser.banned ? "Suspended" : "Active"}
                       </Badge>
                     }
+                  />
+
+                  <DetailRow
+                    icon={<Globe size={16} strokeWidth={1.8} />}
+                    label="Onboarding Progress"
+                    value={
+                      selectedUser.lastLoginAt
+                        ? "Active (Logged In)"
+                        : selectedUser.passwordCreatedAt
+                        ? "Password Configured"
+                        : selectedUser.invitationSeenAt
+                        ? "Invitation Opened"
+                        : selectedUser.invitationSentAt
+                        ? "Invitation Dispatched"
+                        : "Pending Invitation"
+                    }
+                    action={
+                      <Badge variant={selectedUser.lastLoginAt ? "success" : selectedUser.passwordCreatedAt ? "brand" : selectedUser.invitationSeenAt ? "info" : "neutral"}>
+                        {selectedUser.lastLoginAt ? "Logged In" : selectedUser.passwordCreatedAt ? "Password Set" : selectedUser.invitationSeenAt ? "Invite Seen" : "Pending"}
+                      </Badge>
+                    }
+                  />
+
+                  <DetailRow
+                    icon={<MapPin size={16} strokeWidth={1.8} />}
+                    label="Last Sign-in Location"
+                    value={selectedUser.lastLoginCity ? `${selectedUser.lastLoginCity}${selectedUser.lastLoginCountry ? `, ${selectedUser.lastLoginCountry}` : ""} (${selectedUser.lastLoginIp || "IP unknown"})` : "No recorded sign-ins"}
                   />
 
                   {/* Quick Action Button for Selected User */}

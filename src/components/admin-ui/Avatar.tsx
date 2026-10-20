@@ -25,10 +25,12 @@ export function Avatar({
   onAvatarChanged,
 }: AvatarProps) {
   const [currentSrc, setCurrentSrc] = useState<string | null>(src || null);
+  const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     setCurrentSrc(src || null);
+    setImageError(false);
   }, [src]);
 
   // Listen to cross-component live avatar update events
@@ -38,6 +40,7 @@ export function Avatar({
       if (!customEvent.detail) return;
       if (!userId || customEvent.detail.userId === userId) {
         setCurrentSrc(customEvent.detail.avatarUrl);
+        setImageError(false);
         onAvatarChanged?.(customEvent.detail.avatarUrl);
       }
     }
@@ -57,6 +60,7 @@ export function Avatar({
   const fontSize = size === "sm" ? 13 : size === "md" ? 17 : 42;
 
   const showCamera = cameraButton || (editable && size === "lg");
+  const hasValidImage = Boolean(currentSrc && !imageError);
 
   return (
     <div
@@ -74,10 +78,11 @@ export function Avatar({
         display: "inline-block",
       }}
     >
-      {currentSrc ? (
+      {hasValidImage ? (
         <img
-          src={currentSrc}
+          src={currentSrc!}
           alt={`${name || "User"}'s profile photo`}
+          onError={() => setImageError(true)}
           style={{
             width: "100%",
             height: "100%",
@@ -129,6 +134,7 @@ export function Avatar({
               userName={name || "User"}
               onAvatarChanged={(newUrl) => {
                 setCurrentSrc(newUrl);
+                setImageError(false);
                 onAvatarChanged?.(newUrl);
               }}
             />

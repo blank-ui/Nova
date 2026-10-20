@@ -30,6 +30,7 @@ export function buildNovaEmailHtml({
   actionText,
   actionUrl,
   subtext,
+  trackingPixelUrl,
 }: {
   subject: string;
   heading: string;
@@ -37,6 +38,7 @@ export function buildNovaEmailHtml({
   actionText?: string;
   actionUrl?: string;
   subtext?: string;
+  trackingPixelUrl?: string;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -112,6 +114,11 @@ export function buildNovaEmailHtml({
       </td>
     </tr>
   </table>
+  ${
+    trackingPixelUrl
+      ? `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none;width:1px;height:1px;border:0;" />`
+      : ""
+  }
 </body>
 </html>`;
 }
@@ -302,16 +309,19 @@ export async function sendAuthEmail({ to, subject, url }: AuthEmailInput) {
 }
 
 /**
- * Send an initiation email to a newly created user with their setup/password-creation link
+ * Send an initiation email to a newly created user with their setup/password-creation link.
+ * Automatically embeds an invisible tracking pixel to record when the user views the invitation.
  */
 export async function sendAccountInitiationEmail({
   to,
   name,
   setupUrl,
+  userId,
 }: {
   to: string;
   name: string;
   setupUrl: string;
+  userId?: string;
 }) {
   const subject = "Welcome to Nova — Create your profile & access your workspace";
   const heading = `Welcome to Nova, ${name || "there"}`;
@@ -321,6 +331,20 @@ export async function sendAccountInitiationEmail({
   const subtext =
     "This invitation link is intended for you. For security, do not forward this email. If you were not expecting this, please contact support.";
 
+  // Extract token from setupUrl for the tracking pixel
+  let trackingPixelUrl: string | undefined;
+  try {
+    const urlObj = new URL(setupUrl);
+    const token = urlObj.searchParams.get("token");
+    if (token || userId) {
+      const baseOrigin = urlObj.origin;
+      const params = new URLSearchParams();
+      if (token) params.set("token", token);
+      if (userId) params.set("uid", userId);
+      trackingPixelUrl = `${baseOrigin}/api/auth/email-track?${params.toString()}`;
+    }
+  } catch {}
+
   const html = buildNovaEmailHtml({
     subject,
     heading,
@@ -328,6 +352,7 @@ export async function sendAccountInitiationEmail({
     actionText,
     actionUrl: setupUrl,
     subtext,
+    trackingPixelUrl,
   });
 
   return sendSmtpEmail({

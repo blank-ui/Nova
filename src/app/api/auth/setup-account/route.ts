@@ -32,7 +32,8 @@ function detectImageType(buffer: Buffer): { ext: string; mime: string } | null {
 
 /**
  * GET /api/auth/setup-account?token=...
- * Inspects whether a setup/reset token is valid and returns initial user profile info
+ * Inspects whether a setup/reset token is valid and returns initial user profile info.
+ * Also marks invitationSeenAt if the user clicked the link from the invitation email.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -64,11 +65,20 @@ export async function GET(request: Request) {
         dateOfBirth: true,
         image: true,
         role: true,
+        invitationSeenAt: true,
       },
     });
 
     if (!user) {
       return NextResponse.json({ valid: false, error: "User not found." }, { status: 404 });
+    }
+
+    // Automatically record that the user saw/opened the activation invitation
+    if (!user.invitationSeenAt) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { invitationSeenAt: new Date() },
+      });
     }
 
     return NextResponse.json({
@@ -204,9 +214,10 @@ export async function POST(request: Request) {
     }
 
     const hashedPassword = await hashPassword(password);
+    const now = new Date();
 
     await prisma.$transaction([
-      // 1. Update user profile details
+      // 1. Update user profile details and mark passwordCreatedAt
       prisma.user.update({
         where: { id: user.id },
         data: {
@@ -214,8 +225,9 @@ export async function POST(request: Request) {
           phone: phone || user.phone,
           dateOfBirth: dateOfBirth || user.dateOfBirth,
           image: uploadedAvatarUrl || user.image,
+          passwordCreatedAt: now,
           emailVerified: true,
-          emailVerifiedAt: user.emailVerifiedAt || new Date(),
+          emailVerifiedAt: user.emailVerifiedAt || now,
           banned: false,
         },
       }),
@@ -230,7 +242,7 @@ export async function POST(request: Request) {
         },
         update: {
           password: hashedPassword,
-          updatedAt: new Date(),
+          updatedAt: now,
         },
         create: {
           accountId: user.id,

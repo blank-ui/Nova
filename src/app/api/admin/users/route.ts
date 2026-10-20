@@ -12,7 +12,7 @@ import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
  * GET /api/admin/users
- * Returns list of users with project counts, status, roles, and ban state
+ * Returns list of users with project counts, status, roles, onboarding state, and login locations
  */
 export async function GET(request: Request) {
   const session = await getCurrentSession();
@@ -52,6 +52,13 @@ export async function GET(request: Request) {
         banned: true,
         banReason: true,
         discordHandle: true,
+        invitationSentAt: true,
+        invitationSeenAt: true,
+        passwordCreatedAt: true,
+        lastLoginAt: true,
+        lastLoginIp: true,
+        lastLoginCity: true,
+        lastLoginCountry: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -125,6 +132,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A user with this email address already exists." }, { status: 409 });
     }
 
+    const now = new Date();
+
     // Create user in verified state so they can set password and sign in directly
     const user = await prisma.user.create({
       data: {
@@ -133,8 +142,9 @@ export async function POST(request: Request) {
         role,
         phone,
         dateOfBirth,
+        invitationSentAt: now,
         emailVerified: true,
-        emailVerifiedAt: new Date(),
+        emailVerifiedAt: now,
       },
     });
 
@@ -161,6 +171,7 @@ export async function POST(request: Request) {
         to: user.email,
         name: user.name,
         setupUrl,
+        userId: user.id,
       });
       emailSent = true;
     } catch (mailErr) {
@@ -195,6 +206,7 @@ export async function POST(request: Request) {
  * Actions:
  * - suspend: toggle ban status
  * - reset-password: send password setup/reset email link
+ * - update-contact: save name, phone, discordHandle, dateOfBirth
  */
 export async function PATCH(request: Request) {
   const session = await getCurrentSession();
@@ -302,6 +314,12 @@ export async function PATCH(request: Request) {
             to: user.email,
             name: user.name,
             setupUrl: resetUrl,
+            userId: user.id,
+          });
+          // Update invitationSentAt timestamp
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { invitationSentAt: new Date() },
           });
         } else {
           await sendAdminPasswordResetNotificationEmail({
@@ -332,6 +350,36 @@ export async function PATCH(request: Request) {
         message: isSetup
           ? "Account setup and profile activation link generated and dispatched to user email."
           : "Password reset link generated and dispatched to user email.",
+      });
+    }
+
+    // Action: update-contact or generic user details edit
+    if (action === "update-contact" || (!action && (body.name || body.phone !== undefined || body.discordHandle !== undefined))) {
+      const updateData: Record<string, any> = {};
+      if (typeof body.name === "string" && body.name.trim()) updateData.name = body.name.trim();
+      if (typeof body.phone === "string") updateData.phone = body.phone.trim() || null;
+      if (typeof body.discordHandle === "string") updateData.discordHandle = body.discordHandle.trim() || null;
+      if (typeof body.dateOfBirth === "string") updateData.dateOfBirth = body.dateOfBirth.trim() || null;
+
+      const updated = await prisma.user.update({
+        where: { id },
+        data: updateData,
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          actorId: session.user.id,
+          action: "UPDATE",
+          entityType: "User",
+          entityId: id,
+          metadata: { action: "CONTACT_DETAILS_UPDATED", fields: Object.keys(updateData) },
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        user: updated,
+        message: "Contact parameters updated successfully.",
       });
     }
 

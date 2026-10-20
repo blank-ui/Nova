@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin, twoFactor } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
 import { sendAuthEmail } from "@/lib/auth-email";
+import { recordUserLogin } from "@/lib/geo-ip";
 
 const defaultAppUrl = "https://nova.allskyfares.com";
 const rawAppUrl = process.env.APP_URL || process.env.BETTER_AUTH_URL;
@@ -238,6 +239,31 @@ export const auth = betterAuth({
               });
             } catch (err) {
               console.error("Failed to sync dateOfBirth on user creation:", err);
+            }
+          }
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (session, context) => {
+          if (session?.userId) {
+            try {
+              const reqHeaders = (context as any)?.headers;
+              const ip =
+                session.ipAddress ||
+                reqHeaders?.get?.("cf-connecting-ip") ||
+                reqHeaders?.get?.("x-forwarded-for") ||
+                reqHeaders?.get?.("x-real-ip");
+              const userAgent = session.userAgent || reqHeaders?.get?.("user-agent");
+              await recordUserLogin({
+                userId: session.userId,
+                ipAddress: ip,
+                userAgent,
+                headers: reqHeaders,
+              });
+            } catch (err) {
+              console.error("[Auth Hook] Failed to record login history:", err);
             }
           }
         },

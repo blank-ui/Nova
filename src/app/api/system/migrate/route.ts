@@ -21,6 +21,13 @@ const DDL_STATEMENTS = [
     \`banned\` BOOLEAN NOT NULL DEFAULT false,
     \`banReason\` VARCHAR(191) NULL,
     \`banExpires\` DATETIME(3) NULL,
+    \`invitationSentAt\` DATETIME(3) NULL,
+    \`invitationSeenAt\` DATETIME(3) NULL,
+    \`passwordCreatedAt\` DATETIME(3) NULL,
+    \`lastLoginAt\` DATETIME(3) NULL,
+    \`lastLoginIp\` VARCHAR(191) NULL,
+    \`lastLoginCity\` VARCHAR(191) NULL,
+    \`lastLoginCountry\` VARCHAR(191) NULL,
     \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     \`updatedAt\` DATETIME(3) NOT NULL,
     UNIQUE INDEX \`User_email_key\`(\`email\`),
@@ -326,6 +333,35 @@ const DDL_STATEMENTS = [
     UNIQUE INDEX \`ProjectMember_projectId_userId_key\`(\`projectId\`, \`userId\`),
     PRIMARY KEY (\`id\`)
   ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 24. UserLoginHistory
+  `CREATE TABLE IF NOT EXISTS \`UserLoginHistory\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`userId\` VARCHAR(191) NOT NULL,
+    \`ipAddress\` VARCHAR(191) NOT NULL,
+    \`city\` VARCHAR(191) NULL,
+    \`country\` VARCHAR(191) NULL,
+    \`countryCode\` VARCHAR(191) NULL,
+    \`userAgent\` TEXT NULL,
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    INDEX \`UserLoginHistory_userId_createdAt_idx\`(\`userId\`, \`createdAt\`),
+    INDEX \`UserLoginHistory_countryCode_idx\`(\`countryCode\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+  // 25. ClientNote
+  `CREATE TABLE IF NOT EXISTS \`ClientNote\` (
+    \`id\` VARCHAR(191) NOT NULL,
+    \`clientId\` VARCHAR(191) NOT NULL,
+    \`authorId\` VARCHAR(191) NOT NULL,
+    \`targetDate\` VARCHAR(191) NOT NULL,
+    \`note\` TEXT NOT NULL,
+    \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    INDEX \`ClientNote_clientId_targetDate_idx\`(\`clientId\`, \`targetDate\`),
+    INDEX \`ClientNote_authorId_idx\`(\`authorId\`),
+    PRIMARY KEY (\`id\`)
+  ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
 ];
 
 const FOREIGN_KEYS = [
@@ -355,6 +391,15 @@ const COLUMN_MIGRATIONS = [
   "ALTER TABLE `User` ADD COLUMN `emailVerifiedAt` DATETIME(3) NULL",
   "ALTER TABLE `User` ADD COLUMN `passwordHash` VARCHAR(191) NULL",
   "ALTER TABLE `User` ADD COLUMN `role` VARCHAR(191) NOT NULL DEFAULT 'CLIENT'",
+
+  // User Onboarding & Geolocation tracking columns
+  "ALTER TABLE `User` ADD COLUMN `invitationSentAt` DATETIME(3) NULL",
+  "ALTER TABLE `User` ADD COLUMN `invitationSeenAt` DATETIME(3) NULL",
+  "ALTER TABLE `User` ADD COLUMN `passwordCreatedAt` DATETIME(3) NULL",
+  "ALTER TABLE `User` ADD COLUMN `lastLoginAt` DATETIME(3) NULL",
+  "ALTER TABLE `User` ADD COLUMN `lastLoginIp` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `lastLoginCity` VARCHAR(191) NULL",
+  "ALTER TABLE `User` ADD COLUMN `lastLoginCountry` VARCHAR(191) NULL",
 
   // Inquiry columns
   "ALTER TABLE `Inquiry` ADD COLUMN `phone` VARCHAR(191) NULL",
@@ -472,7 +517,7 @@ export async function GET(req: Request) {
       });
     } catch {}
 
-    // 4. Ensure admin user kbipul792@gmail.com exists with password Bipul@1008
+    // 5. Ensure admin user kbipul792@gmail.com exists with password Bipul@1008
     const adminEmail = "kbipul792@gmail.com";
     const adminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || "Bipul@1008";
     const hashedPassword = await hashPassword(adminPassword);
@@ -531,7 +576,7 @@ export async function GET(req: Request) {
       });
     }
 
-    // 5. Ensure default Studio Channels exist
+    // 6. Ensure default Studio Channels exist
     try {
       await prisma.$executeRawUnsafe(`
         INSERT IGNORE INTO StudioChannel (id, slug, name, description, icon) VALUES
@@ -541,7 +586,7 @@ export async function GET(req: Request) {
       `);
     } catch {}
 
-    // 6. Ensure initial welcome message in general channel
+    // 7. Ensure initial welcome message in general channel
     try {
       const msgCount = await prisma.teamMessage.count({
         where: { channel: "general" },

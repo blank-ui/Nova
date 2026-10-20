@@ -11,7 +11,7 @@ export default async function AdminUserProfilePage({ params }: AdminUserProfileP
   const session = await requireAdmin();
   const { id } = await params;
 
-  // Query user with their projects, milestones, tasks, and recent sessions
+  // Query user with projects, login history, and notes
   const user = await prisma.user.findUnique({
     where: { id },
     include: {
@@ -21,6 +21,18 @@ export default async function AdminUserProfilePage({ params }: AdminUserProfileP
           tasks: true,
         },
         orderBy: { updatedAt: "desc" },
+      },
+      loginHistories: {
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      },
+      clientNotesReceived: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          author: {
+            select: { id: true, name: true, image: true, role: true },
+          },
+        },
       },
     },
   });
@@ -41,6 +53,10 @@ export default async function AdminUserProfilePage({ params }: AdminUserProfileP
   const serializedUser = {
     ...user,
     createdAt: user.createdAt.toISOString(),
+    invitationSentAt: user.invitationSentAt ? user.invitationSentAt.toISOString() : null,
+    invitationSeenAt: user.invitationSeenAt ? user.invitationSeenAt.toISOString() : null,
+    passwordCreatedAt: user.passwordCreatedAt ? user.passwordCreatedAt.toISOString() : null,
+    lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
     projects: user.projects.map((p) => ({
       ...p,
       createdAt: p.createdAt.toISOString(),
@@ -55,6 +71,15 @@ export default async function AdminUserProfilePage({ params }: AdminUserProfileP
         dueAt: t.dueAt ? t.dueAt.toISOString() : null,
         completedAt: t.completedAt ? t.completedAt.toISOString() : null,
       })),
+    })),
+    loginHistories: user.loginHistories.map((h) => ({
+      ...h,
+      createdAt: h.createdAt.toISOString(),
+    })),
+    clientNotesReceived: user.clientNotesReceived.map((n) => ({
+      ...n,
+      createdAt: n.createdAt.toISOString(),
+      updatedAt: n.updatedAt.toISOString(),
     })),
   };
 

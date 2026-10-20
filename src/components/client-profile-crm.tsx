@@ -29,6 +29,11 @@ import {
   Layers,
   FileText,
   Loader2,
+  MapPin,
+  Globe,
+  Eye,
+  LogIn,
+  Laptop,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { Avatar, SectionCard, Badge } from "@/components/admin-ui";
@@ -39,22 +44,52 @@ export interface ClientProfileData {
   name: string;
   email: string;
   role: string;
+  phone?: string | null;
+  dateOfBirth?: string | null;
   emailVerified: boolean;
   twoFactorEnabled: boolean;
   banned: boolean;
   banReason?: string | null;
   discordHandle?: string | null;
   image?: string | null;
-  createdAt: string;
+  invitationSentAt?: string | Date | null;
+  invitationSeenAt?: string | Date | null;
+  passwordCreatedAt?: string | Date | null;
+  lastLoginAt?: string | Date | null;
+  lastLoginIp?: string | null;
+  lastLoginCity?: string | null;
+  lastLoginCountry?: string | null;
+  createdAt: string | Date;
   projects: Array<{
     id: string;
     name: string;
     description?: string | null;
     status: string;
-    createdAt: string;
-    updatedAt: string;
-    milestones: Array<{ id: string; title: string; dueAt?: string | null; completedAt?: string | null }>;
-    tasks: Array<{ id: string; title: string; dueAt?: string | null; completedAt?: string | null }>;
+    createdAt: string | Date;
+    updatedAt: string | Date;
+    milestones: Array<{ id: string; title: string; dueAt?: string | Date | null; completedAt?: string | Date | null }>;
+    tasks: Array<{ id: string; title: string; dueAt?: string | Date | null; completedAt?: string | Date | null }>;
+  }>;
+  loginHistories?: Array<{
+    id: string;
+    ipAddress: string;
+    city?: string | null;
+    country?: string | null;
+    countryCode?: string | null;
+    userAgent?: string | null;
+    createdAt: string | Date;
+  }>;
+  clientNotesReceived?: Array<{
+    id: string;
+    targetDate: string;
+    note: string;
+    createdAt: string | Date;
+    author?: {
+      id: string;
+      name: string;
+      image?: string | null;
+      role: string;
+    };
   }>;
 }
 
@@ -118,6 +153,12 @@ export function ClientProfileCRM({
   const [editContactModal, setEditContactModal] = useState(false);
   const [createProjectModal, setCreateProjectModal] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState<ClientProfileData>(user);
+  const [editName, setEditName] = useState(user.name);
+  const [editPhone, setEditPhone] = useState(user.phone || inquiries[0]?.phone || "");
+  const [editDiscord, setEditDiscord] = useState(user.discordHandle || "");
+  const [isSavingContact, setIsSavingContact] = useState(false);
+
   // Form states for creating real project
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
@@ -125,9 +166,24 @@ export function ClientProfileCRM({
   const [localProjects, setLocalProjects] = useState(user.projects || []);
 
   // Day notes & appointments on calendar
-  const [dayNotes, setDayNotes] = useState<Record<number, string[]>>({
-    9: ["Initial client project inquiry submitted"],
-    18: ["System onboarding & workspace setup"],
+  const [dayNotes, setDayNotes] = useState<Record<number, string[]>>(() => {
+    const initialNotes: Record<number, string[]> = {
+      9: ["Initial client project inquiry submitted"],
+      18: ["System onboarding & workspace setup"],
+    };
+    if (user.clientNotesReceived && Array.isArray(user.clientNotesReceived)) {
+      for (const n of user.clientNotesReceived) {
+        try {
+          const d = new Date(n.targetDate);
+          if (!isNaN(d.getTime())) {
+            const dayNum = d.getDate();
+            if (!initialNotes[dayNum]) initialNotes[dayNum] = [];
+            initialNotes[dayNum].push(n.note);
+          }
+        } catch {}
+      }
+    }
+    return initialNotes;
   });
   const [dayAppointments, setDayAppointments] = useState<Record<number, string[]>>({
     15: ["10:30 AM · Architecture Scoping Review"],
@@ -251,7 +307,7 @@ export function ClientProfileCRM({
     }
   }
 
-  function handleSaveCalendarNote(e: React.FormEvent) {
+  async function handleSaveCalendarNote(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedCalendarDay || !calendarNoteText.trim()) return;
 
@@ -263,13 +319,72 @@ export function ClientProfileCRM({
       return;
     }
 
-    setDayNotes((prev) => ({
-      ...prev,
-      [selectedCalendarDay]: [...(prev[selectedCalendarDay] || []), calendarNoteText.trim()],
-    }));
-    toast.success(`Note saved for ${currentMonthName} ${selectedCalendarDay}!`, "Note Added");
-    setCalendarNoteText("");
-    setCalendarActionModal(null);
+    const isoDateStr = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(selectedCalendarDay).padStart(2, "0")}`;
+
+    try {
+      const res = await fetch("/api/admin/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: user.id,
+          targetDate: isoDateStr,
+          note: calendarNoteText.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to persist note");
+      }
+
+      setDayNotes((prev) => ({
+        ...prev,
+        [selectedCalendarDay]: [...(prev[selectedCalendarDay] || []), calendarNoteText.trim()],
+      }));
+      toast.success(`Note saved for ${currentMonthName} ${selectedCalendarDay}!`, "Note Added");
+      setCalendarNoteText("");
+      setCalendarActionModal(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error saving note", "Failed");
+    }
+  }
+
+  async function handleSaveContact(e: React.FormEvent) {
+    e.preventDefault();
+    setIsSavingContact(true);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: user.id,
+          action: "update-contact",
+          name: editName,
+          phone: editPhone,
+          discordHandle: editDiscord,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save contact parameters.");
+      }
+
+      setCurrentUser((prev) => ({
+        ...prev,
+        name: editName,
+        phone: editPhone,
+        discordHandle: editDiscord,
+      }));
+
+      toast.success("Client parameters successfully saved & persisted.", "Saved");
+      setEditContactModal(false);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update client contact.", "Error");
+    } finally {
+      setIsSavingContact(false);
+    }
   }
 
   // Derive Client Name
@@ -560,11 +675,7 @@ export function ClientProfileCRM({
           </p>
 
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setEditContactModal(false);
-              toast.success("Client parameters updated.", "Saved");
-            }}
+            onSubmit={handleSaveContact}
             style={{ display: "grid", gap: 20 }}
           >
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
@@ -574,7 +685,9 @@ export function ClientProfileCRM({
                 </label>
                 <input
                   type="text"
-                  defaultValue={user.name}
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
                   style={{
                     width: "100%",
                     padding: "10px 14px",
@@ -617,8 +730,9 @@ export function ClientProfileCRM({
                 </label>
                 <input
                   type="text"
-                  defaultValue={phoneNumber}
-                  placeholder="Not provided"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="+1 (555) 000-0000"
                   style={{
                     width: "100%",
                     padding: "10px 14px",
@@ -639,7 +753,8 @@ export function ClientProfileCRM({
                 </label>
                 <input
                   type="text"
-                  defaultValue={user.discordHandle || ""}
+                  value={editDiscord}
+                  onChange={(e) => setEditDiscord(e.target.value)}
                   placeholder="username"
                   style={{
                     width: "100%",
@@ -675,6 +790,7 @@ export function ClientProfileCRM({
               </button>
               <button
                 type="submit"
+                disabled={isSavingContact}
                 style={{
                   padding: "10px 24px",
                   borderRadius: "var(--radius-pill)",
@@ -683,10 +799,15 @@ export function ClientProfileCRM({
                   color: "var(--ink-crm-text, #FFFFFF)",
                   fontWeight: 700,
                   fontSize: 13,
-                  cursor: "pointer",
+                  cursor: isSavingContact ? "not-allowed" : "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  opacity: isSavingContact ? 0.7 : 1,
                 }}
               >
-                Save Details
+                {isSavingContact && <Loader2 size={14} className="animate-spin" />}
+                {isSavingContact ? "Saving…" : "Save Details"}
               </button>
             </div>
           </form>
@@ -1736,6 +1857,271 @@ export function ClientProfileCRM({
               >
                 <span>Projects: <strong>{totalProjectsCount}</strong></span>
                 <span>Inquiries: <strong>{totalInquiriesCount}</strong></span>
+              </div>
+            </section>
+
+            {/* Card 4: User Onboarding Lifecycle & Geolocation History */}
+            <section
+              className="crm-card"
+              style={{
+                background: "var(--paper)",
+                border: "1px solid var(--line)",
+                borderRadius: 24,
+                padding: "clamp(18px, 3vw, 24px)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 12,
+                  marginBottom: 20,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      background: "rgba(108,76,255,0.12)",
+                      color: "#6C4CFF",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Globe size={18} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.03em", margin: 0, color: "var(--ink)" }}>
+                      Onboarding &amp; Geolocation History
+                    </h2>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)" }}>
+                      Verification lifecycle, password configuration state, and historical sign-in locations.
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={user.lastLoginAt ? "success" : user.passwordCreatedAt ? "brand" : user.invitationSeenAt ? "info" : "neutral"}>
+                  {user.lastLoginAt ? "Active Workspace Member" : user.passwordCreatedAt ? "Password Configured" : user.invitationSeenAt ? "Invitation Opened" : "Pending Activation"}
+                </Badge>
+              </div>
+
+              {/* 4-Step Onboarding Funnel Progress Bar */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                  gap: 10,
+                  marginBottom: 20,
+                }}
+              >
+                {/* Step 1: Initiation Sent */}
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 14,
+                    background: user.invitationSentAt ? "rgba(16,185,129,0.06)" : "var(--subtle-fill, rgba(0,0,0,0.03))",
+                    border: `1px solid ${user.invitationSentAt ? "rgba(16,185,129,0.3)" : "var(--line)"}`,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    {user.invitationSentAt ? <CheckCircle2 size={15} color="#059669" /> : <Clock size={15} color="var(--muted)" />}
+                    <span style={{ fontSize: 11, fontWeight: 700, color: user.invitationSentAt ? "#059669" : "var(--ink)" }}>
+                      1. Invite Sent
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.3 }}>
+                    {user.invitationSentAt ? new Date(user.invitationSentAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Not dispatched"}
+                  </div>
+                </div>
+
+                {/* Step 2: Email Viewed / Link Opened */}
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 14,
+                    background: user.invitationSeenAt ? "rgba(16,185,129,0.06)" : "var(--subtle-fill, rgba(0,0,0,0.03))",
+                    border: `1px solid ${user.invitationSeenAt ? "rgba(16,185,129,0.3)" : "var(--line)"}`,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    {user.invitationSeenAt ? <Eye size={15} color="#059669" /> : <Clock size={15} color="var(--muted)" />}
+                    <span style={{ fontSize: 11, fontWeight: 700, color: user.invitationSeenAt ? "#059669" : "var(--ink)" }}>
+                      2. Invite Opened
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.3 }}>
+                    {user.invitationSeenAt ? new Date(user.invitationSeenAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Not opened yet"}
+                  </div>
+                </div>
+
+                {/* Step 3: Password Created */}
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 14,
+                    background: user.passwordCreatedAt ? "rgba(16,185,129,0.06)" : "var(--subtle-fill, rgba(0,0,0,0.03))",
+                    border: `1px solid ${user.passwordCreatedAt ? "rgba(16,185,129,0.3)" : "var(--line)"}`,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    {user.passwordCreatedAt ? <KeyRound size={15} color="#059669" /> : <Clock size={15} color="var(--muted)" />}
+                    <span style={{ fontSize: 11, fontWeight: 700, color: user.passwordCreatedAt ? "#059669" : "var(--ink)" }}>
+                      3. Password Set
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.3 }}>
+                    {user.passwordCreatedAt ? new Date(user.passwordCreatedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Pending setup"}
+                  </div>
+                </div>
+
+                {/* Step 4: First Login / Access */}
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 14,
+                    background: user.lastLoginAt ? "rgba(108,76,255,0.08)" : "var(--subtle-fill, rgba(0,0,0,0.03))",
+                    border: `1px solid ${user.lastLoginAt ? "rgba(108,76,255,0.3)" : "var(--line)"}`,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    {user.lastLoginAt ? <LogIn size={15} color="#6C4CFF" /> : <Clock size={15} color="var(--muted)" />}
+                    <span style={{ fontSize: 11, fontWeight: 700, color: user.lastLoginAt ? "#6C4CFF" : "var(--ink)" }}>
+                      4. Workspace Login
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.3 }}>
+                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Never logged in"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Last Known Location Banner */}
+              <div
+                style={{
+                  padding: "16px 20px",
+                  borderRadius: 16,
+                  background: "var(--surface-raised, rgba(0,0,0,0.02))",
+                  border: "1px solid var(--line)",
+                  marginBottom: 20,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: "50%",
+                      background: "rgba(239,68,68,0.1)",
+                      color: "#DC2626",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Last Login Location
+                    </span>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "var(--ink)" }}>
+                      {user.lastLoginCity || "No recorded city"}
+                      {user.lastLoginCountry ? `, ${user.lastLoginCountry}` : ""}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
+                      IP: <code style={{ fontSize: 11, background: "rgba(0,0,0,0.04)", padding: "1px 6px", borderRadius: 4 }}>{user.lastLoginIp || "—"}</code>
+                      {user.lastLoginAt ? ` · ${new Date(user.lastLoginAt).toLocaleString()}` : ""}
+                    </div>
+                  </div>
+                </div>
+
+                {user.lastLoginAt && (
+                  <Badge variant="brand">Verified Sign-in</Badge>
+                )}
+              </div>
+
+              {/* All Login Locations Table / Card Stack */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
+                    All Recorded Sign-In Locations ({user.loginHistories?.length || 0})
+                  </h3>
+                </div>
+
+                {user.loginHistories && user.loginHistories.length > 0 ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 8,
+                      maxHeight: 280,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {user.loginHistories.map((log) => (
+                      <div
+                        key={log.id}
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 12,
+                          background: "var(--surface-raised, rgba(0,0,0,0.015))",
+                          border: "1px solid var(--line)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: 8,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <MapPin size={15} color="#6C4CFF" style={{ flexShrink: 0 }} />
+                          <div>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
+                              {log.city || "Unknown City"}, {log.country || "Unknown Country"}
+                            </span>
+                            <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
+                              IP: {log.ipAddress} {log.userAgent ? `· ${log.userAgent.slice(0, 45)}...` : ""}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", fontSize: 11, color: "var(--muted)", flexShrink: 0 }}>
+                          {new Date(log.createdAt).toLocaleString([], {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: 24,
+                      textAlign: "center",
+                      borderRadius: 14,
+                      background: "var(--subtle-fill, rgba(0,0,0,0.02))",
+                      border: "1px dashed var(--line)",
+                      fontSize: 12,
+                      color: "var(--muted)",
+                    }}
+                  >
+                    No sign-in locations logged yet for this account.
+                  </div>
+                )}
               </div>
             </section>
           </div>

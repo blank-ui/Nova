@@ -259,6 +259,34 @@ export function UserProfileSecurity({
   // Sessions state
   const [sessionsBusy, setSessionsBusy] = useState(false);
   const [sessionsMessage, setSessionsMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [activeSessionsList, setActiveSessionsList] = useState<Array<{
+    id: string;
+    token: string;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    createdAt: Date | string;
+    expiresAt: Date | string;
+  }>>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "sessions") {
+      setSessionsLoading(true);
+      authClient
+        .listSessions()
+        .then((res) => {
+          if (res?.data && Array.isArray(res.data)) {
+            setActiveSessionsList(res.data as any);
+          }
+        })
+        .catch((err) => {
+          console.warn("[Security] Could not list sessions:", err);
+        })
+        .finally(() => {
+          setSessionsLoading(false);
+        });
+    }
+  }, [activeTab]);
 
   // 1. Profile Update
   async function handleSendPhoneOtp() {
@@ -594,6 +622,11 @@ export function UserProfileSecurity({
       const successText = "All other active sessions have been signed out.";
       setSessionsMessage({ type: "success", text: successText });
       toast.success(successText, "Sessions Revoked");
+      authClient.listSessions().then((res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          setActiveSessionsList(res.data as any);
+        }
+      }).catch(() => {});
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Revocation failed.";
       setSessionsMessage({ type: "error", text: msg });
@@ -1752,6 +1785,73 @@ export function UserProfileSecurity({
                 </div>
               </div>
             )}
+
+            {/* Real Active Sessions List */}
+            {sessionsLoading ? (
+              <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Checking active sessions…</span>
+              </div>
+            ) : activeSessionsList.length > 0 ? (
+              <div style={{ marginTop: 8 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 700, margin: "0 0 10px", color: "var(--ink)" }}>
+                  Recognized Devices ({activeSessionsList.length})
+                </h4>
+                <div style={{ display: "grid", gap: 10 }}>
+                  {activeSessionsList.map((s, idx) => (
+                    <div
+                      key={s.id || idx}
+                      style={{
+                        padding: "14px 18px",
+                        borderRadius: 12,
+                        background: "var(--paper)",
+                        border: "1px solid var(--line)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            background: "rgba(108,76,255,0.08)",
+                            color: "#6C4CFF",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Laptop size={18} />
+                        </div>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 13, fontWeight: 700 }}>
+                              {s.userAgent ? (s.userAgent.includes("Mobile") ? "Mobile Device" : "Desktop Browser") : "Active Device"}
+                            </span>
+                            {idx === 0 && (
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(16,185,129,0.12)", color: "#059669" }}>
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: 11, color: "var(--muted)", margin: "2px 0 0" }}>
+                            IP: {s.ipAddress || "Internal / Local"} · Started {new Date(s.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                          </p>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                        Expires {new Date(s.expiresAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {sessionsMessage && (
               <div
