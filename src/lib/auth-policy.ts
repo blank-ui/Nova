@@ -16,5 +16,6 @@ export function canOpenFinance(role: string | null | undefined) {
 }
 
 export function canOpenClientResource(role: string | null | undefined, sessionUserId: string | undefined, ownerId: string | undefined) {
+  if (role === "ADMIN") return true;
   return role === "CLIENT" && Boolean(sessionUserId) && sessionUserId === ownerId;
 }

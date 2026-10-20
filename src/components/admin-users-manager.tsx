@@ -28,6 +28,8 @@ import {
   MapPin,
   Globe,
   Eye,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   PageHeader,
@@ -100,6 +102,21 @@ export function AdminUsersManager({
   const [newDob, setNewDob] = useState("");
   const [newRole, setNewRole] = useState<"CLIENT" | "ADMIN" | "DEVELOPER" | "FINANCE">("CLIENT");
   const [createdResult, setCreatedResult] = useState<{ setupUrl: string; emailSent: boolean } | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  function handleExportAudit(type: "users" | "logins" = "users", format: "csv" | "json" = "csv") {
+    const roleParam = roleFilter !== "ALL" ? `&role=${roleFilter}` : "";
+    window.location.href = `/api/admin/audit/export?type=${type}${roleParam}&format=${format}`;
+    toast.success(
+      format === "json"
+        ? "Full audit archive JSON export started."
+        : type === "users"
+        ? "User audit log CSV download started."
+        : "Login history CSV download started.",
+      "Export Started"
+    );
+    setShowExportModal(false);
+  }
 
   // In-app Confirm Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -346,11 +363,11 @@ export function AdminUsersManager({
     {
       key: "user",
       header: "User & Identity",
-      width: "minmax(240px, 2fr)",
+      width: "minmax(180px, 1.4fr)",
       render: (u: UserItem) => {
         const isCurrentAdmin = u.id === currentAdminId;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, overflow: "hidden" }}>
             <Avatar src={u.image} name={u.name} size="sm" />
             <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -365,21 +382,26 @@ export function AdminUsersManager({
                 style={{
                   fontSize: 11,
                   color: "var(--text-muted-crm)",
-                  marginTop: 2,
+                  marginTop: 1,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  maxWidth: 200,
+                  maxWidth: 190,
                 }}
                 title={u.email}
               >
                 {u.email}
               </div>
-              {u.discordHandle && (
-                <div style={{ fontSize: 10, color: "#5865F2", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  @{u.discordHandle}
-                </div>
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                {u.discordHandle && (
+                  <span style={{ fontSize: 10, color: "#5865F2", whiteSpace: "nowrap" }}>
+                    @{u.discordHandle}
+                  </span>
+                )}
+                <span style={{ fontSize: 10, color: "var(--text-muted-crm)", whiteSpace: "nowrap" }}>
+                  Joined {new Date(u.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                </span>
+              </div>
             </div>
           </div>
         );
@@ -388,7 +410,7 @@ export function AdminUsersManager({
     {
       key: "role",
       header: "Role",
-      width: "110px",
+      width: "85px",
       render: (u: UserItem) => (
         <Badge variant={u.role === "ADMIN" ? "brand" : u.role === "DEVELOPER" ? "success" : "neutral"}>
           {u.role}
@@ -398,7 +420,7 @@ export function AdminUsersManager({
     {
       key: "status",
       header: "Status",
-      width: "110px",
+      width: "75px",
       render: (u: UserItem) =>
         u.banned ? (
           <Badge variant="warning">Suspended</Badge>
@@ -409,7 +431,7 @@ export function AdminUsersManager({
     {
       key: "onboarding",
       header: "Onboarding State",
-      width: "140px",
+      width: "115px",
       render: (u: UserItem) => {
         if (u.banned) return <Badge variant="warning">Suspended</Badge>;
         if (u.lastLoginAt) return <Badge variant="success">Logged In</Badge>;
@@ -422,9 +444,20 @@ export function AdminUsersManager({
     {
       key: "location",
       header: "Last Location",
-      width: "140px",
+      width: "110px",
       render: (u: UserItem) => (
-        <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+        <span
+          style={{
+            fontSize: 11,
+            color: "var(--text-secondary)",
+            fontWeight: 500,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            display: "block",
+          }}
+          title={u.lastLoginCity ? `${u.lastLoginCity}${u.lastLoginCountry ? `, ${u.lastLoginCountry}` : ""}` : "No sign-ins"}
+        >
           {u.lastLoginCity ? `${u.lastLoginCity}${u.lastLoginCountry ? `, ${u.lastLoginCountry}` : ""}` : "No sign-ins"}
         </span>
       ),
@@ -432,7 +465,7 @@ export function AdminUsersManager({
     {
       key: "projects",
       header: "Projects",
-      width: "90px",
+      width: "60px",
       render: (u: UserItem) => (
         <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>
           {u._count.projects}
@@ -440,40 +473,31 @@ export function AdminUsersManager({
       ),
     },
     {
-      key: "joined",
-      header: "Joined",
-      width: "100px",
-      render: (u: UserItem) => (
-        <span style={{ fontSize: 11, color: "var(--text-muted-crm)", fontWeight: 600 }}>
-          {new Date(u.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
-        </span>
-      ),
-    },
-    {
       key: "actions",
       header: "Actions",
-      width: "140px",
+      width: "130px",
       align: "right" as const,
       render: (u: UserItem) => {
         const isCurrentAdmin = u.id === currentAdminId;
         const isBusy = busyUserId === u.id;
 
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
             <Link
               href={`/admin/users/${u.id}`}
               style={{
-                padding: "4px 10px",
+                width: 28,
+                height: 28,
                 borderRadius: "var(--radius-pill)",
                 background: "var(--subtle-fill)",
                 color: "var(--text-primary)",
-                fontSize: 11,
-                fontWeight: 700,
+                display: "grid",
+                placeItems: "center",
                 textDecoration: "none",
               }}
-              title="Open full client profile"
+              title="Open full profile"
             >
-              Profile
+              <ExternalLink size={13} />
             </Link>
 
             <button
@@ -490,7 +514,7 @@ export function AdminUsersManager({
                 height: 28,
                 borderRadius: "50%",
                 border: "none",
-                background: "transparent",
+                background: "var(--subtle-fill)",
                 color: "var(--text-secondary)",
                 cursor: "pointer",
                 display: "grid",
@@ -500,7 +524,7 @@ export function AdminUsersManager({
               <KeyRound size={13} />
             </button>
 
-            {!isCurrentAdmin && (
+            {!isCurrentAdmin ? (
               <>
                 <button
                   type="button"
@@ -516,8 +540,8 @@ export function AdminUsersManager({
                     height: 28,
                     borderRadius: "50%",
                     border: "none",
-                    background: "transparent",
-                    color: u.banned ? "#10b981" : "#f59e0b",
+                    background: u.banned ? "rgba(16, 185, 129, 0.12)" : "var(--subtle-fill)",
+                    color: u.banned ? "#10b981" : "var(--text-secondary)",
                     cursor: "pointer",
                     display: "grid",
                     placeItems: "center",
@@ -532,23 +556,37 @@ export function AdminUsersManager({
                     handleDeleteUser(u);
                   }}
                   disabled={isBusy}
-                  aria-label="Delete user"
-                  title="Delete user"
+                  aria-label={`Delete ${u.name}`}
+                  title={`Delete ${u.name}`}
                   style={{
                     width: 28,
                     height: 28,
                     borderRadius: "50%",
-                    border: "none",
-                    background: "transparent",
-                    color: "#dc2626",
+                    border: "1px solid rgba(239, 68, 68, 0.35)",
+                    background: "rgba(239, 68, 68, 0.14)",
+                    color: "#ef4444",
                     cursor: "pointer",
                     display: "grid",
                     placeItems: "center",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   <Trash2 size={13} />
                 </button>
               </>
+            ) : (
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-muted-crm)",
+                  padding: "3px 6px",
+                  borderRadius: 6,
+                  background: "var(--subtle-fill)",
+                }}
+                title="Current admin cannot be deleted"
+              >
+                Self
+              </span>
             )}
           </div>
         );
@@ -1037,6 +1075,30 @@ export function AdminUsersManager({
 
           <button
             type="button"
+            onClick={() => setShowExportModal(true)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              borderRadius: "var(--radius-pill)",
+              background: "var(--surface-raised)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border-hairline)",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              transition: "all 0.15s ease",
+            }}
+            title="Download comprehensive audit history and onboarding tracking for all users"
+          >
+            <Download size={14} />
+            <span>Export Audit Log</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => {
               setShowCreateModal(true);
               setCreatedResult(null);
@@ -1084,7 +1146,7 @@ export function AdminUsersManager({
               columns={columns}
               data={filteredUsers}
               keyExtractor={(u) => u.id}
-              minWidth={720}
+              minWidth={660}
               onRowClick={(u) => setSelectedUserId(u.id)}
               onRowDoubleClick={(u) => router.push(`/admin/users/${u.id}`)}
               isRowSelected={(u) => u.id === selectedUserId}
@@ -1251,27 +1313,53 @@ export function AdminUsersManager({
                     </button>
 
                     {selectedUser.id !== currentAdminId && (
-                      <button
-                        type="button"
-                        onClick={() => handleSuspend(selectedUser)}
-                        style={{
-                          padding: "10px",
-                          borderRadius: "var(--radius-pill)",
-                          border: "1px solid var(--border-hairline)",
-                          background: selectedUser.banned ? "#ecfdf5" : "var(--surface-raised)",
-                          color: selectedUser.banned ? "#059669" : "var(--text-primary)",
-                          fontSize: 11,
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 6,
-                        }}
-                      >
-                        <Ban size={13} />
-                        {selectedUser.banned ? "Reactivate" : "Suspend"}
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleSuspend(selectedUser)}
+                          style={{
+                            padding: "10px",
+                            borderRadius: "var(--radius-pill)",
+                            border: "1px solid var(--border-hairline)",
+                            background: selectedUser.banned ? "#ecfdf5" : "var(--surface-raised)",
+                            color: selectedUser.banned ? "#059669" : "var(--text-primary)",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <Ban size={13} />
+                          {selectedUser.banned ? "Reactivate" : "Suspend"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(selectedUser)}
+                          disabled={busyUserId === selectedUser.id}
+                          style={{
+                            gridColumn: "1 / -1",
+                            padding: "10px",
+                            borderRadius: "var(--radius-pill)",
+                            border: "1px solid rgba(239, 68, 68, 0.35)",
+                            background: "rgba(239, 68, 68, 0.08)",
+                            color: "#ef4444",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 6,
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <Trash2 size={13} />
+                          Delete User Account
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1288,6 +1376,182 @@ export function AdminUsersManager({
           )}
         </div>
       </div>
+
+      {/* Export Audit Modal */}
+      {showExportModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(0, 0, 0, 0.65)",
+            backdropFilter: "blur(6px)",
+            display: "grid",
+            placeItems: "center",
+            padding: 20,
+          }}
+          onClick={() => setShowExportModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 500,
+              background: "var(--card-bg-crm, #141829)",
+              border: "1px solid var(--border-hairline)",
+              borderRadius: 24,
+              padding: 24,
+              boxShadow: "0 24px 60px rgba(0, 0, 0, 0.4)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "rgba(108, 76, 255, 0.15)",
+                    color: "var(--accent-blue, #6C4CFF)",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <Download size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
+                    Export Audit History
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted-crm)" }}>
+                    Download user lifecycle tracking &amp; sign-in logs
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-secondary)",
+                  cursor: "pointer",
+                  padding: 4,
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gap: 12, margin: "20px 0" }}>
+              <button
+                type="button"
+                onClick={() => handleExportAudit("users", "csv")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "14px 16px",
+                  borderRadius: 16,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(16, 185, 129, 0.15)", color: "#10b981", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <FileSpreadsheet size={18} />
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Users Audit Log (CSV)</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2 }}>
+                    All user accounts with roles, onboarding progress dates, last locations, and project counts.
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleExportAudit("logins", "csv")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "14px 16px",
+                  borderRadius: 16,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", color: "#3b82f6", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <Globe size={18} />
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Login Sessions History (CSV)</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2 }}>
+                    Every sign-in event from history with timestamp, IP, City, Country, and User-Agent.
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleExportAudit("users", "json")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "14px 16px",
+                  borderRadius: 16,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--surface-raised)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(168, 85, 247, 0.15)", color: "#a855f7", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <Download size={18} />
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Full System Archive (JSON)</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted-crm)", marginTop: 2 }}>
+                    Structured JSON format for technical compliance auditing, archiving, or migration.
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--border-hairline)",
+                  background: "transparent",
+                  color: "var(--text-secondary)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* In-App Confirmation Modal */}

@@ -12,10 +12,11 @@ describe("authorization policy", () => {
     expect(canOpenAdminSecurity("CLIENT")).toBe(false);
   });
 
-  it("isolates client resources by authenticated owner", () => {
+  it("isolates client resources by authenticated owner, while granting full administrative access to ADMIN", () => {
     expect(canOpenClientResource("CLIENT", "client-a", "client-a")).toBe(true);
     expect(canOpenClientResource("CLIENT", "client-a", "client-b")).toBe(false);
-    expect(canOpenClientResource("ADMIN", "admin", "client-a")).toBe(false);
+    expect(canOpenClientResource("ADMIN", "admin", "client-a")).toBe(true);
+    expect(canOpenClientResource("DEVELOPER", "dev", "client-a")).toBe(false);
   });
 });
 

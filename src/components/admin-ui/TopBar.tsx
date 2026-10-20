@@ -262,7 +262,10 @@ export function TopBar({ user, defaultNotificationsOpen = false }: TopBarProps) 
       { label: "Client Projects", href: "/portal/projects", matchExact: false },
       { label: "Appointments", href: "/portal/appointments", matchExact: false },
       { label: "Profile & Security", href: "/portal/security", matchExact: false },
-      ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
+      ...(isAdmin ? [
+        { label: "Finance Space", href: "/finance", matchExact: false },
+        { label: "Admin Space", href: "/admin", matchExact: false },
+      ] : []),
     ];
   } else if (isFinance || (user.role === "FINANCE" && isPortal)) {
     navLinks = [
@@ -271,7 +274,10 @@ export function TopBar({ user, defaultNotificationsOpen = false }: TopBarProps) 
       { label: "Client Projects", href: "/portal/projects", matchExact: false },
       { label: "Appointments", href: "/portal/appointments", matchExact: false },
       { label: "Profile & Security", href: "/portal/security", matchExact: false },
-      ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
+      ...(isAdmin ? [
+        { label: "Developer Space", href: "/developer", matchExact: false },
+        { label: "Admin Space", href: "/admin", matchExact: false },
+      ] : []),
     ];
   } else if (isPortal) {
     navLinks = [
@@ -279,7 +285,11 @@ export function TopBar({ user, defaultNotificationsOpen = false }: TopBarProps) 
       { label: "Projects", href: "/portal/projects", matchExact: false },
       { label: "Appointments", href: "/portal/appointments", matchExact: false },
       { label: "Profile & Security", href: "/portal/security", matchExact: false },
-      ...(isAdmin ? [{ label: "Admin Space", href: "/admin", matchExact: false }] : []),
+      ...(isAdmin ? [
+        { label: "Finance Space", href: "/finance", matchExact: false },
+        { label: "Developer Space", href: "/developer", matchExact: false },
+        { label: "Admin Space", href: "/admin", matchExact: false },
+      ] : []),
     ];
   } else {
     navLinks = [
@@ -288,6 +298,8 @@ export function TopBar({ user, defaultNotificationsOpen = false }: TopBarProps) 
       { label: "Projects", href: "/admin/projects", matchExact: false },
       { label: "Appointments", href: "/admin/appointments", matchExact: false },
       { label: "Users & Accounts", href: "/admin/users", matchExact: false },
+      { label: "Finance", href: "/finance", matchExact: false },
+      { label: "Developer", href: "/developer", matchExact: false },
       { label: "GitHub & Gallery", href: "/admin/showcase", matchExact: false },
       { label: "Security", href: "/admin/security", matchExact: false },
       { label: "Client Portal", href: "/portal", matchExact: false },

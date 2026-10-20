@@ -34,6 +34,7 @@ import {
   Eye,
   LogIn,
   Laptop,
+  Download,
 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { Avatar, SectionCard, Badge } from "@/components/admin-ui";
@@ -2058,6 +2059,7 @@ export function ClientProfileCRM({
                   <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
                     All Recorded Sign-In Locations ({user.loginHistories?.length || 0})
                   </h3>
+                  <a href={`/api/admin/audit/export?userId=${user.id}&format=csv`} download style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "var(--accent-blue, #6C4CFF)", textDecoration: "none", padding: "4px 10px", borderRadius: "var(--radius-pill)", background: "var(--subtle-fill)" }} title="Export user audit history CSV"><Download size={13} /> Export CSV</a>
                 </div>
 
                 {user.loginHistories && user.loginHistories.length > 0 ? (

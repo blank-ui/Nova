@@ -115,6 +115,18 @@ export function LeftRail({ user }: LeftRailProps = {}) {
       icon: <Shield size={18} strokeWidth={1.8} />,
     },
     {
+      id: "finance",
+      label: "Finance & Operations",
+      href: "/finance",
+      icon: <DollarSign size={18} strokeWidth={1.8} />,
+    },
+    {
+      id: "developer",
+      label: "Developer Console",
+      href: "/developer",
+      icon: <Terminal size={18} strokeWidth={1.8} />,
+    },
+    {
       id: "portal",
       label: "Switch to Client Portal",
       href: "/portal",
