@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PublicPage, CTA } from "@/components/public-page";
+import { FAQAccordion } from "@/components/faq-accordion";
 import { ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 
@@ -37,7 +38,7 @@ export default function FAQ() {
     {
       category: "Pricing & Contracts",
       q: t("faq.q4", "How is pricing structured?"),
-      a: t("faq.a4", "We work primarily on fixed-scope milestone contracts. Before any code is authored, you receive an itemized proposal detailing deliverables, schedule, and cost. There are no hidden fees or surprise billings. Ongoing care and maintenance are available via dedicated monthly retainers."),
+      a: t("faq.a4", "We work primarily on fixed-scope milestone contracts. Before any code is authored, you receive an itemized proposal detailing deliverables, schedule, and cost. There are no hidden fees or surprise billings. All quoted figures are exclusive of applicable statutory taxes (such as GST or VAT) unless explicitly stated otherwise in the SOW. Ongoing care and maintenance are available via dedicated monthly retainers."),
     },
     {
       category: "Pricing & Contracts",
@@ -92,98 +93,57 @@ export default function FAQ() {
       }
       subtitle={t("faq_page.subtitle", "Everything you need to know about our studio process, contract terms, technology standards, and deliverables.")}
     >
-      <div style={{ display: "grid", gap: 48, maxWidth: 900, margin: "0 auto" }}>
-        {categories.map((cat) => (
-          <div key={cat.key}>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 800,
-                letterSpacing: ".08em",
-                textTransform: "uppercase",
-                color: "var(--blue)",
-                marginBottom: 16,
-                paddingBottom: 8,
-                borderBottom: "1px solid var(--line)",
-              }}
-            >
-              {cat.label}
-            </div>
+      <div style={{ display: "grid", gap: 54, maxWidth: 880, margin: "0 auto" }}>
+        {categories.map((cat) => {
+          const catFaqs = faqs.filter((f) => f.category === cat.key);
+          return (
+            <div key={cat.key}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--pub-violet)",
+                  marginBottom: 18,
+                  paddingBottom: 10,
+                  borderBottom: "1px solid var(--pub-line)",
+                  fontFamily: "'DM Mono', monospace",
+                }}
+              >
+                {cat.label}
+              </div>
 
-            <div style={{ display: "grid", gap: 12 }}>
-              {faqs
-                .filter((f) => f.category === cat.key)
-                .map((f) => (
-                  <details
-                    key={f.q}
-                    className="card card-hover-glow"
-                    style={{
-                      padding: "20px 24px",
-                      borderRadius: 14,
-                      cursor: "pointer",
-                      border: "1px solid var(--line)",
-                    }}
-                  >
-                    <summary
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 16,
-                        letterSpacing: "-.02em",
-                        color: "var(--ink)",
-                        listStyle: "none",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span>{f.q}</span>
-                      <span style={{ color: "var(--blue)", fontSize: 18, fontWeight: 700, marginLeft: 12 }}>
-                        +
-                      </span>
-                    </summary>
-                    <p
-                      style={{
-                        color: "var(--muted)",
-                        lineHeight: 1.8,
-                        fontSize: 14,
-                        margin: "14px 0 0",
-                        borderTop: "1px solid var(--line)",
-                        paddingTop: 14,
-                      }}
-                    >
-                      {f.a}
-                    </p>
-                  </details>
-                ))}
+              <FAQAccordion items={catFaqs} />
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Direct Help Banner */}
         <div
-          className="card"
+          className="nova-card"
           style={{
-            padding: "clamp(22px, 4vw, 32px) clamp(18px, 4vw, 36px)",
-            borderRadius: 18,
-            background: "var(--lav)",
-            border: "1px solid var(--line)",
+            padding: "clamp(24px, 4vw, 36px)",
+            borderRadius: 20,
+            background: "var(--pub-surface-card)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: 20,
+            gap: 24,
           }}
         >
           <div>
-            <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 6px", color: "var(--ink)" }}>
+            <h3 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 6px", color: "var(--pub-ink)", letterSpacing: "-0.03em" }}>
               {t("faq.banner_title", "Have a specific question not covered here?")}
             </h3>
-            <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--pub-muted)", margin: 0, lineHeight: 1.6 }}>
               {t("faq.banner_desc", "Send an email directly to nova@allskyfares.com or submit an inquiry.")}
             </p>
           </div>
-          <Link className="button" href="/contact" style={{ padding: "12px 20px", fontSize: 13 }}>
-            {t("faq.banner_button", "Contact the team")} <ArrowUpRight size={14} />
+          <Link className="nova-btn-primary" href="/contact" style={{ padding: "12px 22px", fontSize: 13 }}>
+            <span>{t("faq.banner_button", "Contact the team")}</span>
+            <ArrowUpRight size={14} className="nova-arrow-icon" />
           </Link>
         </div>
 

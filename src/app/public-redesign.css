@@ -1,0 +1,461 @@
+/* ==========================================================================
+   NOVA — Scoped Public Website Redesign & Editorial Motion System
+   Strictly isolated to public-facing pages via .nova-public-root.
+   Zero impact on workspace / admin / portal tokens.
+   ========================================================================== */
+
+:root {
+  --pub-bg: #F8F7F3;
+  --pub-bg-alt: #EFECE3;
+  --pub-surface: #FFFFFF;
+  --pub-surface-card: #FFFFFF;
+  --pub-surface-hover: #FAF9F5;
+  --pub-ink: #0E1118;
+  --pub-ink-secondary: #2C3240;
+  --pub-muted: #666E7F;
+  --pub-line: rgba(14, 17, 24, 0.09);
+  --pub-line-subtle: rgba(14, 17, 24, 0.05);
+  --pub-line-highlight: rgba(108, 76, 255, 0.35);
+
+  /* Accents */
+  --pub-lime: #9DF871;
+  --pub-lime-text: #0E4700;
+  --pub-lime-glow: rgba(157, 248, 113, 0.32);
+  --pub-violet: #6C4CFF;
+  --pub-violet-soft: rgba(108, 76, 255, 0.08);
+  --pub-amber: #FFB547;
+  --pub-cyan: #4EE4F5;
+
+  /* Shadows & Depth */
+  --pub-shadow-sm: 0 2px 8px rgba(14, 17, 24, 0.04);
+  --pub-shadow-md: 0 12px 36px -8px rgba(14, 17, 24, 0.07);
+  --pub-shadow-lg: 0 28px 72px -16px rgba(14, 17, 24, 0.11);
+  --pub-shadow-glow: 0 0 45px rgba(108, 76, 255, 0.12);
+
+  /* Grid */
+  --pub-grid-line: rgba(14, 17, 24, 0.035);
+  --pub-grid-dots: radial-gradient(rgba(14, 17, 24, 0.09) 1px, transparent 1px);
+}
+
+[data-theme="dark"],
+.dark {
+  --pub-bg: #0A0C13;
+  --pub-bg-alt: #0F121C;
+  --pub-surface: #121624;
+  --pub-surface-card: #151929;
+  --pub-surface-hover: #191E32;
+  --pub-ink: #F7F6F2;
+  --pub-ink-secondary: #CFD5E2;
+  --pub-muted: #8E98AC;
+  --pub-line: rgba(255, 255, 255, 0.09);
+  --pub-line-subtle: rgba(255, 255, 255, 0.04);
+  --pub-line-highlight: rgba(157, 248, 113, 0.35);
+
+  --pub-lime: #A8FF7D;
+  --pub-lime-text: #A8FF7D;
+  --pub-lime-glow: rgba(168, 255, 125, 0.22);
+  --pub-violet: #8970FF;
+  --pub-violet-soft: rgba(137, 112, 255, 0.14);
+  --pub-amber: #FFBE59;
+  --pub-cyan: #67E8F9;
+
+  --pub-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --pub-shadow-md: 0 14px 40px -10px rgba(0, 0, 0, 0.55);
+  --pub-shadow-lg: 0 30px 80px -15px rgba(0, 0, 0, 0.7);
+  --pub-shadow-glow: 0 0 60px rgba(137, 112, 255, 0.18);
+
+  --pub-grid-line: rgba(255, 255, 255, 0.035);
+  --pub-grid-dots: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+}
+
+/* ==========================================================================
+   PUBLIC WRAPPER & SUBTLE GRID PATTERNS
+   ========================================================================== */
+
+.nova-public-root {
+  background-color: var(--pub-bg);
+  color: var(--pub-ink);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.nova-grid-bg {
+  background-image: 
+    linear-gradient(var(--pub-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pub-grid-line) 1px, transparent 1px);
+  background-size: 54px 54px;
+}
+
+.nova-dots-bg {
+  background-image: var(--pub-grid-dots);
+  background-size: 24px 24px;
+}
+
+/* ==========================================================================
+   EDITORIAL TYPOGRAPHY & TAGS
+   ========================================================================== */
+
+.nova-editorial-headline {
+  font-family: Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  color: var(--pub-ink);
+}
+
+.nova-editorial-subhead {
+  font-size: clamp(16px, 1.4vw, 18px);
+  line-height: 1.75;
+  color: var(--pub-muted);
+  font-weight: 400;
+}
+
+.nova-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--pub-surface);
+  border: 1px solid var(--pub-line);
+  box-shadow: var(--pub-shadow-sm);
+  color: var(--pub-ink-secondary);
+  transition: all 0.2s ease;
+}
+
+.nova-pill-tag:hover {
+  border-color: var(--pub-violet);
+  transform: translateY(-1px);
+}
+
+.nova-pill-lime {
+  background: rgba(157, 248, 113, 0.12);
+  border-color: rgba(157, 248, 113, 0.35);
+  color: var(--pub-lime-text);
+}
+
+[data-theme="dark"] .nova-pill-lime,
+.dark .nova-pill-lime {
+  background: rgba(168, 255, 125, 0.12);
+  border-color: rgba(168, 255, 125, 0.3);
+  color: var(--pub-lime);
+}
+
+.nova-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+  display: inline-block;
+  animation: novaPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes novaPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+
+/* ==========================================================================
+   BUTTONS & MICRO-INTERACTIONS
+   ========================================================================== */
+
+.nova-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  background: var(--pub-ink);
+  color: var(--pub-bg) !important;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border: 1px solid var(--pub-ink);
+  cursor: pointer;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--pub-shadow-sm);
+  text-decoration: none;
+}
+
+.nova-btn-primary:hover {
+  transform: translateY(-2px);
+  background: var(--pub-violet);
+  border-color: var(--pub-violet);
+  color: #FFFFFF !important;
+  box-shadow: 0 8px 24px rgba(108, 76, 255, 0.3);
+}
+
+.nova-btn-primary:hover .nova-arrow-icon {
+  transform: translate(2px, -2px);
+}
+
+.nova-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  background: var(--pub-surface);
+  color: var(--pub-ink) !important;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border: 1px solid var(--pub-line);
+  cursor: pointer;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--pub-shadow-sm);
+  text-decoration: none;
+}
+
+.nova-btn-secondary:hover {
+  transform: translateY(-2px);
+  border-color: var(--pub-ink);
+  box-shadow: var(--pub-shadow-md);
+}
+
+.nova-btn-secondary:hover .nova-arrow-icon {
+  transform: translate(2px, -2px);
+}
+
+.nova-arrow-icon {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   CARDS & SOPHISTICATED BORDERS
+   ========================================================================== */
+
+.nova-card {
+  background: var(--pub-surface-card);
+  border: 1px solid var(--pub-line);
+  border-radius: 20px;
+  box-shadow: var(--pub-shadow-sm);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.nova-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--pub-shadow-md);
+  border-color: var(--pub-line-highlight);
+}
+
+.nova-card-interactive {
+  cursor: pointer;
+}
+
+.nova-card-interactive:hover .nova-card-arrow {
+  transform: translate(3px, -3px);
+  color: var(--pub-violet);
+}
+
+.nova-card-arrow {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* ==========================================================================
+   BROWSER & WORKSPACE PREVIEW MOCKUPS
+   ========================================================================== */
+
+.nova-browser-frame {
+  border-radius: 14px;
+  border: 1px solid var(--pub-line);
+  background: var(--pub-surface);
+  box-shadow: var(--pub-shadow-lg);
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.nova-browser-frame:hover {
+  transform: translateY(-4px) scale(1.008);
+  box-shadow: var(--pub-shadow-lg), var(--pub-shadow-glow);
+}
+
+.nova-browser-topbar {
+  height: 38px;
+  padding: 0 14px;
+  background: var(--pub-bg-alt);
+  border-bottom: 1px solid var(--pub-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nova-traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nova-traffic-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.nova-traffic-red { background: #FF5F56; }
+.nova-traffic-yellow { background: #FFBD2E; }
+.nova-traffic-green { background: #27C93F; }
+
+.nova-browser-address {
+  flex: 1;
+  max-width: 320px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--pub-surface);
+  border: 1px solid var(--pub-line-subtle);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--pub-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   SUBTLE AMBIENT GLOW ORBS
+   ========================================================================== */
+
+.nova-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.nova-glow-lime {
+  background: radial-gradient(circle, var(--pub-lime-glow) 0%, transparent 70%);
+}
+
+.nova-glow-violet {
+  background: radial-gradient(circle, var(--pub-shadow-glow) 0%, transparent 70%);
+}
+
+/* ==========================================================================
+   PROCESS TIMELINE SEQUENCE
+   ========================================================================== */
+
+.nova-timeline-step {
+  position: relative;
+  padding-left: 36px;
+  padding-bottom: 36px;
+  border-left: 2px dashed var(--pub-line);
+}
+
+.nova-timeline-step:last-child {
+  border-left: 2px solid transparent;
+  padding-bottom: 0;
+}
+
+.nova-timeline-indicator {
+  position: absolute;
+  left: -11px;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--pub-surface);
+  border: 2px solid var(--pub-violet);
+  display: grid;
+  place-items: center;
+}
+
+.nova-timeline-indicator::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pub-violet);
+}
+
+/* ==========================================================================
+   ACCORDION STYLING
+   ========================================================================== */
+
+.nova-faq-item {
+  border-bottom: 1px solid var(--pub-line);
+  padding: 22px 0;
+  transition: border-color 0.2s ease;
+}
+
+.nova-faq-item:first-child {
+  border-top: 1px solid var(--pub-line);
+}
+
+.nova-faq-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: var(--pub-ink);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.nova-faq-btn:hover {
+  color: var(--pub-violet);
+}
+
+.nova-faq-chevron {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--pub-muted);
+  flex-shrink: 0;
+}
+
+.nova-faq-btn[aria-expanded="true"] .nova-faq-chevron {
+  transform: rotate(180deg);
+  color: var(--pub-violet);
+}
+
+.nova-faq-content {
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY & REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .nova-browser-frame:hover,
+  .nova-card:hover,
+  .nova-btn-primary:hover,
+  .nova-btn-secondary:hover {
+    transform: none !important;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, Menu, X } from "lucide-react";
@@ -14,12 +14,21 @@ import { authClient } from "@/lib/auth-client";
 export function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { t } = useLanguage();
   const { data: session } = authClient.useSession();
 
   const userRole = (session?.user as { role?: string } | undefined)?.role;
   const workspaceHref = userRole === "ADMIN" ? "/admin" : "/portal";
   const workspaceLabel = userRole === "ADMIN" ? "Admin Workspace" : "Client Portal";
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 16);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navLinks = [
     { href: "/services", label: t("nav.services", "Services") },
@@ -32,13 +41,17 @@ export function Navigation() {
   return (
     <header
       style={{
-        height: 76,
-        borderBottom: "1px solid var(--line)",
-        background: "var(--nav-bg, rgba(246,244,238,.88))",
-        backdropFilter: "blur(14px)",
+        height: 72,
+        borderBottom: scrolled ? "1px solid var(--pub-line, rgba(14, 17, 24, 0.08))" : "1px solid transparent",
+        background: scrolled
+          ? "var(--pub-surface, rgba(248, 247, 243, 0.88))"
+          : "transparent",
+        backdropFilter: scrolled ? "blur(18px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(18px)" : "none",
         position: "sticky",
         top: 0,
-        zIndex: 40,
+        zIndex: 50,
+        transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
       <div
@@ -55,24 +68,39 @@ export function Navigation() {
           style={{ display: "flex", alignItems: "center", textDecoration: "none" }}
           aria-label="Nova home"
         >
-          <NovaLogo size={26} markColor="#6C4CFF" dotColor="#FFB547" textColor="var(--ink)" withTagline={false} />
+          <NovaLogo size={26} markColor="#6C4CFF" dotColor="#FFB547" textColor="var(--pub-ink, var(--ink))" withTagline={false} />
         </Link>
 
         {/* Desktop navigation */}
         <nav
-          style={{ display: "flex", alignItems: "center", gap: 28 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 24,
+            padding: "6px 14px",
+            borderRadius: 999,
+            background: "var(--pub-surface, var(--card-bg))",
+            border: "1px solid var(--pub-line, var(--line))",
+            boxShadow: "var(--pub-shadow-sm, 0 2px 8px rgba(0,0,0,0.03))",
+          }}
           className="desktop-nav"
+          aria-label="Main Navigation"
         >
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
                 key={link.href}
-                className={`nav-link ${isActive ? "nav-link-active" : ""}`}
+                className="nav-link"
                 href={link.href}
                 style={{
-                  padding: "6px 0",
-                  transition: "color 0.15s ease",
+                  padding: "5px 10px",
+                  borderRadius: 999,
+                  fontSize: 13,
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive ? "var(--pub-violet, #6C4CFF)" : "var(--pub-muted, var(--muted))",
+                  background: isActive ? "var(--pub-violet-soft, rgba(108,76,255,0.08))" : "transparent",
+                  transition: "all 0.18s ease",
                 }}
               >
                 {link.label}
@@ -88,28 +116,34 @@ export function Navigation() {
           <ThemeToggle />
           {session?.user ? (
             <Link
-              className="button button-outline desktop-nav"
+              className="nova-btn-secondary desktop-nav"
               href={workspaceHref}
               style={{ padding: "8px 14px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5, borderRadius: 99 }}
             >
               <span>{workspaceLabel}</span>
-              <ArrowUpRight size={13} />
+              <ArrowUpRight size={13} className="nova-arrow-icon" />
             </Link>
           ) : (
             <Link
               className={`nav-link desktop-nav ${pathname === "/login" ? "nav-link-active" : ""}`}
               href="/login"
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--pub-ink, var(--ink))",
+                padding: "8px 12px",
+              }}
             >
               {t("nav.sign_in", "Sign in")}
             </Link>
           )}
           <Link
-            className="button talk-button"
+            className="nova-btn-primary talk-button"
             href="/contact"
-            style={{ padding: "10px 16px", fontSize: 13 }}
+            style={{ padding: "9px 18px", fontSize: 13 }}
           >
             <span>{t("nav.contact", "Let's talk")}</span>
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={14} className="nova-arrow-icon" />
           </Link>
 
           {/* Mobile hamburger button */}
@@ -120,19 +154,20 @@ export function Navigation() {
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
             style={{
-              background: "transparent",
-              border: "1px solid var(--line)",
-              borderRadius: 10,
-              width: 44,
-              height: 44,
-              minWidth: 44,
-              minHeight: 44,
+              background: "var(--pub-surface, var(--card-bg))",
+              border: "1px solid var(--pub-line, var(--line))",
+              borderRadius: 12,
+              width: 42,
+              height: 42,
+              minWidth: 42,
+              minHeight: 42,
               padding: 0,
               cursor: "pointer",
-              color: "var(--ink)",
+              color: "var(--pub-ink, var(--ink))",
               display: "none",
               alignItems: "center",
               justifyContent: "center",
+              transition: "transform 0.2s ease, border-color 0.2s ease",
             }}
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -146,17 +181,17 @@ export function Navigation() {
           className="mobile-drawer animate-fade-in-up"
           style={{
             position: "absolute",
-            top: 76,
+            top: 72,
             left: 0,
             right: 0,
-            background: "var(--card-bg)",
-            borderBottom: "1px solid var(--line)",
-            boxShadow: "var(--glass-shadow)",
+            background: "var(--pub-surface, var(--card-bg))",
+            borderBottom: "1px solid var(--pub-line, var(--line))",
+            boxShadow: "var(--pub-shadow-lg, 0 20px 50px rgba(0,0,0,0.1))",
             padding: "20px 24px 28px",
             display: "flex",
             flexDirection: "column",
             gap: 14,
-            zIndex: 39,
+            zIndex: 49,
           }}
         >
           {navLinks.map((link) => {
@@ -169,16 +204,16 @@ export function Navigation() {
                 style={{
                   fontSize: 16,
                   fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "var(--blue)" : "var(--ink)",
+                  color: isActive ? "var(--pub-violet, #6C4CFF)" : "var(--pub-ink, var(--ink))",
                   padding: "10px 0",
-                  borderBottom: "1px solid var(--line)",
+                  borderBottom: "1px solid var(--pub-line, var(--line))",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
                 }}
               >
                 <span>{link.label}</span>
-                {isActive && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--blue)" }} />}
+                {isActive && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--pub-violet, #6C4CFF)" }} />}
               </Link>
             );
           })}
@@ -189,9 +224,9 @@ export function Navigation() {
               style={{
                 fontSize: 16,
                 fontWeight: 700,
-                color: "var(--accent-blue, #6C4CFF)",
+                color: "var(--pub-violet, #6C4CFF)",
                 padding: "10px 0",
-                borderBottom: "1px solid var(--line)",
+                borderBottom: "1px solid var(--pub-line, var(--line))",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -207,22 +242,22 @@ export function Navigation() {
               style={{
                 fontSize: 16,
                 fontWeight: pathname === "/login" ? 700 : 500,
-                color: pathname === "/login" ? "var(--blue)" : "var(--ink)",
+                color: pathname === "/login" ? "var(--pub-violet, #6C4CFF)" : "var(--pub-ink, var(--ink))",
                 padding: "10px 0",
-                borderBottom: "1px solid var(--line)",
+                borderBottom: "1px solid var(--pub-line, var(--line))",
               }}
             >
               {t("nav.sign_in", "Sign in")}
             </Link>
           )}
-          
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
-            <span style={{ fontSize: 14, color: "var(--muted)" }}>Currency / मुद्रा</span>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--pub-line, var(--line))" }}>
+            <span style={{ fontSize: 14, color: "var(--pub-muted, var(--muted))" }}>Currency / मुद्रा</span>
             <CurrencySwitcher />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
-            <span style={{ fontSize: 14, color: "var(--muted)" }}>Language / भाषा</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--pub-line, var(--line))" }}>
+            <span style={{ fontSize: 14, color: "var(--pub-muted, var(--muted))" }}>Language / भाषा</span>
             <LanguageSwitcher />
           </div>
 
@@ -230,10 +265,10 @@ export function Navigation() {
             <Link
               href="/contact"
               onClick={() => setMobileOpen(false)}
-              className="button"
+              className="nova-btn-primary"
               style={{ width: "100%", padding: "12px 18px", fontSize: 14, borderRadius: 12 }}
             >
-              {t("hero.start_project", "Start a project")} <ArrowUpRight size={15} />
+              {t("hero.start_project", "Start a project")} <ArrowUpRight size={15} className="nova-arrow-icon" />
             </Link>
           </div>
         </div>

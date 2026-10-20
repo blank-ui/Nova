@@ -116,6 +116,9 @@ export default function Terms() {
                 The website, client portal, and informational content are provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis without warranties of any kind, whether express, implied, statutory, or otherwise.
               </p>
               <p style={{ marginTop: 10 }}>
+                <strong>Performance Targets &amp; Third-Party Dependencies:</strong> Performance scores (including Core Web Vitals targets and deployment speeds) represent engineering benchmarks measured at the time of verified delivery. They do not constitute an ongoing guarantee against degradation caused by client-installed scripts, third-party embeds, external hosting outages, or network latency. Availability of third-party cloud infrastructure (including VPS hosts, DNS providers, payment gateways, and Discord/GitHub webhooks) is outside our direct control, and All Sky Fares LLC assumes no liability for external platform disruptions.
+              </p>
+              <p style={{ marginTop: 10 }}>
                 To the maximum extent permitted by applicable law, in no event shall All Sky Fares LLC, its directors, officers, employees, or contractors be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, revenue, or business opportunities, arising out of or related to your use of this platform.
               </p>
               <p style={{ marginTop: 10 }}>
@@ -130,6 +133,9 @@ export default function Terms() {
             <>
               <p>
                 These Terms and any non-contractual obligations arising out of or in connection with them shall be governed by and construed in accordance with the substantive laws applicable to All Sky Fares LLC, without regard to conflict of laws principles.
+              </p>
+              <p style={{ marginTop: 10 }}>
+                <strong>Electronic Execution:</strong> The parties agree that electronic transmission of Statements of Work, digital signatures, and click-through agreements via the Nova client portal constitute valid, binding execution satisfying all statutory writing requirements under the US Electronic Signatures in Global and National Commerce Act (E-SIGN), Uniform Electronic Transactions Act (UETA), and Indian Information Technology Act, 2000.
               </p>
               <p style={{ marginTop: 10 }}>
                 In the event of any dispute, claim, or controversy arising from or relating to these Terms or the services, the parties agree to first seek resolution through good-faith executive negotiations. If unresolved, disputes shall be submitted to the competent courts of jurisdiction as stipulated in the executed client agreement.

@@ -21,6 +21,7 @@ import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { NovaMascotAvatar } from "@/components/brand";
 import { useLanguage } from "@/components/language-provider";
+import "@/app/public-redesign.css";
 
 const SERVICES = [
   "Website design & development",
@@ -116,7 +117,7 @@ export default function ContactPage() {
   }
 
   return (
-    <>
+    <div className="nova-public-root">
       <Navigation />
       <main>
         {/* Header Hero */}
@@ -827,24 +828,30 @@ export default function ContactPage() {
                     <ArrowUpRight size={16} />
                   </button>
 
-                  <p
+                  <div
                     style={{
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      background: "var(--pub-bg-alt, #f7f8fb)",
+                      border: "1px solid var(--pub-line, #e2e5ec)",
                       fontSize: 12,
-                      color: "var(--muted)",
+                      color: "var(--pub-muted, var(--muted))",
                       lineHeight: 1.6,
-                      margin: 0,
                     }}
                   >
-                    By submitting, you agree to our{" "}
-                    <Link href="/privacy" style={{ color: "var(--blue)", textDecoration: "underline" }}>
-                      Privacy Policy
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/terms" style={{ color: "var(--blue)", textDecoration: "underline" }}>
-                      Terms of Service
-                    </Link>
-                    . Information is processed on behalf of All Sky Fares LLC solely to evaluate and respond to your inquiry.
-                  </p>
+                    <p style={{ margin: 0 }}>
+                      <strong>Notice at Collection &amp; Consent:</strong> By submitting your inquiry, you authorize <strong>All Sky Fares LLC</strong> to process your contact information and submitted project details to evaluate feasibility, prepare proposals, and communicate regarding services in accordance with our{" "}
+                      <Link href="/privacy" style={{ color: "var(--pub-violet, var(--blue))", textDecoration: "underline" }}>
+                        Privacy Policy
+                      </Link>{" "}
+                      and{" "}
+                      <Link href="/terms" style={{ color: "var(--pub-violet, var(--blue))", textDecoration: "underline" }}>
+                        Terms of Service
+                      </Link>
+                      . We never sell your personal data. You may withdraw consent or exercise statutory rights (access, correction, erasure) anytime under DPDPA / GDPR by writing to{" "}
+                      <code>nova@allskyfares.com</code>.
+                    </p>
+                  </div>
                 </div>
               </form>
             )}
@@ -1062,7 +1069,7 @@ export default function ContactPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

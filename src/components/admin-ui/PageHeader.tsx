@@ -169,6 +169,55 @@ export function PageHeader({
           ))}
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 640px) {
+          .page-header {
+            margin-bottom: 18px !important;
+            gap: 14px !important;
+          }
+          .page-header-pretitle {
+            font-size: 20px !important;
+          }
+          .page-header h1 {
+            font-size: 24px !important;
+          }
+          .page-header a[aria-label="Go back"] {
+            width: 38px !important;
+            height: 38px !important;
+          }
+          .page-header-stats {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+            width: 100% !important;
+          }
+          .page-header-stat-item {
+            gap: 8px !important;
+            min-width: 0 !important;
+            background: var(--surface-raised);
+            border: 1px solid var(--border-hairline);
+            border-radius: 14px;
+            padding: 8px 10px;
+          }
+          .page-header-stat-item:last-child:nth-child(odd) {
+            grid-column: span 2;
+          }
+          .page-header-stat-item > div:first-child {
+            width: 34px !important;
+            height: 34px !important;
+          }
+          .page-header-stat-value {
+            font-size: 18px !important;
+          }
+          .page-header-stat-caption {
+            font-size: 10px !important;
+            line-height: 1.2 !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

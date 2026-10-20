@@ -1749,6 +1749,7 @@ export function TeamDiscussionsManager({
             <>
               {/* Chat Canvas Header (Pinned flex-shrink: 0) */}
               <div
+                className="chat-canvas-header"
                 style={{
                   padding: "12px 18px",
                   borderBottom: "1px solid var(--border-hairline)",
@@ -1760,7 +1761,28 @@ export function TeamDiscussionsManager({
                   gap: 12,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <div className="chat-canvas-title-group" style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <button
+                    type="button"
+                    className="discussions-mobile-drawer-btn"
+                    onClick={() => setMobileDrawerOpen(true)}
+                    title="Open conversation list"
+                    style={{
+                      display: "none",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      border: "1px solid var(--border-hairline)",
+                      background: "var(--surface-raised)",
+                      color: "var(--text-primary)",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Menu size={16} />
+                  </button>
                   <div
                     style={{
                       width: 36,
@@ -1851,7 +1873,10 @@ export function TeamDiscussionsManager({
             </div>
 
             {/* Action buttons & live sync indicator */}
-            <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0, flexWrap: "wrap" }}>
+            <div
+              className="chat-canvas-actions-track"
+              style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0, flexWrap: "wrap" }}
+            >
               {/* PROJECT THREAD CONTROLS */}
               {activeMode === "project" && activeProject && isStaff && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -2040,7 +2065,7 @@ export function TeamDiscussionsManager({
                 }}
               >
                 <X size={12} />
-                <span>Close (Esc)</span>
+                <span>Close</span>
               </button>
             </div>
           </div>
@@ -2363,6 +2388,7 @@ export function TeamDiscussionsManager({
           {/* Quick Action Suggestion Bar (when messages exist) */}
           {messages.length > 0 && !inputText && (
             <div
+              className="discussions-quick-chips-track"
               style={{
                 padding: "6px 18px",
                 background: "var(--surface-raised)",
@@ -2404,6 +2430,7 @@ export function TeamDiscussionsManager({
 
           {/* Pinned Message Composer Card (Pinned flex-shrink: 0) */}
           <div
+            className="discussions-composer-card"
             style={{
               padding: "10px 16px",
               borderTop: "1px solid var(--border-hairline)",
@@ -3540,7 +3567,7 @@ export function TeamDiscussionsManager({
                         border: "1px solid var(--border-hairline)",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      <div className="chat-canvas-title-group" style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                         <div
                           style={{
                             width: 32,
@@ -4050,7 +4077,7 @@ export function TeamDiscussionsManager({
                         border: "1px solid var(--border-hairline)",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      <div className="chat-canvas-title-group" style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                         <div
                           style={{
                             width: 30,
@@ -4204,6 +4231,72 @@ export function TeamDiscussionsManager({
         }
 
         @media (max-width: 900px) {
+          .admin-page-wrapper:has(.discussions-viewport-container),
+          .client-portal-wrapper:has(.discussions-viewport-container) {
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            padding: 4px 4px 0 !important;
+            overflow: hidden !important;
+          }
+          .admin-app-shell:has(.discussions-viewport-container) {
+            height: 100% !important;
+            max-height: 100% !important;
+            padding: 8px 8px 0 !important;
+            border-radius: 14px !important;
+            overflow: hidden !important;
+          }
+          .admin-body-layout:has(.discussions-viewport-container) {
+            height: calc(100dvh - 105px) !important;
+            max-height: calc(100dvh - 105px) !important;
+            overflow: hidden !important;
+            gap: 0 !important;
+          }
+          .discussions-viewport-container {
+            height: 100% !important;
+          }
+          .discussions-mobile-drawer-btn {
+            display: flex !important;
+          }
+          .chat-canvas-header {
+            padding: 10px 12px !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+          }
+          .chat-canvas-title-group {
+            width: 100% !important;
+            flex: 0 0 100% !important;
+          }
+          .chat-canvas-actions-track {
+            width: 100% !important;
+            flex: 0 0 100% !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            gap: 6px !important;
+            padding-bottom: 2px !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .chat-canvas-actions-track::-webkit-scrollbar {
+            display: none !important;
+          }
+          .chat-canvas-actions-track button {
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            flex-shrink: 0 !important;
+          }
+          .discussions-quick-chips-track {
+            padding: 4px 10px !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .discussions-quick-chips-track::-webkit-scrollbar {
+            display: none !important;
+          }
+          .discussions-composer-card {
+            padding: 8px 10px 76px !important;
+          }
           .discussions-app-shell {
             grid-template-columns: 1fr !important;
           }
@@ -4213,24 +4306,24 @@ export function TeamDiscussionsManager({
           .discussions-sidebar.mobile-open {
             display: flex !important;
             position: fixed !important;
-            top: 60px !important;
-            left: 14px !important;
-            right: 14px !important;
-            bottom: 16px !important;
-            z-index: 100 !important;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.4) !important;
+            top: 54px !important;
+            left: 10px !important;
+            right: 10px !important;
+            bottom: 74px !important;
+            z-index: 1000 !important;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important;
           }
           .mobile-drawer-header {
             display: flex !important;
           }
           .discussions-preview-pane {
-            top: 14px !important;
-            left: 14px !important;
-            right: 14px !important;
-            bottom: 14px !important;
+            top: 10px !important;
+            left: 10px !important;
+            right: 10px !important;
+            bottom: 74px !important;
             width: auto !important;
             max-width: none !important;
-            z-index: 120 !important;
+            z-index: 1010 !important;
           }
         }
       `}</style>

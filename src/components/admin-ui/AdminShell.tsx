@@ -110,6 +110,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
           }
           .topbar-header {
             flex-wrap: wrap !important;
+            gap: 12px !important;
           }
           .topbar-nav-pill-track {
             order: 3 !important;
@@ -117,19 +118,26 @@ export function AdminShell({ user, children }: AdminShellProps) {
             display: flex !important;
             justify-content: flex-start !important;
             overflow-x: auto !important;
-            padding-bottom: 4px !important;
-            margin-top: 4px !important;
+            padding: 4px 28px 6px 4px !important;
+            margin-top: 6px !important;
             scrollbar-width: none !important;
             -ms-overflow-style: none !important;
             -webkit-overflow-scrolling: touch !important;
+            mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
           }
           .topbar-nav-pill-track::-webkit-scrollbar {
             display: none !important;
           }
+          .topbar-nav-pill-track a {
+            padding: 6px 13px !important;
+            font-size: 12px !important;
+            flex-shrink: 0 !important;
+          }
         }
         @media (max-width: 600px) {
           .admin-page-wrapper {
-            padding: 6px 6px 84px !important;
+            padding: 6px 6px 92px !important;
           }
           .admin-app-shell {
             padding: 12px 10px 18px !important;
@@ -145,8 +153,12 @@ export function AdminShell({ user, children }: AdminShellProps) {
           .topbar-actions > button,
           .topbar-actions > a > div,
           .topbar-actions .avatar-wrapper {
-            width: 38px !important;
-            height: 38px !important;
+            width: 36px !important;
+            height: 36px !important;
+          }
+          .topbar-nav-pill-track a {
+            padding: 5px 11px !important;
+            font-size: 11.5px !important;
           }
         }
       `}</style>

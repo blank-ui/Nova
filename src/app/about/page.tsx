@@ -14,29 +14,28 @@ export default function About() {
       title={t("about.title", "Good work starts with listening.")}
       subtitle={t("about.subtitle", "Nova is an independent digital studio partnering with teams worldwide to make useful, well-crafted digital products and websites. We keep the process close, collaborative, and grounded in real business problems.")}
     >
-      <div style={{ display: "grid", gap: 48 }}>
+      <div style={{ display: "grid", gap: 54 }}>
         {/* Core Philosophy Banner */}
         <div
-          className="card card-hover-glow"
+          className="nova-card"
           style={{
-            padding: "clamp(24px, 4vw, 36px) clamp(20px, 4vw, 40px)",
-            borderRadius: 20,
-            background: "var(--lav)",
-            border: "1px solid var(--line)",
+            padding: "clamp(28px, 4vw, 40px)",
+            borderRadius: 24,
+            background: "var(--pub-surface-card)",
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
-            gap: 24,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+            gap: 28,
             alignItems: "center",
           }}
         >
           <div>
-            <div className="eyebrow" style={{ color: "var(--blue)" }}>
+            <div className="eyebrow" style={{ color: "var(--pub-violet)", marginBottom: 12 }}>
               {t("about.entity_eyebrow", "Operating Entity & Structure")}
             </div>
-            <h2 style={{ fontSize: 24, letterSpacing: "-.04em", margin: "10px 0 12px", color: "var(--ink)", fontWeight: 700 }}>
+            <h2 style={{ fontSize: "clamp(24px, 3.2vw, 36px)", letterSpacing: "-0.05em", margin: "0 0 14px", color: "var(--pub-ink)", fontWeight: 800 }}>
               {t("about.entity_title", "Operated on behalf of All Sky Fares LLC")}
             </h2>
-            <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
+            <p style={{ fontSize: 14, color: "var(--pub-muted)", lineHeight: 1.75, margin: 0 }}>
               {t("about.entity_desc", "Nova operates as the bespoke digital innovation, web development, and design services wing of All Sky Fares LLC. We partner directly with clients across North America, Europe, India, and Asia, combining corporate contractual reliability with the agility of an independent design lab.")}
             </p>
           </div>
@@ -47,9 +46,9 @@ export default function About() {
 
         {/* Studio Principles Grid */}
         <div>
-          <div style={{ marginBottom: 24 }}>
-            <div className="eyebrow">{t("about.values_eyebrow", "Guiding Values")}</div>
-            <h2 style={{ fontSize: 32, letterSpacing: "-.05em", margin: "8px 0 0", color: "var(--ink)", fontWeight: 700 }}>
+          <div style={{ marginBottom: 28 }}>
+            <div className="eyebrow" style={{ color: "var(--pub-violet)" }}>{t("about.values_eyebrow", "Guiding Values")}</div>
+            <h2 style={{ fontSize: "clamp(30px, 4vw, 48px)", letterSpacing: "-0.06em", margin: "10px 0 0", color: "var(--pub-ink)", fontWeight: 800 }}>
               {t("about.values_title", "How we approach every build")}
             </h2>
           </div>
@@ -79,21 +78,21 @@ export default function About() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: 20,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+            gap: 24,
           }}
         >
-          <div className="card" style={{ padding: 32, borderTop: "3px solid var(--blue)" }}>
-            <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 12px", color: "var(--ink)" }}>
+          <div className="nova-card" style={{ padding: 34, borderTop: "3px solid var(--pub-violet)" }}>
+            <h3 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 14px", color: "var(--pub-ink)", letterSpacing: "-0.03em" }}>
               {t("about.direct_collab_title", "No Account Managers In Between")}
             </h3>
-            <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.75, margin: 0 }}>
+            <p style={{ fontSize: 14, color: "var(--pub-muted)", lineHeight: 1.75, margin: 0 }}>
               {t("about.direct_collab_desc", "When you work with Nova, you collaborate directly with the engineers and designers shaping your platform. Communication is swift, nuanced, and devoid of corporate bureaucracy or games of telephone.")}
             </p>
           </div>
 
-          <div className="card" style={{ padding: 32, borderTop: "3px solid #10b981" }}>
-            <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 12px", color: "var(--ink)" }}>
+          <div className="nova-card" style={{ padding: 34, borderTop: "3px solid #10B981" }}>
+            <h3 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 14px", color: "var(--pub-ink)", letterSpacing: "-0.03em" }}>
               {t("about.standards_title", "Standards We Commit To")}
             </h3>
             <Checklist

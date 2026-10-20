@@ -98,69 +98,62 @@ export default function Services() {
       title={t("services_page.title", "Digital capabilities that move your business forward.")}
       subtitle={t("services_page.subtitle", "We bring strategy, product design, and modern software engineering together to deliver digital experiences and tools that solve real bottlenecks.")}
     >
-      <div style={{ display: "grid", gap: 48 }}>
+      <div style={{ display: "grid", gap: 54 }}>
         {/* Services Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))", gap: 24 }}>
           {serviceList.map((service) => (
             <div
               key={service.title}
-              className="card card-hover-glow"
+              className="nova-card"
               style={{
-                padding: 32,
-                borderRadius: 20,
+                padding: 34,
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                borderTop: "3px solid var(--blue)",
+                borderTop: "3px solid var(--pub-violet)",
               }}
             >
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                   <div
                     style={{
                       width: 44,
                       height: 44,
                       borderRadius: 12,
-                      background: "rgba(108, 76, 255, 0.1)",
+                      background: "var(--pub-violet-soft)",
                       display: "grid",
                       placeItems: "center",
-                      color: "var(--blue)",
+                      color: "var(--pub-violet)",
                     }}
                   >
                     {service.icon}
                   </div>
                   <span
+                    className="nova-pill-tag"
                     style={{
                       fontSize: 10,
-                      fontWeight: 800,
-                      letterSpacing: ".06em",
-                      textTransform: "uppercase",
-                      padding: "4px 10px",
-                      borderRadius: 99,
-                      background: "var(--paper)",
-                      border: "1px solid var(--line)",
-                      color: "var(--muted)",
+                      fontWeight: 700,
                     }}
                   >
                     {service.badge}
                   </span>
                 </div>
 
-                <h2 style={{ fontSize: 22, letterSpacing: "-.04em", margin: "0 0 10px", color: "var(--ink)", fontWeight: 700 }}>
+                <h2 style={{ fontSize: 22, letterSpacing: "-0.04em", margin: "0 0 10px", color: "var(--pub-ink)", fontWeight: 800 }}>
                   {service.title}
                 </h2>
-                <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, margin: "0 0 20px" }}>
+                <p style={{ fontSize: 14, color: "var(--pub-muted)", lineHeight: 1.7, margin: "0 0 24px" }}>
                   {service.text}
                 </p>
 
-                <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)", letterSpacing: ".06em", marginBottom: 10 }}>
+                <div style={{ borderTop: "1px solid var(--pub-line)", paddingTop: 18 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--pub-muted)", letterSpacing: "0.08em", marginBottom: 12, fontFamily: "'DM Mono', monospace" }}>
                     {t("services_page.deliverables", "Key Deliverables:")}
                   </div>
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
                     {service.deliverables.map((item) => (
-                      <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "var(--ink)", lineHeight: 1.5 }}>
-                        <CheckCircle2 size={14} style={{ color: "var(--blue)", flexShrink: 0, marginTop: 2 }} />
+                      <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "var(--pub-ink)", lineHeight: 1.5 }}>
+                        <CheckCircle2 size={15} style={{ color: "var(--pub-violet)", flexShrink: 0, marginTop: 2 }} />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -168,20 +161,21 @@ export default function Services() {
                 </div>
               </div>
 
-              <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+              <div style={{ marginTop: 28, paddingTop: 18, borderTop: "1px solid var(--pub-line)" }}>
                 <Link
                   href="/contact"
                   style={{
                     fontSize: 13,
                     fontWeight: 700,
-                    color: "var(--blue)",
+                    color: "var(--pub-violet)",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
                     textDecoration: "none",
                   }}
                 >
-                  {t("hero.start_project", "Inquire about this service")} <ArrowUpRight size={14} />
+                  <span>{t("hero.start_project", "Inquire about this service")}</span>
+                  <ArrowUpRight size={14} />
                 </Link>
               </div>
             </div>
@@ -190,32 +184,32 @@ export default function Services() {
 
         {/* Transparent Engagements Banner */}
         <div
-          className="card"
+          className="nova-card"
           style={{
-            padding: "clamp(24px, 4vw, 36px) clamp(20px, 4vw, 40px)",
-            borderRadius: 20,
-            background: "var(--lav)",
-            border: "1px solid var(--line)",
+            padding: "clamp(28px, 4vw, 40px)",
+            borderRadius: 24,
+            background: "var(--pub-surface-card)",
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
-            gap: 24,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+            gap: 28,
             alignItems: "center",
           }}
         >
           <div>
-            <div className="eyebrow" style={{ color: "var(--blue)" }}>
+            <div className="eyebrow" style={{ color: "var(--pub-violet)", marginBottom: 10 }}>
               {t("process.eyebrow", "Transparent Scoping")}
             </div>
-            <h3 style={{ fontSize: 24, letterSpacing: "-.04em", margin: "10px 0 10px", color: "var(--ink)", fontWeight: 700 }}>
+            <h3 style={{ fontSize: "clamp(24px, 3.2vw, 36px)", letterSpacing: "-0.05em", margin: "0 0 12px", color: "var(--pub-ink)", fontWeight: 800 }}>
               {t("services_page.banner_title", "Fixed milestone scopes. No surprise invoices.")}
             </h3>
-            <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, margin: 0 }}>
+            <p style={{ fontSize: 14, color: "var(--pub-muted)", lineHeight: 1.75, margin: 0 }}>
               {t("services_page.banner_desc", "Every engagement starts with a clearly defined specification, timeline milestones, and deliverables. You always know what is being built, when it will be delivered, and exactly what it costs.")}
             </p>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Link className="button" href="/contact" style={{ padding: "14px 24px", fontSize: 14 }}>
-              {t("hero.start_project", "Discuss your project scope")} <ArrowUpRight size={15} />
+            <Link className="nova-btn-primary" href="/contact" style={{ padding: "14px 26px", fontSize: 14 }}>
+              <span>{t("hero.start_project", "Discuss your project scope")}</span>
+              <ArrowUpRight size={15} className="nova-arrow-icon" />
             </Link>
           </div>
         </div>
