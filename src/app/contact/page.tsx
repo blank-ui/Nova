@@ -552,7 +552,7 @@ export default function ContactPage() {
                       style={{
                         fontSize: 11,
                         color: charCount < 20 ? "var(--muted)" : "var(--blue)",
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: "var(--font-dm-mono), monospace",
                       }}
                     >
                       {charCount} / 5000 chars {charCount < 20 ? "(min 20)" : "✓"}

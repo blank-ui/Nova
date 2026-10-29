@@ -88,7 +88,7 @@ export default function Process() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
                   <span
                     style={{
-                      fontFamily: "'DM Mono', monospace",
+                      fontFamily: "var(--font-dm-mono), monospace",
                       fontSize: 18,
                       fontWeight: 800,
                       color: "var(--pub-violet)",

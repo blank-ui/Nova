@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { Manrope, DM_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast";
 import { LanguageProvider } from "@/components/language-provider";
 import { CurrencyProvider } from "@/components/currency-provider";
+import { DepthMotion } from "@/components/depth-motion";
 import "./globals.css";
+
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
+const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-dm-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "Nova — Web Development Studio", template: "%s · Nova" },
@@ -15,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${manrope.variable} ${dmMono.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -33,6 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <LanguageProvider>
             <CurrencyProvider>
               <ToastProvider>{children}</ToastProvider>
+              <DepthMotion />
             </CurrencyProvider>
           </LanguageProvider>
         </ThemeProvider>

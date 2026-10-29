@@ -321,7 +321,7 @@ export function ClientPortalTracker({
         {/* Card 4: Support Channel */}
         <div className="card card-hover-glow" style={{ padding: 22, borderRadius: 18, borderTop: "3px solid #7c3aed" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            <ShieldCheck size={15} color="#7c3aed" /> Direct Engineering SLA
+            <ShieldCheck size={15} color="#7c3aed" /> Engineering Support
           </div>
           <div style={{ fontSize: 16, fontWeight: 800, margin: "14px 0 6px", color: "var(--ink)" }}>
             nova@allskyfares.com

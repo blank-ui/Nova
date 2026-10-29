@@ -165,7 +165,7 @@ export function GitHubActivity({ defaultUser }: { defaultUser?: string }) {
                   <span
                     style={{
                       fontSize: 11,
-                      fontFamily: "'DM Mono', monospace",
+                      fontFamily: "var(--font-dm-mono), monospace",
                       color: "var(--blue)",
                       background: "var(--lav, #eeebff)",
                       padding: "2px 6px",

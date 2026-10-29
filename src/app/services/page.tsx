@@ -147,7 +147,7 @@ export default function Services() {
                 </p>
 
                 <div style={{ borderTop: "1px solid var(--pub-line)", paddingTop: 18 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--pub-muted)", letterSpacing: "0.08em", marginBottom: 12, fontFamily: "'DM Mono', monospace" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--pub-muted)", letterSpacing: "0.08em", marginBottom: 12, fontFamily: "var(--font-dm-mono), monospace" }}>
                     {t("services_page.deliverables", "Key Deliverables:")}
                   </div>
                   <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>

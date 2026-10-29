@@ -108,7 +108,7 @@ export default function FAQ() {
                   marginBottom: 18,
                   paddingBottom: 10,
                   borderBottom: "1px solid var(--pub-line)",
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "var(--font-dm-mono), monospace",
                 }}
               >
                 {cat.label}

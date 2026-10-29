@@ -63,7 +63,7 @@ export function NovaLogo({
         <NovaMark size={size} starColor={markColor} dotColor={dotColor} />
         <span
           style={{
-            fontFamily: "Manrope, sans-serif",
+            fontFamily: "var(--font-manrope), sans-serif",
             fontWeight: 800,
             fontSize: size * 0.88,
             letterSpacing: "-0.04em",
@@ -78,7 +78,7 @@ export function NovaLogo({
       {withTagline && (
         <span
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-dm-mono), monospace",
             fontSize: Math.max(9, Math.round(size * 0.28)),
             letterSpacing: "0.14em",
             color: taglineColor,
@@ -203,7 +203,7 @@ export function NovaMascotFull({
           y="20"
           textAnchor="middle"
           fill="#67E8F9"
-          fontFamily="'DM Mono', monospace"
+          fontFamily="var(--font-dm-mono), monospace"
           fontSize="15"
           fontWeight="bold"
         >
@@ -219,7 +219,7 @@ export function NovaMascotFull({
           y="20"
           textAnchor="middle"
           fill="#FFB547"
-          fontFamily="'DM Mono', monospace"
+          fontFamily="var(--font-dm-mono), monospace"
           fontSize="14"
           fontWeight="bold"
         >

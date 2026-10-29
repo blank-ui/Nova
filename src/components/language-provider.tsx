@@ -18,17 +18,15 @@ const LanguageContext = createContext<LanguageContextValue>({
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = (sessionStorage.getItem("nova-locale") || localStorage.getItem("nova-locale")) as Locale | null;
-        if (stored && ["en", "hi", "es", "fr", "de", "ja"].includes(stored)) {
-          return stored;
-        }
-      } catch {}
-    }
-    return "en";
-  });
+  // Start from "en" so hydration matches; a stored locale is applied after mount.
+  const [locale, setLocaleState] = useState<Locale>("en");
+
+  useEffect(() => {
+    try {
+      const stored = (sessionStorage.getItem("nova-locale") || localStorage.getItem("nova-locale")) as Locale | null;
+      if (stored && ["en", "hi", "es", "fr", "de", "ja"].includes(stored)) setLocaleState(stored);
+    } catch {}
+  }, []);
 
   // Sync document language attribute with active locale
   useEffect(() => {

@@ -33,19 +33,16 @@ const CurrencyContext = createContext<CurrencyContextValue>({
 });
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = (sessionStorage.getItem("nova-currency") ||
-          localStorage.getItem("nova-currency")) as CurrencyCode | null;
-        if (stored && SUPPORTED_CURRENCIES.some((c) => c.code === stored)) {
-          return stored;
-        }
-        return detectBrowserCurrency();
-      } catch {}
-    }
-    return DEFAULT_CURRENCY;
-  });
+  // Start from the server default so hydration matches; stored/browser currency is applied after mount.
+  const [currency, setCurrencyState] = useState<CurrencyCode>(DEFAULT_CURRENCY);
+
+  useEffect(() => {
+    try {
+      const stored = (sessionStorage.getItem("nova-currency") ||
+        localStorage.getItem("nova-currency")) as CurrencyCode | null;
+      setCurrencyState(stored && SUPPORTED_CURRENCIES.some((c) => c.code === stored) ? stored : detectBrowserCurrency());
+    } catch {}
+  }, []);
 
   const [detectedCurrency, setDetectedCurrency] = useState<CurrencyCode | null>(null);
 

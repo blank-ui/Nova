@@ -213,7 +213,7 @@ export function CTA({
         </h2>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 16, fontSize: 13, color: "var(--pub-muted)", flexWrap: "wrap" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Clock size={14} style={{ color: "#10B981" }} /> {t("hero.cta_hours", "Replies within 24 hours")}
+            <Clock size={14} style={{ color: "#10B981" }} /> {t("hero.cta_hours", "We usually reply within a business day")}
           </span>
           <span>·</span>
           <span style={{ display: "flex", alignItems: "center", gap: 6 }}>

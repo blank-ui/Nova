@@ -105,7 +105,7 @@ export function HeroProductPreview() {
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="nova-pill-tag nova-pill-lime" style={{ padding: "2px 8px", fontSize: 10 }}>
-              Live 60 FPS
+              Live preview
             </span>
           </div>
         </div>
@@ -129,10 +129,10 @@ export function HeroProductPreview() {
                   <Zap size={16} style={{ color: "#FFB547" }} />
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "var(--pub-ink)", letterSpacing: "-0.04em" }}>
-                  14-Day Delivery
+                  Sprint-Based Delivery
                 </div>
                 <p style={{ fontSize: 13, color: "var(--pub-muted)", margin: "8px 0 0", lineHeight: 1.6 }}>
-                  From scoping and high-fidelity prototype to production deployment with full QA.
+                  Scoping, prototype, and production rollout in focused sprints — timelines are shaped together around your scope.
                 </p>
               </div>
 
@@ -151,10 +151,10 @@ export function HeroProductPreview() {
                   <CheckCircle2 size={16} style={{ color: "#10B981" }} />
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "var(--pub-ink)", letterSpacing: "-0.04em" }}>
-                  100 / 100 Score
+                  Built for Speed
                 </div>
                 <p style={{ fontSize: 13, color: "var(--pub-muted)", margin: "8px 0 0", lineHeight: 1.6 }}>
-                  Sub-50ms TTFB edge caching, zero CLS shift, and priority LCP image pipelines.
+                  Edge caching, layout-stable rendering, and prioritized image loading — aiming for strong Core Web Vitals where the stack allows.
                 </p>
               </div>
 
@@ -173,10 +173,10 @@ export function HeroProductPreview() {
                   <Shield size={16} style={{ color: "var(--pub-violet)" }} />
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "var(--pub-ink)", letterSpacing: "-0.04em" }}>
-                  Zero-Trust 2FA
+                  Security-First Auth
                 </div>
                 <p style={{ fontSize: 13, color: "var(--pub-muted)", margin: "8px 0 0", lineHeight: 1.6 }}>
-                  TOTP authenticator app verification, signed sessions, and rate-limited endpoints.
+                  Optional authenticator-app 2FA, signed sessions, and rate-limited endpoints as sensible defaults.
                 </p>
               </div>
             </div>
@@ -189,7 +189,7 @@ export function HeroProductPreview() {
                 borderRadius: 10,
                 background: "#0A0C13",
                 color: "#A8FF7D",
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-dm-mono), monospace",
                 fontSize: 12,
                 display: "flex",
                 alignItems: "center",
@@ -263,11 +263,11 @@ export function HeroProductPreview() {
                     <NovaMascotAvatar size={28} />
                     <div style={{ background: "var(--pub-bg)", padding: "8px 12px", borderRadius: 10, fontSize: 12 }}>
                       <span style={{ fontWeight: 700, display: "block", marginBottom: 2 }}>Nova Lead Engineer</span>
-                      Sprint 3 build is deployed to staging. Core Web Vitals audit scored 100/100!
+                      Sprint 3 build is deployed to staging. Core Web Vitals are looking healthy in the latest audit.
                     </div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "'DM Mono', monospace" }}>
+                <div style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "var(--font-dm-mono), monospace" }}>
                   Encrypted · Discord webhook synced · Role isolated
                 </div>
               </div>
@@ -280,19 +280,19 @@ export function HeroProductPreview() {
           <div style={{ padding: "clamp(20px, 3.5vw, 32px)", background: "var(--pub-bg)", minHeight: 320 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16 }}>
               <div style={{ background: "var(--pub-surface)", padding: 18, borderRadius: 12, border: "1px solid var(--pub-line)" }}>
-                <span className="eyebrow" style={{ color: "var(--pub-muted)" }}>Average SLA</span>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--pub-ink)", marginTop: 6 }}>1.8 Hours</div>
-                <span style={{ fontSize: 11, color: "#10B981" }}>99.2% on-time resolution</span>
+                <span className="eyebrow" style={{ color: "var(--pub-muted)" }}>Avg. first response</span>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--pub-ink)", marginTop: 6 }}>~2 Hours</div>
+                <span style={{ fontSize: 11, color: "#10B981" }}>Sample figure · varies by plan</span>
               </div>
               <div style={{ background: "var(--pub-surface)", padding: 18, borderRadius: 12, border: "1px solid var(--pub-line)" }}>
                 <span className="eyebrow" style={{ color: "var(--pub-muted)" }}>Inquiries Managed</span>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--pub-ink)", marginTop: 6 }}>100% Verified</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--pub-ink)", marginTop: 6 }}>Tracked</div>
                 <span style={{ fontSize: 11, color: "var(--pub-violet)" }}>Encrypted client records</span>
               </div>
               <div style={{ background: "var(--pub-surface)", padding: 18, borderRadius: 12, border: "1px solid var(--pub-line)" }}>
-                <span className="eyebrow" style={{ color: "var(--pub-muted)" }}>Deployment Uptime</span>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--pub-ink)", marginTop: 6 }}>99.98%</div>
-                <span style={{ fontSize: 11, color: "#10B981" }}>Production systems healthy</span>
+                <span className="eyebrow" style={{ color: "var(--pub-muted)" }}>Deployment Health</span>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--pub-ink)", marginTop: 6 }}>Monitored</div>
+                <span style={{ fontSize: 11, color: "#10B981" }}>Uptime tracked continuously</span>
               </div>
             </div>
           </div>

@@ -1558,7 +1558,7 @@ export function UserProfileSecurity({
                         borderRadius: 8,
                         background: "var(--ink-crm, var(--ink))",
                         color: "var(--ink-crm-text, var(--paper))",
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: "var(--font-dm-mono), monospace",
                         fontSize: 12,
                         lineHeight: 1.6,
                         margin: 0,
@@ -1638,7 +1638,7 @@ export function UserProfileSecurity({
                   <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
                     2. Emergency Backup Codes (Store somewhere safe)
                   </div>
-                  <pre style={{ margin: "10px 0 0", fontSize: 12, lineHeight: 1.6, fontFamily: "'DM Mono', monospace" }}>
+                  <pre style={{ margin: "10px 0 0", fontSize: 12, lineHeight: 1.6, fontFamily: "var(--font-dm-mono), monospace" }}>
                     {backupCodes.join("\n")}
                   </pre>
                 </div>

@@ -47,7 +47,7 @@ export function Footer() {
         >
           {/* Column 1: Brand & Operating Entity */}
           <div style={{ maxWidth: 360 }}>
-            <Link href="/" style={{ display: "inline-block" }} aria-label="Nova home">
+            <Link href="/" style={{ display: "inline-block" }}>
               <NovaLogo
                 size={28}
                 markColor="#6C4CFF"
@@ -78,7 +78,7 @@ export function Footer() {
                 border: "1px solid rgba(16, 185, 129, 0.25)",
                 color: "#34D399",
                 fontSize: 11,
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-dm-mono), monospace",
                 fontWeight: 600,
                 letterSpacing: "0.04em",
               }}
@@ -202,7 +202,7 @@ export function Footer() {
             paddingTop: 18,
             borderTop: "1px solid rgba(255, 255, 255, 0.05)",
             fontSize: 11,
-            color: "#636C80",
+            color: "#8A93A6",
             lineHeight: 1.65,
           }}
         >

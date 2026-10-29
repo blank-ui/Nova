@@ -31,7 +31,7 @@ const services = [
   {
     n: "01",
     title: "Websites & Digital Experiences",
-    text: "Brand-led websites that turn first impressions into lasting authority, engineered for 100/100 Core Web Vitals and zero layout shift.",
+    text: "Brand-led websites that turn first impressions into lasting authority, engineered with Core Web Vitals and layout stability in mind.",
     href: "/services",
   },
   {
@@ -107,7 +107,7 @@ const techBadges = [
 const homeFaqs = [
   {
     q: "How fast can Nova design and ship our project?",
-    a: "Standard bespoke studio websites and focused web apps ship within our signature 14-day sprint cycle. Larger enterprise platforms or multi-role CRM systems typically range from 3 to 6 weeks, structured into transparent, bi-weekly milestones tracked in your private client portal.",
+    a: "Timelines depend on scope. Focused websites and smaller web apps can often move through a two-week sprint cycle, while larger platforms or multi-role CRM systems may take several weeks — structured into transparent, bi-weekly milestones tracked in your private client portal.",
   },
   {
     q: "Do we get full ownership of the codebase and intellectual property?",
@@ -282,15 +282,15 @@ export default async function Home() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckCircle2 size={16} style={{ color: "#10B981" }} />
-                <span><T k="hero.stat_speed" fallback="14-Day Sprint Velocity" /></span>
+                <span><T k="hero.stat_speed" fallback="Sprint-Based Delivery" /></span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckCircle2 size={16} style={{ color: "var(--pub-violet)" }} />
-                <span><T k="hero.stat_quality" fallback="100% Type-Safe Architecture" /></span>
+                <span><T k="hero.stat_quality" fallback="Type-Safe Architecture" /></span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckCircle2 size={16} style={{ color: "#FFB547" }} />
-                <span><T k="hero.stat_uptime" fallback="99.9% Production SLA Target" /></span>
+                <span><T k="hero.stat_uptime" fallback="Uptime-Focused Hosting" /></span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckCircle2 size={16} style={{ color: "var(--pub-cyan)" }} />
@@ -331,15 +331,15 @@ export default async function Home() {
                         border: "1px solid rgba(103, 232, 249, 0.3)",
                         color: "#67E8F9",
                         fontSize: 10,
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: "var(--font-dm-mono), monospace",
                       }}
                     >
                       ships @ light speed
                     </span>
                   </div>
-                  <h3 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 800, margin: "0 0 10px", letterSpacing: "-0.04em" }}>
+                  <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 800, margin: "0 0 10px", letterSpacing: "-0.04em" }}>
                     Soft to look at. Serious about code.
-                  </h3>
+                  </h2>
                   <p style={{ color: "#9CA5B8", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
                     Bespoke web development, clean server component architecture, and zero-compromise craft. Click or hover Nova anytime to say hi!
                   </p>
@@ -387,13 +387,13 @@ export default async function Home() {
               }}
             >
               <div className="eyebrow" style={{ color: "#10B981", marginBottom: 16 }}>
-                Predictable Sprint Velocity
+                Transparent Sprint Cadence
               </div>
               <h2 style={{ fontSize: "clamp(28px, 3.6vw, 42px)", fontWeight: 800, letterSpacing: "-0.05em", margin: "0 0 16px", color: "var(--pub-ink)" }}>
                 From first scoping to launch.
               </h2>
               <p style={{ fontSize: 15, lineHeight: 1.8, color: "var(--pub-muted)", margin: 0 }}>
-                We work in high-cadence two-week sprints with daily asynchronous updates, transparent milestone tracking, and staging URLs where you can test real progress before release.
+                We typically work in two-week sprints with regular asynchronous updates, transparent milestone tracking, and staging URLs where you can test real progress before release.
               </p>
               <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
                 <Link href="/process" className="nova-btn-secondary" style={{ padding: "10px 18px", fontSize: 13 }}>
@@ -596,7 +596,7 @@ export default async function Home() {
                     background: "var(--pub-bg-alt)",
                   }}
                 >
-                  <span style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "'DM Mono', monospace" }}>
+                  <span style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "var(--font-dm-mono), monospace" }}>
                     {item.repoName ? `Repo: ${item.repoName}` : "Verified Studio Build"}
                   </span>
                   {item.projectUrl ? (
@@ -643,7 +643,7 @@ export default async function Home() {
                     <span className="nova-pill-tag nova-pill-lime" style={{ padding: "2px 6px", fontSize: 9 }}>SaaS</span>
                   </div>
                   <div style={{ height: 180, background: "linear-gradient(135deg, #101428 0%, #1A2242 100%)", padding: 20, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                    <div style={{ fontSize: 11, color: "#67E8F9", fontFamily: "'DM Mono', monospace" }}>ALL SKY FARES PLATFORM</div>
+                    <div style={{ fontSize: 11, color: "#67E8F9", fontFamily: "var(--font-dm-mono), monospace" }}>ALL SKY FARES PLATFORM</div>
                     <div style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", marginTop: 4 }}>Enterprise Flight &amp; Booking Engine</div>
                     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                       <span style={{ fontSize: 10, background: "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: 4, color: "#fff" }}>Next.js 15</span>
@@ -662,7 +662,7 @@ export default async function Home() {
                 </div>
               </div>
               <div style={{ padding: "16px 24px", borderTop: "1px solid var(--pub-line)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pub-bg-alt)" }}>
-                <span style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "'DM Mono', monospace" }}>All Sky Fares LLC</span>
+                <span style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "var(--font-dm-mono), monospace" }}>All Sky Fares LLC</span>
                 <Link href="/portfolio" style={{ fontSize: 12, color: "var(--pub-violet)", textDecoration: "none", fontWeight: 700 }}>
                   Case Study &rarr;
                 </Link>
@@ -683,7 +683,7 @@ export default async function Home() {
                     <span className="nova-pill-tag nova-pill-lime" style={{ padding: "2px 6px", fontSize: 9 }}>CRM</span>
                   </div>
                   <div style={{ height: 180, background: "linear-gradient(135deg, #0C0F1A 0%, #171E36 100%)", padding: 20, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                    <div style={{ fontSize: 11, color: "#A8FF7D", fontFamily: "'DM Mono', monospace" }}>NOVA OPERATIONAL SUITE</div>
+                    <div style={{ fontSize: 11, color: "#A8FF7D", fontFamily: "var(--font-dm-mono), monospace" }}>NOVA OPERATIONAL SUITE</div>
                     <div style={{ fontSize: 18, fontWeight: 800, color: "#FFFFFF", marginTop: 4 }}>Role-Isolated Admin &amp; Portals</div>
                     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                       <span style={{ fontSize: 10, background: "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: 4, color: "#fff" }}>TOTP 2FA</span>
@@ -702,7 +702,7 @@ export default async function Home() {
                 </div>
               </div>
               <div style={{ padding: "16px 24px", borderTop: "1px solid var(--pub-line)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pub-bg-alt)" }}>
-                <span style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "'DM Mono', monospace" }}>Studio Operations</span>
+                <span style={{ fontSize: 11, color: "var(--pub-muted)", fontFamily: "var(--font-dm-mono), monospace" }}>Studio Operations</span>
                 <Link href="/portfolio" style={{ fontSize: 12, color: "var(--pub-violet)", textDecoration: "none", fontWeight: 700 }}>
                   Case Study &rarr;
                 </Link>
@@ -733,7 +733,7 @@ export default async function Home() {
               How we take projects from zero to production.
             </h2>
             <p style={{ color: "var(--pub-muted)", fontSize: 15, margin: 0 }}>
-              A disciplined, transparent engineering framework designed to eliminate guesswork and ship within 14 days.
+              A disciplined, transparent engineering framework designed to reduce guesswork and keep every milestone visible as we build together.
             </p>
           </div>
 
@@ -823,7 +823,7 @@ export default async function Home() {
                 <T k="hero.bento1_title" fallback="Core Web Vitals & Speed" />
               </h3>
               <p style={{ fontSize: 13, color: "var(--pub-muted)", lineHeight: 1.7, margin: 0 }}>
-                <T k="hero.bento1_desc" fallback="Optimized font loading, priority LCP images, sub-50ms TTFB edge caching, and zero layout shift across devices." />
+                <T k="hero.bento1_desc" fallback="Optimized font loading, prioritized images, edge caching, and layout-stable rendering — aiming for fast loads across devices." />
               </p>
             </div>
 
@@ -938,7 +938,7 @@ export default async function Home() {
                 >
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--pub-violet)" }} />
                   <span>{badge.name}</span>
-                  <span style={{ fontSize: 10, color: "var(--pub-muted)", textTransform: "uppercase", fontFamily: "'DM Mono', monospace" }}>
+                  <span style={{ fontSize: 10, color: "var(--pub-muted)", textTransform: "uppercase", fontFamily: "var(--font-dm-mono), monospace" }}>
                     ({badge.tag})
                   </span>
                 </div>

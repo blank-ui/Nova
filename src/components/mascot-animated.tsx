@@ -196,7 +196,7 @@ export function AnimatedNovaMascot({
             y="20"
             textAnchor="middle"
             fill="#67E8F9"
-            fontFamily="'DM Mono', monospace"
+            fontFamily="var(--font-dm-mono), monospace"
             fontSize="15"
             fontWeight="bold"
           >
@@ -219,7 +219,7 @@ export function AnimatedNovaMascot({
             y="20"
             textAnchor="middle"
             fill="#FFB547"
-            fontFamily="'DM Mono', monospace"
+            fontFamily="var(--font-dm-mono), monospace"
             fontSize="14"
             fontWeight="bold"
           >
@@ -378,7 +378,7 @@ export function AnimatedNovaMascot({
             borderRadius: 999,
             fontSize: 11,
             fontWeight: 600,
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-dm-mono), monospace",
             whiteSpace: "nowrap",
             boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
             zIndex: 10,
